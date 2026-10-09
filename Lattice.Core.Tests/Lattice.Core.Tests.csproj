@@ -15,6 +15,9 @@
     <ProjectReference Include="..\Lattice\Lattice.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\knowledge\**\*.json" Link="knowledge\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0",
+  "id": "example.physics",
+  "name": "Basic Physics Example",
+  "description": "A tiny package used to exercise loading, lookup, and rule evaluation.",
+  "concepts": [
+    {
+      "id": "concept.water",
+      "preferred": "water",
+      "aliases": ["H2O"],
+      "definition": "The liquid commonly denoted H2O."
+    },
+    {
+      "id": "concept.steam",
+      "preferred": "steam",
+      "aliases": ["water vapor"],
+      "definition": "The gaseous phase of water."
+    }
+  ],
+  "facts": [
+    {
+      "id": "fact.water.boiling_point",
+      "subject": "concept.water",
+      "predicate": "boils_at",
+      "value": "100C",
+      "source": "hand-authored example"
+    },
+    {
+      "id": "fact.sample.temperature",
+      "subject": "concept.water",
+      "predicate": "temperature",
+      "value": "100C",
+      "source": "hand-authored example"
+    },
+    {
+      "id": "fact.water.phase",
+      "subject": "concept.water",
+      "predicate": "phase",
+      "value": "liquid"
+    },
+    {
+      "id": "fact.steam.phase",
+      "subject": "concept.steam",
+      "predicate": "phase",
+      "value": "gas"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule.water.boils",
+      "description": "Water at its boiling point is in the boiling state.",
+      "premises": [
+        { "subject": "concept.water", "predicate": "boils_at", "value": "100C" },
+        { "subject": "concept.water", "predicate": "temperature", "value": "100C" }
+      ],
+      "conclusion": { "subject": "concept.water", "predicate": "state", "value": "boiling" }
+    }
+  ]
+}
