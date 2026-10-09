@@ -17,6 +17,19 @@ public sealed record ToolCatalog
         Descriptors = array;
     }
     public ImmutableArray<ToolDescriptor> Descriptors { get; }
+    public bool TryResolve(ToolId id, out ToolDescriptor descriptor)
+    {
+        foreach (var candidate in Descriptors)
+        {
+            if (candidate.Id == id)
+            {
+                descriptor = candidate;
+                return true;
+            }
+        }
+        descriptor = null!;
+        return false;
+    }
     // ImmutableArray<T> compares by reference of its backing array, so the record's
     // synthesized equality would treat equal-but-distinct descriptor sets as unequal.
     public bool Equals(ToolCatalog? other)
