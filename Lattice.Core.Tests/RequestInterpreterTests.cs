@@ -65,10 +65,38 @@ public sealed class RequestInterpreterTests
         Assert.NotNull(result.Diagnostic);
     }
     [Fact]
-    public void SlotWithNoRemainingTokensDoesNotMatch()
+    public void SlotWithNoRemainingTokensReportsMissingValue()
     {
         var result = CreateInterpreter().Interpret("what is");
-        Assert.Equal(IntentMatchKind.Unknown, result.Kind);
+        Assert.Equal(IntentMatchKind.MissingValue, result.Kind);
+        Assert.Equal(RequestIntentKind.Question, result.Intent);
+        Assert.Equal("topic", result.MissingSlotName);
+        Assert.Null(result.Match!.Slot);
+    }
+    [Fact]
+    public void MissingValueIsNotReportedWhenAnotherPatternMatches()
+    {
+        // "explain" alone has no slot value, but it is a plain no-slot pattern and must match.
+        var interpreter = new RequestInterpreter(new IntentPatternCatalog(new[]
+        {
+            new IntentPattern("explain.plain", RequestIntentKind.Explanation, ImmutableArray.Create("explain"), "topic"),
+            new IntentPattern("explain.exact", RequestIntentKind.Explanation, ImmutableArray.Create("explain"), null),
+        }));
+        var result = interpreter.Interpret("explain");
+        Assert.Equal(IntentMatchKind.Matched, result.Kind);
+        Assert.Equal("explain.exact", result.Match!.PatternId);
+    }
+    [Fact]
+    public void MultipleMissingValuePatternsAreAmbiguous()
+    {
+        var interpreter = new RequestInterpreter(new IntentPatternCatalog(new[]
+        {
+            new IntentPattern("a", RequestIntentKind.Question, ImmutableArray.Create("what"), "topic"),
+            new IntentPattern("b", RequestIntentKind.Explanation, ImmutableArray.Create("what"), "subject"),
+        }));
+        var result = interpreter.Interpret("what");
+        Assert.Equal(IntentMatchKind.Ambiguous, result.Kind);
+        Assert.Equal(2, result.Candidates.Length);
     }
     [Fact]
     public void NoSlotPatternRejectsTrailingTokens()

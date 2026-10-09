@@ -4,4 +4,5 @@ public enum IntentMatchKind
     Matched,
     Unknown,
     Ambiguous,
+    MissingValue,
 }

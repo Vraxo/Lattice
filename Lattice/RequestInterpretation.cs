@@ -9,7 +9,8 @@ public sealed record RequestInterpretation
         ImmutableArray<IntentMatch> candidates,
         string text,
         SourceSpan span,
-        string? diagnostic)
+        string? diagnostic,
+        string? missingSlotName)
     {
         Kind = kind;
         Intent = intent;
@@ -18,6 +19,7 @@ public sealed record RequestInterpretation
         Text = text;
         Span = span;
         Diagnostic = diagnostic;
+        MissingSlotName = missingSlotName;
     }
     public IntentMatchKind Kind { get; }
     public RequestIntentKind Intent { get; }
@@ -26,6 +28,8 @@ public sealed record RequestInterpretation
     public string Text { get; }
     public SourceSpan Span { get; }
     public string? Diagnostic { get; }
+    /// <summary>The slot name that was left empty, when <see cref="Kind"/> is MissingValue.</summary>
+    public string? MissingSlotName { get; }
     public static RequestInterpretation Matched(string text, IntentMatch match)
     {
         ArgumentNullException.ThrowIfNull(match);
@@ -36,6 +40,7 @@ public sealed record RequestInterpretation
             ImmutableArray<IntentMatch>.Empty,
             text,
             new SourceSpan(0, text.Length),
+            null,
             null);
     }
     public static RequestInterpretation Unknown(string text, string diagnostic)
@@ -48,7 +53,8 @@ public sealed record RequestInterpretation
             ImmutableArray<IntentMatch>.Empty,
             text,
             new SourceSpan(0, text.Length),
-            diagnostic);
+            diagnostic,
+            null);
     }
     public static RequestInterpretation Ambiguous(string text, IEnumerable<IntentMatch> candidates)
     {
@@ -65,7 +71,22 @@ public sealed record RequestInterpretation
             array,
             text,
             new SourceSpan(0, text.Length),
-            "More than one pattern matched with equal specificity.");
+            "More than one pattern matched with equal specificity.",
+            null);
+    }
+    public static RequestInterpretation MissingValue(string text, IntentMatch match, string missingSlotName)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+        ArgumentException.ThrowIfNullOrWhiteSpace(missingSlotName);
+        return new RequestInterpretation(
+            IntentMatchKind.MissingValue,
+            match.Intent,
+            match,
+            ImmutableArray<IntentMatch>.Empty,
+            text,
+            new SourceSpan(0, text.Length),
+            $"The value for '{missingSlotName}' is missing.",
+            missingSlotName);
     }
     // ImmutableArray<T> compares by reference of its backing array, so the record's
     // synthesized equality would treat equal-but-distinct candidate sets as unequal.
@@ -81,6 +102,7 @@ public sealed record RequestInterpretation
             && Text == other.Text
             && Span == other.Span
             && Diagnostic == other.Diagnostic
+            && MissingSlotName == other.MissingSlotName
             && Candidates.SequenceEqual(other.Candidates);
     }
     public override int GetHashCode()
@@ -92,6 +114,7 @@ public sealed record RequestInterpretation
         hash.Add(Text);
         hash.Add(Span);
         hash.Add(Diagnostic);
+        hash.Add(MissingSlotName);
         foreach (var candidate in Candidates)
         {
             hash.Add(candidate);

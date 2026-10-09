@@ -23,32 +23,45 @@ public sealed class RequestInterpreter
                 matches.Add((pattern.Literals.Length, match));
             }
         }
-        if (matches.Count == 0)
+        if (matches.Count > 0)
         {
-            return RequestInterpretation.Unknown(input, "No known pattern matched.");
+            var best = matches.Max(entry => entry.Score);
+            var winners = matches
+                .Where(entry => entry.Score == best)
+                .Select(entry => entry.Match)
+                .ToImmutableArray();
+            return winners.Length == 1
+                ? RequestInterpretation.Matched(input, winners[0])
+                : RequestInterpretation.Ambiguous(input, winners);
         }
-        var best = matches.Max(entry => entry.Score);
-        var winners = matches
-            .Where(entry => entry.Score == best)
-            .Select(entry => entry.Match)
+        // No pattern matched with a value. Before giving up, check whether the input is a
+        // slot pattern with its value omitted; that is a missing field, not gibberish.
+        var missing = _catalog.Patterns
+            .Where(pattern => HasMissingValue(pattern, tokens))
             .ToImmutableArray();
-        return winners.Length == 1
-            ? RequestInterpretation.Matched(input, winners[0])
-            : RequestInterpretation.Ambiguous(input, winners);
+        if (missing.Length == 1)
+        {
+            var pattern = missing[0];
+            var match = new IntentMatch(pattern.Id, pattern.Intent, null);
+            return RequestInterpretation.MissingValue(input, match, pattern.SlotName!);
+        }
+        if (missing.Length > 1)
+        {
+            var candidates = missing.Select(p => new IntentMatch(p.Id, p.Intent, null));
+            return RequestInterpretation.Ambiguous(input, candidates);
+        }
+        return RequestInterpretation.Unknown(input, "No known pattern matched.");
     }
+    private static bool HasMissingValue(IntentPattern pattern, string[] tokens) =>
+        pattern.SlotName is not null
+        && tokens.Length == pattern.Literals.Length
+        && LeadsWithLiterals(pattern, tokens);
     private static bool TryMatch(IntentPattern pattern, string[] tokens, out IntentMatch match)
     {
         match = null!;
-        if (tokens.Length < pattern.Literals.Length)
+        if (!LeadsWithLiterals(pattern, tokens))
         {
             return false;
-        }
-        for (var i = 0; i < pattern.Literals.Length; i++)
-        {
-            if (!string.Equals(tokens[i], pattern.Literals[i], StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
         }
         if (pattern.SlotName is null)
         {
@@ -61,11 +74,26 @@ public sealed class RequestInterpreter
         }
         if (tokens.Length == pattern.Literals.Length)
         {
-            // The slot must absorb at least one token; a missing value is not a match.
+            // The slot must absorb at least one token; a missing value is reported separately.
             return false;
         }
         var value = string.Join(' ', tokens, pattern.Literals.Length, tokens.Length - pattern.Literals.Length);
         match = new IntentMatch(pattern.Id, pattern.Intent, new IntentSlot(pattern.SlotName, value));
+        return true;
+    }
+    private static bool LeadsWithLiterals(IntentPattern pattern, string[] tokens)
+    {
+        if (tokens.Length < pattern.Literals.Length)
+        {
+            return false;
+        }
+        for (var i = 0; i < pattern.Literals.Length; i++)
+        {
+            if (!string.Equals(tokens[i], pattern.Literals[i], StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
         return true;
     }
 }
