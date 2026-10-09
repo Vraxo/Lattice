@@ -8,4 +8,6 @@ public static class FileToolErrorCodes
     public const string FileTooLarge = "files.file.too-large";
     public const string EncodingInvalid = "files.file.encoding-invalid";
     public const string ReadFailed = "files.file.read-failed";
+    public const string QueryEmpty = "files.search.query-empty";
+    public const string QueryInvalid = "files.search.query-invalid";
 }
