@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Lattice.Cli/Lattice.Cli.csproj" Id="2a0a2cde-d906-42d3-98eb-c7eaddf8c54f" />
+  <Project Path="Lattice.Core.Tests/Lattice.Core.Tests.csproj" Id="2223f552-4f63-494e-8c5a-f316cbe08122" />
+  <Project Path="Lattice/Lattice.Core.csproj" />
+</Solution>
