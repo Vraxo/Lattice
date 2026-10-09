@@ -5,7 +5,7 @@ public sealed class ResultTests
     [Fact]
     public void NonGenericSuccessIsSuccessfulWithNoError()
     {
-        var result = Result.Success();
+        Result result = Result.Success();
         Assert.True(result.IsSuccess);
         Assert.Null(result.Error);
     }
@@ -13,8 +13,8 @@ public sealed class ResultTests
     [Fact]
     public void NonGenericFailureCarriesError()
     {
-        var error = new Error("test.failure", "Something expected went wrong.");
-        var result = Result.Failure(error);
+        Error error = new("test.failure", "Something expected went wrong.");
+        Result result = Result.Failure(error);
         Assert.False(result.IsSuccess);
         Assert.Same(error, result.Error);
     }
@@ -28,7 +28,7 @@ public sealed class ResultTests
     [Fact]
     public void GenericSuccessExposesValue()
     {
-        var result = Result<int>.Success(42);
+        Result<int> result = Result<int>.Success(42);
         Assert.True(result.IsSuccess);
         Assert.Null(result.Error);
         Assert.Equal(42, result.Value);
@@ -37,8 +37,8 @@ public sealed class ResultTests
     [Fact]
     public void GenericFailureExposesErrorAndValueAccessThrows()
     {
-        var error = new Error("test.failure", "boom");
-        var result = Result<string>.Failure(error);
+        Error error = new("test.failure", "boom");
+        Result<string> result = Result<string>.Failure(error);
         Assert.False(result.IsSuccess);
         Assert.Same(error, result.Error);
         Assert.Throws<InvalidOperationException>(() => result.Value);

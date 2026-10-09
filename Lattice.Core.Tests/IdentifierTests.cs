@@ -5,8 +5,8 @@ public sealed class IdentifierTests
     [Fact]
     public void NewProducesNonEmptyDistinctValues()
     {
-        var first = SessionId.New();
-        var second = SessionId.New();
+        SessionId first = SessionId.New();
+        SessionId second = SessionId.New();
         Assert.NotEqual(Guid.Empty, first.Value);
         Assert.NotEqual(first, second);
     }
