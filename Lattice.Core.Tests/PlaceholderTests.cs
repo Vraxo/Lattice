@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class PlaceholderTests
 {
     [Fact]
