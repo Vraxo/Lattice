@@ -9,6 +9,7 @@ public sealed class SessionTests
         Assert.Empty(session.Facts);
         Assert.Empty(session.Goals);
         Assert.Empty(session.Observations);
+        Assert.Empty(session.ToolInvocations);
     }
     [Fact]
     public void AddUserAssertionAddsUserAssertedFact()
@@ -66,6 +67,28 @@ public sealed class SessionTests
         var goal = new Goal(GoalId.New(), "Do it.", "It is done.", GoalStatus.Incomplete);
         var updated = session.AddGoal(goal);
         Assert.Equal(goal, Assert.Single(updated.Goals));
+    }
+    [Fact]
+    public void AddToolInvocationAppendsInvocation()
+    {
+        var session = Session.Empty(SessionId.New());
+        var invocation = new ToolInvocation(
+            CalculatorTool.Id,
+            ArgumentBag.Empty,
+            ToolResult.Success(ArgumentValue.FromInteger(3)));
+        var updated = session.AddToolInvocation(invocation);
+        Assert.Equal(invocation, Assert.Single(updated.ToolInvocations));
+    }
+    [Fact]
+    public void AddToolInvocationLeavesOriginalSessionUnchanged()
+    {
+        var session = Session.Empty(SessionId.New());
+        var invocation = new ToolInvocation(
+            CalculatorTool.Id,
+            ArgumentBag.Empty,
+            ToolResult.Success(ArgumentValue.FromInteger(3)));
+        session.AddToolInvocation(invocation);
+        Assert.Empty(session.ToolInvocations);
     }
     [Fact]
     public void SessionsWithSameContentAreEqual()
