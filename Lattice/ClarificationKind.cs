@@ -4,4 +4,5 @@ public enum ClarificationKind
     MissingValue,
     AmbiguousIntent,
     UnknownIntent,
+    NoEligibleAction,
 }
