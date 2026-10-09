@@ -1,0 +1,41 @@
+{
+  "corpusVersion": "1.0",
+  "files": [
+    { "path": "README.md", "content": "# Demo\n\nThis project contains a Calculator.\n" },
+    { "path": "src/Calculator.cs", "content": "namespace Demo;\n\npublic sealed class Calculator\n{\n    public int Add(int a, int b) => a + b;\n}\n" },
+    { "path": "src/Strings.cs", "content": "namespace Demo;\n\npublic static class Strings\n{\n    public const string Name = \"lattice\";\n}\n" },
+    { "path": "bin/Generated.cs", "content": "class Calculator { }\n" }
+  ],
+  "entries": [
+    {
+      "id": "find-symbol.multiple-files",
+      "question": "find symbol Calculator",
+      "expect": { "status": "Answered", "files": ["README.md", "src/Calculator.cs"] }
+    },
+    {
+      "id": "find-symbol.single-file",
+      "question": "find symbol Strings",
+      "expect": { "status": "Answered", "files": ["src/Strings.cs"] }
+    },
+    {
+      "id": "find-symbol.no-match",
+      "question": "find symbol Missing",
+      "expect": { "status": "InsufficientEvidence", "files": [] }
+    },
+    {
+      "id": "inspect-path.file",
+      "question": "read README.md",
+      "expect": { "status": "Answered", "files": ["README.md"] }
+    },
+    {
+      "id": "inspect-path.missing",
+      "question": "read missing.md",
+      "expect": { "status": "InsufficientEvidence", "files": [] }
+    },
+    {
+      "id": "unsupported.question",
+      "question": "what is gravity",
+      "expect": { "status": "UnsupportedQuestion", "files": [] }
+    }
+  ]
+}
