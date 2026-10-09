@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lattice\Lattice.Core.csproj" />
+    <ProjectReference Include="..\Lattice.CSharp\Lattice.CSharp.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\knowledge\**\*.json" Link="knowledge\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
