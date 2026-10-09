@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public readonly record struct ToolId
 {
     public ToolId(string value)
@@ -7,7 +8,9 @@ public readonly record struct ToolId
         {
             throw new ArgumentException("Tool id must not be empty.", nameof(value));
         }
+
         Value = value;
     }
+
     public string Value { get; }
 }

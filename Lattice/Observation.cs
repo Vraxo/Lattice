@@ -8,13 +8,17 @@ public sealed record Observation
         {
             throw new ArgumentException("Observation content must not be empty.", nameof(content));
         }
+
         if (string.IsNullOrWhiteSpace(source))
         {
             throw new ArgumentException("Observation source must not be empty.", nameof(source));
         }
+
         Content = content;
         Source = source;
     }
+
     public string Content { get; }
+
     public string Source { get; }
 }

@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public enum FactStatus
 {
     Observed,

@@ -1,69 +1,83 @@
 namespace Lattice.Core.Tests;
+
 public sealed class KnowledgeLookupTests
 {
-    private static KnowledgeLookup CreateLookup() => new(CreatePackage());
+    private static KnowledgeLookup CreateLookup()
+    {
+        return new(CreatePackage());
+    }
+
     [Fact]
     public void FindByIdReturnsFoundConcept()
     {
-        var lookup = CreateLookup();
-        var result = lookup.FindById("concept.water");
+        KnowledgeLookup lookup = CreateLookup();
+        ConceptLookup result = lookup.FindById("concept.water");
         Assert.True(result.IsFound);
         Assert.Equal("concept.water", result.Concept!.Id);
         Assert.Equal("example.physics", result.PackageId);
     }
+
     [Fact]
     public void FindByIdReturnsNotFoundForUnknownId()
     {
-        var lookup = CreateLookup();
-        var result = lookup.FindById("concept.missing");
+        KnowledgeLookup lookup = CreateLookup();
+        ConceptLookup result = lookup.FindById("concept.missing");
         Assert.Equal(KnowledgeMatchKind.NotFound, result.Kind);
         Assert.Equal("example.physics", result.PackageId);
     }
+
     [Fact]
     public void FindByAliasIsCaseInsensitive()
     {
-        var lookup = CreateLookup();
-        var result = lookup.FindByAlias("h2o");
+        KnowledgeLookup lookup = CreateLookup();
+        ConceptLookup result = lookup.FindByAlias("h2o");
         Assert.True(result.IsFound);
         Assert.Equal("concept.water", result.Concept!.Id);
     }
+
     [Fact]
     public void FindByAliasReturnsNotFoundWhenAbsent()
     {
-        var lookup = CreateLookup();
-        var result = lookup.FindByAlias("unobtainium");
+        KnowledgeLookup lookup = CreateLookup();
+        ConceptLookup result = lookup.FindByAlias("unobtainium");
         Assert.Equal(KnowledgeMatchKind.NotFound, result.Kind);
     }
+
     [Fact]
     public void FindByAliasReportsAmbiguity()
     {
-        var lookup = new KnowledgeLookup(new KnowledgePackage(
+        KnowledgeLookup lookup = new(new KnowledgePackage(
             new SchemaVersion(1, 0),
             "example.physics",
             "Basic Physics Example",
-            concepts: new[]
-            {
-                new KnowledgeConcept("concept.water", "water", new[] { "shared" }),
-                new KnowledgeConcept("concept.ice", "ice", new[] { "shared" }),
-            }));
-        var result = lookup.FindByAlias("shared");
+            concepts:
+            [
+                new KnowledgeConcept("concept.water", "water", ["shared"]),
+                new KnowledgeConcept("concept.ice", "ice", ["shared"]),
+            ]));
+        ConceptLookup result = lookup.FindByAlias("shared");
         Assert.Equal(KnowledgeMatchKind.Ambiguous, result.Kind);
         Assert.Equal(2, result.Candidates.Length);
         Assert.Equal("example.physics", result.PackageId);
     }
+
     [Fact]
     public void FindByIdRejectsEmptyId()
     {
-        var lookup = CreateLookup();
+        KnowledgeLookup lookup = CreateLookup();
         Assert.Throws<ArgumentException>(() => lookup.FindById(string.Empty));
     }
-    private static KnowledgePackage CreatePackage() => new(
+
+    private static KnowledgePackage CreatePackage()
+    {
+        return new(
         new SchemaVersion(1, 0),
         "example.physics",
         "Basic Physics Example",
-        concepts: new[]
-        {
-            new KnowledgeConcept("concept.water", "water", new[] { "H2O" }),
-            new KnowledgeConcept("concept.steam", "steam", new[] { "water vapor" }),
-        });
+        concepts:
+        [
+            new KnowledgeConcept("concept.water", "water", ["H2O"]),
+            new KnowledgeConcept("concept.steam", "steam", ["water vapor"]),
+        ]);
+    }
 }

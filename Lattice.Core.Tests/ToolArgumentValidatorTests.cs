@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class ToolArgumentValidatorTests
 {
     private static readonly ToolDescriptor Descriptor = new(
@@ -6,60 +7,68 @@ public sealed class ToolArgumentValidatorTests
         "Adds two integers.",
         "An integer sum.",
         ToolSideEffect.ReadOnly,
-        new[]
-        {
+        [
             new ToolParameter("left", ToolParameterType.Integer),
             new ToolParameter("right", ToolParameterType.Integer),
             new ToolParameter("label", ToolParameterType.String, required: false),
-        });
+        ]);
+
     [Fact]
     public void ValidArgumentsPass()
     {
-        var result = ToolArgumentValidator.Validate(Descriptor, TwoIntegers());
+        Result result = ToolArgumentValidator.Validate(Descriptor, TwoIntegers());
         Assert.True(result.IsSuccess);
     }
+
     [Fact]
     public void UnknownArgumentFails()
     {
-        var arguments = ArgumentBag.From(new[]
-        {
+        ArgumentBag arguments = ArgumentBag.From(
+        [
             new ArgumentEntry("left", ArgumentValue.FromInteger(1)),
             new ArgumentEntry("right", ArgumentValue.FromInteger(2)),
             new ArgumentEntry("extra", ArgumentValue.FromInteger(3)),
-        });
-        var result = ToolArgumentValidator.Validate(Descriptor, arguments);
+        ]);
+        Result result = ToolArgumentValidator.Validate(Descriptor, arguments);
         Assert.False(result.IsSuccess);
         Assert.Equal("tool.argument.unknown", result.Error!.Code);
     }
+
     [Fact]
     public void TypeMismatchFails()
     {
-        var arguments = ArgumentBag.From(new[]
-        {
+        ArgumentBag arguments = ArgumentBag.From(
+        [
             new ArgumentEntry("left", ArgumentValue.FromString("one")),
             new ArgumentEntry("right", ArgumentValue.FromInteger(2)),
-        });
-        var result = ToolArgumentValidator.Validate(Descriptor, arguments);
+        ]);
+        Result result = ToolArgumentValidator.Validate(Descriptor, arguments);
         Assert.False(result.IsSuccess);
         Assert.Equal("tool.argument.type", result.Error!.Code);
     }
+
     [Fact]
     public void MissingRequiredArgumentFails()
     {
-        var arguments = ArgumentBag.From(new[] { new ArgumentEntry("left", ArgumentValue.FromInteger(1)) });
-        var result = ToolArgumentValidator.Validate(Descriptor, arguments);
+        ArgumentBag arguments = ArgumentBag.From([new ArgumentEntry("left", ArgumentValue.FromInteger(1))]);
+        Result result = ToolArgumentValidator.Validate(Descriptor, arguments);
         Assert.False(result.IsSuccess);
         Assert.Equal("tool.argument.missing", result.Error!.Code);
     }
+
     [Fact]
     public void MissingOptionalArgumentPasses()
     {
-        var result = ToolArgumentValidator.Validate(Descriptor, TwoIntegers());
+        Result result = ToolArgumentValidator.Validate(Descriptor, TwoIntegers());
         Assert.True(result.IsSuccess);
     }
-    private static ArgumentBag TwoIntegers() => ArgumentBag.From(new[]
+
+    private static ArgumentBag TwoIntegers()
     {
+        return ArgumentBag.From(
+    [
         new ArgumentEntry("left", ArgumentValue.FromInteger(1)),
         new ArgumentEntry("right", ArgumentValue.FromInteger(2)),
-    });
+    ]);
+    }
 }

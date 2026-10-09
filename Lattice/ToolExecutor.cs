@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public static class ToolExecutor
 {
     public static ToolInvocation Execute(ITool tool, ArgumentBag arguments, ToolPermissionPolicy policy)
@@ -15,12 +16,14 @@ public static class ToolExecutor
                     "tool.permission.denied",
                     $"Tool '{tool.Descriptor.Id.Value}' requires {tool.Descriptor.SideEffect}, which is not permitted.")));
         }
-        var validation = ToolArgumentValidator.Validate(tool.Descriptor, arguments);
+
+        Result validation = ToolArgumentValidator.Validate(tool.Descriptor, arguments);
         if (!validation.IsSuccess)
         {
             return new ToolInvocation(tool.Descriptor.Id, arguments, ToolResult.Failure(validation.Error!));
         }
-        var result = tool.Execute(arguments);
+
+        ToolResult result = tool.Execute(arguments);
         return new ToolInvocation(tool.Descriptor.Id, arguments, result);
     }
 }

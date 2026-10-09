@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class ToolExecutionLimitsTests
 {
     [Fact]
@@ -6,6 +7,7 @@ public sealed class ToolExecutionLimitsTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new ToolExecutionLimits(TimeSpan.Zero));
     }
+
     [Fact]
     public void DefaultHasPositiveTimeout()
     {

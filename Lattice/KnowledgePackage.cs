@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
+
 namespace Lattice.Core;
+
 public sealed record KnowledgePackage
 {
     public KnowledgePackage(
@@ -15,25 +17,35 @@ public sealed record KnowledgePackage
         {
             throw new ArgumentException("Package id must not be empty.", nameof(id));
         }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Package name must not be empty.", nameof(name));
         }
+
         SchemaVersion = schemaVersion;
         Id = id;
         Name = name;
         Description = description;
-        Concepts = concepts?.ToImmutableArray() ?? ImmutableArray<KnowledgeConcept>.Empty;
-        Facts = facts?.ToImmutableArray() ?? ImmutableArray<KnowledgeFact>.Empty;
-        Rules = rules?.ToImmutableArray() ?? ImmutableArray<KnowledgeRule>.Empty;
+        Concepts = concepts?.ToImmutableArray() ?? [];
+        Facts = facts?.ToImmutableArray() ?? [];
+        Rules = rules?.ToImmutableArray() ?? [];
     }
+
     public SchemaVersion SchemaVersion { get; }
+
     public string Id { get; }
+
     public string Name { get; }
+
     public string? Description { get; }
+
     public ImmutableArray<KnowledgeConcept> Concepts { get; }
+
     public ImmutableArray<KnowledgeFact> Facts { get; }
+
     public ImmutableArray<KnowledgeRule> Rules { get; }
+
     // ImmutableArray<T> compares by reference of its backing array, so the record's
     // synthesized equality would treat equal-but-distinct content as unequal.
     public bool Equals(KnowledgePackage? other)
@@ -42,6 +54,7 @@ public sealed record KnowledgePackage
         {
             return false;
         }
+
         return SchemaVersion == other.SchemaVersion
             && Id == other.Id
             && Name == other.Name
@@ -50,25 +63,29 @@ public sealed record KnowledgePackage
             && Facts.SequenceEqual(other.Facts)
             && Rules.SequenceEqual(other.Rules);
     }
+
     public override int GetHashCode()
     {
-        var hash = new HashCode();
+        HashCode hash = default;
         hash.Add(SchemaVersion);
         hash.Add(Id);
         hash.Add(Name);
         hash.Add(Description);
-        foreach (var concept in Concepts)
+        foreach (KnowledgeConcept concept in Concepts)
         {
             hash.Add(concept);
         }
-        foreach (var fact in Facts)
+
+        foreach (KnowledgeFact fact in Facts)
         {
             hash.Add(fact);
         }
-        foreach (var rule in Rules)
+
+        foreach (KnowledgeRule rule in Rules)
         {
             hash.Add(rule);
         }
+
         return hash.ToHashCode();
     }
 }

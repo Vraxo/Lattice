@@ -1,19 +1,22 @@
 namespace Lattice.Core.Tests;
+
 public sealed class SchemaVersionTests
 {
     [Fact]
     public void ParsesMajorAndMinor()
     {
-        Assert.True(SchemaVersion.TryParse("1.0", out var version));
+        Assert.True(SchemaVersion.TryParse("1.0", out SchemaVersion version));
         Assert.Equal(1, version.Major);
         Assert.Equal(0, version.Minor);
     }
+
     [Fact]
     public void ParsesMultiDigitMinor()
     {
-        Assert.True(SchemaVersion.TryParse("1.12", out var version));
+        Assert.True(SchemaVersion.TryParse("1.12", out SchemaVersion version));
         Assert.Equal(12, version.Minor);
     }
+
     [Theory]
     [InlineData("")]
     [InlineData("1")]
@@ -26,6 +29,7 @@ public sealed class SchemaVersionTests
     {
         Assert.False(SchemaVersion.TryParse(text, out _));
     }
+
     [Fact]
     public void ToStringRoundTrips()
     {

@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class ArgumentBagTests
 {
     [Fact]
@@ -6,54 +7,60 @@ public sealed class ArgumentBagTests
     {
         Assert.Empty(ArgumentBag.Empty.Entries);
     }
+
     [Fact]
     public void FromOrdersEntriesByName()
     {
-        var bag = ArgumentBag.From(new[]
-        {
+        ArgumentBag bag = ArgumentBag.From(
+        [
             new ArgumentEntry("b", ArgumentValue.FromInteger(2)),
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
-        });
-        Assert.Equal(new[] { "a", "b" }, bag.Entries.Select(entry => entry.Name));
+        ]);
+        Assert.Equal(["a", "b"], bag.Entries.Select(entry => entry.Name));
     }
+
     [Fact]
     public void BagsWithSameEntriesInDifferentOrderAreEqual()
     {
-        var first = ArgumentBag.From(new[]
-        {
+        ArgumentBag first = ArgumentBag.From(
+        [
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
             new ArgumentEntry("b", ArgumentValue.FromInteger(2)),
-        });
-        var second = ArgumentBag.From(new[]
-        {
+        ]);
+        ArgumentBag second = ArgumentBag.From(
+        [
             new ArgumentEntry("b", ArgumentValue.FromInteger(2)),
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
-        });
+        ]);
         Assert.Equal(first, second);
     }
+
     [Fact]
     public void FromRejectsDuplicateNames()
     {
-        var entries = new[]
-        {
+        ArgumentEntry[] entries =
+        [
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
             new ArgumentEntry("a", ArgumentValue.FromInteger(2)),
-        };
+        ];
         Assert.Throws<ArgumentException>(() => ArgumentBag.From(entries));
     }
+
     [Fact]
     public void AddAppendsEntry()
     {
-        var bag = ArgumentBag.Empty.Add(new ArgumentEntry("a", ArgumentValue.FromInteger(1)));
+        ArgumentBag bag = ArgumentBag.Empty.Add(new ArgumentEntry("a", ArgumentValue.FromInteger(1)));
         Assert.Single(bag.Entries);
     }
+
     [Fact]
     public void TryGetValueFindsExistingEntry()
     {
-        var bag = ArgumentBag.From(new[] { new ArgumentEntry("a", ArgumentValue.FromInteger(1)) });
-        Assert.True(bag.TryGetValue("a", out var value));
+        ArgumentBag bag = ArgumentBag.From([new ArgumentEntry("a", ArgumentValue.FromInteger(1))]);
+        Assert.True(bag.TryGetValue("a", out ArgumentValue? value));
         Assert.Equal(ArgumentValue.FromInteger(1), value);
     }
+
     [Fact]
     public void TryGetValueReturnsFalseForMissingEntry()
     {

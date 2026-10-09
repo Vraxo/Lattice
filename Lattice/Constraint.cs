@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public sealed record Constraint
 {
     public Constraint(string description)
@@ -7,7 +8,9 @@ public sealed record Constraint
         {
             throw new ArgumentException("Constraint description must not be empty.", nameof(description));
         }
+
         Description = description;
     }
+
     public string Description { get; }
 }

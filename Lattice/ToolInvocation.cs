@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public sealed record ToolInvocation
 {
     public ToolInvocation(ToolId toolId, ArgumentBag arguments, ToolResult result)
@@ -9,7 +10,10 @@ public sealed record ToolInvocation
         Arguments = arguments;
         Result = result;
     }
+
     public ToolId ToolId { get; }
+
     public ArgumentBag Arguments { get; }
+
     public ToolResult Result { get; }
 }
