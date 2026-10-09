@@ -10,4 +10,7 @@ public static class FileToolErrorCodes
     public const string ReadFailed = "files.file.read-failed";
     public const string QueryEmpty = "files.search.query-empty";
     public const string QueryInvalid = "files.search.query-invalid";
+    public const string PatchContextNotFound = "files.patch.context-not-found";
+    public const string PatchContextAmbiguous = "files.patch.context-ambiguous";
+    public const string WriteFailed = "files.write.failed";
 }
