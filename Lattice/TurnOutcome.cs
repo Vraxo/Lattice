@@ -10,4 +10,7 @@ public enum TurnOutcome
     FactRecorded,
     GoalRecorded,
     ConstraintNotSupported,
+    AskedUser,
+    Responded,
+    Blocked,
 }

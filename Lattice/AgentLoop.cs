@@ -1,69 +1,92 @@
 using System.Globalization;
 namespace Lattice.Core;
 /// <summary>
-/// Runs a single bounded turn: interprets one controlled statement, acts on it, records the
-/// result in the session, and produces a response. Multi-statement planning is out of scope.
+/// Runs a single bounded turn. It interprets the incoming statement into structured candidates,
+/// asks <see cref="PolicySelector"/> to choose one, executes the chosen proposal, and records the
+/// result. The loop does not decide by switching on the incoming statement type; the only switch
+/// is over the already-selected proposal, which the execution layer necessarily handles.
 /// </summary>
 public sealed class AgentLoop
 {
     private readonly ToolRegistry _registry;
     private readonly ToolPermissionPolicy _policy;
-    public AgentLoop(ToolRegistry registry, ToolPermissionPolicy policy)
+    private readonly PolicySelector _selector;
+    private readonly RequestInterpretation _interpretation;
+    public AgentLoop(
+        ToolRegistry registry,
+        ToolPermissionPolicy policy,
+        PolicySelector? selector = null,
+        RequestInterpretation? interpretation = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(policy);
         _registry = registry;
         _policy = policy;
+        _selector = selector ?? PolicySelector.Default;
+        _interpretation = interpretation ?? RequestInterpretation.Unknown(string.Empty, "No request interpretation was supplied.");
     }
     public AgentTurnResult Run(Session session, IControlledStatement statement)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(statement);
-        return statement switch
+        var interpreted = ControlledStatementInterpreter.Interpret(session, statement);
+        if (interpreted.IsResolved)
         {
-            ActionStatement action => RunAction(session, action),
-            FactStatement fact => RunFact(session, fact),
-            GoalStatement goal => RunGoal(session, goal),
-            ConstraintStatement => new AgentTurnResult(
+            return new AgentTurnResult(
+                interpreted.Session,
+                interpreted.ResolvedOutcome!.Value,
+                interpreted.ResolvedResponse!);
+        }
+        var context = new ActionSelectionContext(interpreted.Session, _interpretation);
+        var selection = _selector.Select(context, interpreted.Candidates);
+        return Execute(interpreted.Session, selection);
+    }
+    private AgentTurnResult Execute(Session session, ActionSelection selection)
+    {
+        // A blocked selection carries a proposal the user should see (typically a question).
+        if (!selection.IsSelected)
+        {
+            return new AgentTurnResult(
                 session,
-                TurnOutcome.ConstraintNotSupported,
-                "Constraints are not yet attached to a goal; no change was made."),
+                TurnOutcome.Blocked,
+                DescribeProposal(selection.Proposal));
+        }
+        return selection.Proposal switch
+        {
+            InvokeToolProposal invoke => ExecuteTool(session, invoke),
+            AskUserProposal ask => new AgentTurnResult(session, TurnOutcome.AskedUser, ask.Request.Question),
+            RespondProposal respond => new AgentTurnResult(session, TurnOutcome.Responded, respond.Text),
+            ContinueProposal or FinishProposal => new AgentTurnResult(
+                session,
+                TurnOutcome.Blocked,
+                DescribeProposal(selection.Proposal)),
             _ => throw new InvalidOperationException(
-                $"Unhandled statement type '{statement.GetType().Name}'."),
+                $"Unhandled proposal type '{selection.Proposal.GetType().Name}'."),
         };
     }
-    private AgentTurnResult RunAction(Session session, ActionStatement action)
+    private AgentTurnResult ExecuteTool(Session session, InvokeToolProposal proposal)
     {
-        var toolId = new ToolId(action.ToolId);
-        var arguments = ToArgumentBag(action.Arguments);
-        if (!_registry.TryResolve(toolId, out var tool))
+        if (!_registry.TryResolve(proposal.ToolId, out var tool))
         {
             return new AgentTurnResult(
                 session,
                 TurnOutcome.ToolUnavailable,
-                $"Tool '{action.ToolId}' is not available.");
+                $"Tool '{proposal.ToolId.Value}' is not available.");
         }
-        if (IsDuplicate(session, toolId, arguments))
+        if (IsDuplicate(session, proposal.ToolId, proposal.Arguments))
         {
             return new AgentTurnResult(
                 session,
                 TurnOutcome.DuplicateAction,
-                $"The action for '{action.ToolId}' with the same arguments was already attempted.");
+                $"The action for '{proposal.ToolId.Value}' with the same arguments was already attempted.");
         }
-        var invocation = ToolExecutor.Execute(tool, arguments, _policy);
+        var invocation = ToolExecutor.Execute(tool, proposal.Arguments, _policy);
         var updated = session.AddToolInvocation(invocation);
-        return new AgentTurnResult(updated, Classify(invocation), Describe(action.ToolId, invocation), invocation);
-    }
-    private static AgentTurnResult RunFact(Session session, FactStatement fact)
-    {
-        var updated = session.AddUserAssertion($"{fact.Subject} {fact.Predicate} {fact.Value}", "controlled");
-        return new AgentTurnResult(updated, TurnOutcome.FactRecorded, "Recorded the fact.");
-    }
-    private static AgentTurnResult RunGoal(Session session, GoalStatement goal)
-    {
-        var created = new Goal(GoalId.New(), goal.Description, goal.Completion, GoalStatus.Incomplete);
-        var updated = session.AddGoal(created);
-        return new AgentTurnResult(updated, TurnOutcome.GoalRecorded, "Recorded the goal.");
+        return new AgentTurnResult(
+            updated,
+            Classify(invocation),
+            DescribeInvocation(proposal.ToolId.Value, invocation),
+            invocation);
     }
     private static TurnOutcome Classify(ToolInvocation invocation)
     {
@@ -78,7 +101,7 @@ public sealed class AgentLoop
             _ => TurnOutcome.ToolFailed,
         };
     }
-    private static string Describe(string toolId, ToolInvocation invocation)
+    private static string DescribeInvocation(string toolId, ToolInvocation invocation)
     {
         if (invocation.Result.IsSuccess)
         {
@@ -92,6 +115,15 @@ public sealed class AgentLoop
             _ => $"Tool '{toolId}' failed: {invocation.Result.Error.Message}",
         };
     }
+    private static string DescribeProposal(ActionProposal proposal) => proposal switch
+    {
+        AskUserProposal ask => ask.Request.Question,
+        ContinueProposal cont => $"Continuing: {cont.Reason}",
+        FinishProposal finish => $"Finishing: {finish.Reason}",
+        RespondProposal respond => respond.Text,
+        InvokeToolProposal invoke => $"Invoking '{invoke.ToolId.Value}'.",
+        _ => proposal.GetType().Name,
+    };
     private static bool IsDuplicate(Session session, ToolId toolId, ArgumentBag arguments)
     {
         foreach (var existing in session.ToolInvocations)
@@ -103,21 +135,4 @@ public sealed class AgentLoop
         }
         return false;
     }
-    private static ArgumentBag ToArgumentBag(IEnumerable<ActionArgument> arguments)
-    {
-        var entries = arguments.Select(ToEntry);
-        return ArgumentBag.From(entries);
-    }
-    private static ArgumentEntry ToEntry(ActionArgument argument) => new(
-        argument.Name,
-        argument.Type switch
-        {
-            ToolParameterType.String => ArgumentValue.FromString(argument.Value),
-            ToolParameterType.Integer => ArgumentValue.FromInteger(
-                long.Parse(argument.Value, CultureInfo.InvariantCulture)),
-            ToolParameterType.Number => ArgumentValue.FromNumber(
-                double.Parse(argument.Value, CultureInfo.InvariantCulture)),
-            ToolParameterType.Boolean => ArgumentValue.FromBoolean(bool.Parse(argument.Value)),
-            _ => throw new InvalidOperationException($"Unhandled argument type '{argument.Type}'."),
-        });
 }

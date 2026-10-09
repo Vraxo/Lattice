@@ -27,6 +27,33 @@ public sealed class PolicySelector
         new ClarifyUnresolvedInterpretationRule(),
         new ContinueWhenGoalIncompleteRule(),
     });
+    /// <summary>
+    /// Selects among explicitly supplied candidates. When more than one candidate is supplied
+    /// and no rule prefers one, the selection is blocked rather than choosing arbitrarily.
+    /// </summary>
+    public ActionSelection Select(ActionSelectionContext context, IEnumerable<ActionProposal> candidates)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(candidates);
+        var list = candidates.ToImmutableArray();
+        if (list.IsEmpty)
+        {
+            return Select(context);
+        }
+        if (list.Length == 1)
+        {
+            return ActionSelection.Selected(list[0], "The only supplied candidate was selected.");
+        }
+        var request = new ClarificationRequest(
+            ClarificationKind.MultipleCandidates,
+            "More than one action could satisfy the request. Which one should I take?");
+        return ActionSelection.Blocked(
+            new AskUserProposal(request),
+            $"No rule distinguished {list.Length} supplied candidates.");
+    }
+    /// <summary>
+    /// Selects using the registered rules alone, with no externally supplied candidates.
+    /// </summary>
     public ActionSelection Select(ActionSelectionContext context)
     {
         ArgumentNullException.ThrowIfNull(context);

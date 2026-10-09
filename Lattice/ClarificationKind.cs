@@ -5,4 +5,5 @@ public enum ClarificationKind
     AmbiguousIntent,
     UnknownIntent,
     NoEligibleAction,
+    MultipleCandidates,
 }
