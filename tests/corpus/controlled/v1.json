@@ -1,0 +1,234 @@
+{
+  "corpusVersion": "1.0",
+  "languageVersion": "1.0",
+  "entries": [
+    {
+      "id": "fact.basic",
+      "input": "fact water | boils_at | 100C",
+      "expect": { "statement": { "kind": "fact", "subject": "water", "predicate": "boils_at", "value": "100C" } },
+      "notes": "Canonical three-field fact."
+    },
+    {
+      "id": "fact.value-with-spaces",
+      "input": "fact water | temperature | room temperature",
+      "expect": { "statement": { "kind": "fact", "subject": "water", "predicate": "temperature", "value": "room temperature" } },
+      "notes": "Value may contain internal whitespace."
+    },
+    {
+      "id": "fact.value-with-period",
+      "input": "fact water | boils_at | 100C.",
+      "expect": { "statement": { "kind": "fact", "subject": "water", "predicate": "boils_at", "value": "100C." } },
+      "notes": "A trailing period is part of the value; the language does not strip terminators."
+    },
+    {
+      "id": "fact.surrounding-whitespace",
+      "input": "  fact   water | boils_at | 100C  ",
+      "expect": { "statement": { "kind": "fact", "subject": "water", "predicate": "boils_at", "value": "100C" } },
+      "notes": "Fields are trimmed; repeated spaces around separators are tolerated."
+    },
+    {
+      "id": "goal.basic",
+      "input": "goal Summarize the file. | A summary exists.",
+      "expect": { "statement": { "kind": "goal", "description": "Summarize the file.", "completion": "A summary exists." } },
+      "notes": "Canonical two-field goal."
+    },
+    {
+      "id": "constraint.basic",
+      "input": "constraint Do not change other sections.",
+      "expect": { "statement": { "kind": "constraint", "description": "Do not change other sections." } },
+      "notes": "Canonical one-field constraint."
+    },
+    {
+      "id": "action.integers",
+      "input": "action calculator | left=2 | right=3",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "calculator",
+          "arguments": [
+            { "name": "left", "type": "integer", "value": "2" },
+            { "name": "right", "type": "integer", "value": "3" }
+          ]
+        }
+      },
+      "notes": "All-digit values type as integer."
+    },
+    {
+      "id": "action.negative-integer",
+      "input": "action calculator | left=-7 | right=0",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "calculator",
+          "arguments": [
+            { "name": "left", "type": "integer", "value": "-7" },
+            { "name": "right", "type": "integer", "value": "0" }
+          ]
+        }
+      },
+      "notes": "Leading minus and zero are valid integers."
+    },
+    {
+      "id": "action.number",
+      "input": "action scale | factor=1.5",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "scale",
+          "arguments": [{ "name": "factor", "type": "number", "value": "1.5" }]
+        }
+      },
+      "notes": "A mandatory decimal point types as number."
+    },
+    {
+      "id": "action.boolean",
+      "input": "action flag | enabled=TRUE",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "flag",
+          "arguments": [{ "name": "enabled", "type": "boolean", "value": "TRUE" }]
+        }
+      },
+      "notes": "Boolean words are recognised case-insensitively."
+    },
+    {
+      "id": "action.string-with-space",
+      "input": "action echo | message=hello world",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "echo",
+          "arguments": [{ "name": "message", "type": "string", "value": "hello world" }]
+        }
+      },
+      "notes": "Non-numeric values type as string and may contain spaces."
+    },
+    {
+      "id": "action.string-not-integer",
+      "input": "action echo | message=100C",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "echo",
+          "arguments": [{ "name": "message", "type": "string", "value": "100C" }]
+        }
+      },
+      "notes": "100C is not all digits, so it is a string, not an integer."
+    },
+    {
+      "id": "action.no-arguments",
+      "input": "action clock",
+      "expect": { "statement": { "kind": "action", "toolId": "clock", "arguments": [] } },
+      "notes": "Zero arguments is valid."
+    },
+    {
+      "id": "action.string-trailing-point",
+      "input": "action scale | factor=1.",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "scale",
+          "arguments": [{ "name": "factor", "type": "string", "value": "1." }]
+        }
+      },
+      "notes": "A number requires digits after the point; '1.' is a string."
+    },
+    {
+      "id": "action.string-leading-point",
+      "input": "action scale | factor=.5",
+      "expect": {
+        "statement": {
+          "kind": "action",
+          "toolId": "scale",
+          "arguments": [{ "name": "factor", "type": "string", "value": ".5" }]
+        }
+      },
+      "notes": "A number requires digits before the point; '.5' is a string."
+    },
+    {
+      "id": "error.empty",
+      "input": "   ",
+      "expect": { "error": { "kind": "empty" } },
+      "notes": "Whitespace-only input is empty."
+    },
+    {
+      "id": "error.unknown-keyword",
+      "input": "sing a song",
+      "expect": { "error": { "kind": "unknown-keyword" } },
+      "notes": "No recognised leading keyword."
+    },
+    {
+      "id": "error.keyword-case-sensitive",
+      "input": "Fact water | boils_at | 100C",
+      "expect": { "error": { "kind": "unknown-keyword" } },
+      "notes": "Keywords are case-sensitive; 'Fact' is not 'fact'."
+    },
+    {
+      "id": "error.fact.missing-field",
+      "input": "fact water | boils_at",
+      "expect": { "error": { "kind": "missing-field" } },
+      "notes": "A fact needs three fields."
+    },
+    {
+      "id": "error.fact.extra-field",
+      "input": "fact water | boils_at | 100C | extra",
+      "expect": { "error": { "kind": "extra-field" } },
+      "notes": "A fact takes exactly three fields."
+    },
+    {
+      "id": "error.fact.empty-subject",
+      "input": "fact  | boils_at | 100C",
+      "expect": { "error": { "kind": "empty-field" } },
+      "notes": "Subject is empty after trimming."
+    },
+    {
+      "id": "error.goal.missing-completion",
+      "input": "goal Say hello",
+      "expect": { "error": { "kind": "missing-field" } },
+      "notes": "Completion is required and is not inferred from the description."
+    },
+    {
+      "id": "error.constraint.empty",
+      "input": "constraint   ",
+      "expect": { "error": { "kind": "empty-field" } },
+      "notes": "Constraint description is empty after trimming."
+    },
+    {
+      "id": "error.action.malformed-argument",
+      "input": "action calculator | left 2",
+      "expect": { "error": { "kind": "malformed-argument" } },
+      "notes": "Argument is missing the '=' separator."
+    },
+    {
+      "id": "error.action.empty-argument-name",
+      "input": "action calculator | =2",
+      "expect": { "error": { "kind": "malformed-argument" } },
+      "notes": "Argument name is empty."
+    },
+    {
+      "id": "error.action.empty-argument-value",
+      "input": "action calculator | left=",
+      "expect": { "error": { "kind": "malformed-argument" } },
+      "notes": "An empty value is malformed, not an empty string."
+    },
+    {
+      "id": "error.action.duplicate-argument",
+      "input": "action calculator | left=2 | left=3",
+      "expect": { "error": { "kind": "duplicate-argument" } },
+      "notes": "Argument names must be unique within a statement."
+    },
+    {
+      "id": "error.action.invalid-tool-id",
+      "input": "action bad id | left=2",
+      "expect": { "error": { "kind": "invalid-tool-id" } },
+      "notes": "Tool id must match ^[A-Za-z0-9._-]+$; a space is not allowed."
+    },
+    {
+      "id": "error.action.empty-tool-id",
+      "input": "action  | left=2",
+      "expect": { "error": { "kind": "invalid-tool-id" } },
+      "notes": "Tool id is empty after trimming."
+    }
+  ]
+}

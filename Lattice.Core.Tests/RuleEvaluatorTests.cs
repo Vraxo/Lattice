@@ -94,6 +94,7 @@ public sealed class RuleEvaluatorTests
         KnowledgeFact[] facts = [Fact("fact.a", "p", "v")];
         ImmutableArray<Derivation> first = RuleEvaluator.Evaluate(rules, facts);
         ImmutableArray<Derivation> second = RuleEvaluator.Evaluate(rules, facts);
+
         // Compare element-wise: Assert.Equal on two ImmutableArray<T> values binds to the
         // generic overload and uses ImmutableArray's reference-based struct equality.
         Assert.True(first.SequenceEqual(second));
