@@ -1,0 +1,101 @@
+using System.Collections.Immutable;
+namespace Lattice.Core;
+public sealed record RequestInterpretation
+{
+    private RequestInterpretation(
+        IntentMatchKind kind,
+        RequestIntentKind intent,
+        IntentMatch? match,
+        ImmutableArray<IntentMatch> candidates,
+        string text,
+        SourceSpan span,
+        string? diagnostic)
+    {
+        Kind = kind;
+        Intent = intent;
+        Match = match;
+        Candidates = candidates;
+        Text = text;
+        Span = span;
+        Diagnostic = diagnostic;
+    }
+    public IntentMatchKind Kind { get; }
+    public RequestIntentKind Intent { get; }
+    public IntentMatch? Match { get; }
+    public ImmutableArray<IntentMatch> Candidates { get; }
+    public string Text { get; }
+    public SourceSpan Span { get; }
+    public string? Diagnostic { get; }
+    public static RequestInterpretation Matched(string text, IntentMatch match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+        return new RequestInterpretation(
+            IntentMatchKind.Matched,
+            match.Intent,
+            match,
+            ImmutableArray<IntentMatch>.Empty,
+            text,
+            new SourceSpan(0, text.Length),
+            null);
+    }
+    public static RequestInterpretation Unknown(string text, string diagnostic)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(diagnostic);
+        return new RequestInterpretation(
+            IntentMatchKind.Unknown,
+            RequestIntentKind.Unknown,
+            null,
+            ImmutableArray<IntentMatch>.Empty,
+            text,
+            new SourceSpan(0, text.Length),
+            diagnostic);
+    }
+    public static RequestInterpretation Ambiguous(string text, IEnumerable<IntentMatch> candidates)
+    {
+        ArgumentNullException.ThrowIfNull(candidates);
+        var array = candidates.ToImmutableArray();
+        if (array.Length < 2)
+        {
+            throw new ArgumentException("An ambiguous interpretation requires at least two candidates.", nameof(candidates));
+        }
+        return new RequestInterpretation(
+            IntentMatchKind.Ambiguous,
+            RequestIntentKind.Unknown,
+            null,
+            array,
+            text,
+            new SourceSpan(0, text.Length),
+            "More than one pattern matched with equal specificity.");
+    }
+    // ImmutableArray<T> compares by reference of its backing array, so the record's
+    // synthesized equality would treat equal-but-distinct candidate sets as unequal.
+    public bool Equals(RequestInterpretation? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+        return Kind == other.Kind
+            && Intent == other.Intent
+            && Match == other.Match
+            && Text == other.Text
+            && Span == other.Span
+            && Diagnostic == other.Diagnostic
+            && Candidates.SequenceEqual(other.Candidates);
+    }
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Kind);
+        hash.Add(Intent);
+        hash.Add(Match);
+        hash.Add(Text);
+        hash.Add(Span);
+        hash.Add(Diagnostic);
+        foreach (var candidate in Candidates)
+        {
+            hash.Add(candidate);
+        }
+        return hash.ToHashCode();
+    }
+}

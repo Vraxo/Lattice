@@ -1,0 +1,18 @@
+{
+  "patternVersion": "1.0",
+  "patterns": [
+    { "id": "question.what-is", "intent": "question", "template": "what is {topic}" },
+    { "id": "question.who-is", "intent": "question", "template": "who is {topic}" },
+    { "id": "question.is", "intent": "question", "template": "is {subject}" },
+    { "id": "explain.plain", "intent": "explanation", "template": "explain {topic}" },
+    { "id": "explain.why", "intent": "explanation", "template": "why {subject}" },
+    { "id": "explain.what-does", "intent": "explanation", "template": "what does {subject}" },
+    { "id": "find.symbol", "intent": "find-symbol", "template": "find {symbol}" },
+    { "id": "find.symbol-named", "intent": "find-symbol", "template": "find symbol {symbol}" },
+    { "id": "inspect.path", "intent": "inspect-path", "template": "inspect {path}" },
+    { "id": "inspect.read", "intent": "inspect-path", "template": "read {path}" },
+    { "id": "inspect.open", "intent": "inspect-path", "template": "open {path}" },
+    { "id": "show.inspect", "intent": "inspect-path", "template": "show {target}" },
+    { "id": "show.explain", "intent": "explanation", "template": "show {target}" }
+  ]
+}
