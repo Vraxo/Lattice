@@ -51,14 +51,15 @@ public sealed class SystemProcessRunnerTests
     }
 
     [Fact]
-    public void CancellationDuringExecutionIsReportedWithoutThrowing()
+    public void CancellationIsReportedWithoutThrowing()
     {
         using TempWorkspace workspace = new();
         SystemProcessRunner runner = new();
         using CancellationTokenSource source = new();
-        // Cancel shortly after the process starts, so the kill happens mid-flight. This is the
-        // path that faults the output reads; a pre-cancelled token never reaches it.
-        source.CancelAfter(TimeSpan.FromMilliseconds(150));
+        // The delay must be far shorter than the process runtime, not longer. Cancellation has to
+        // land before the process exits; starting any process takes more than a millisecond, so
+        // this reliably exercises the kill-during-read path without racing the command's speed.
+        source.CancelAfter(TimeSpan.FromMilliseconds(1));
         ProcessOutcome outcome = runner.Run(
             "dotnet",
             ["--info"],
