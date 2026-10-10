@@ -7,15 +7,15 @@ using Microsoft.CodeAnalysis.Text;
 namespace Lattice.CSharp;
 
 /// <summary>
-/// Compiles C# source against the running runtime's platform assemblies and reports semantic
-/// diagnostics and declared symbols. References come from the host runtime rather than a package,
-/// so no additional dependency is introduced.
+/// Compiles C# source against a reference set and reports semantic diagnostics and declared
+/// symbols. When no references are supplied, the running runtime's platform assemblies are used.
+/// Project files, MSBuild, and NuGet resolution are deliberately out of scope.
 /// </summary>
 public static class CSharpSemanticInspector
 {
     public const int MaxDiagnostics = 100;
     public const int MaxDeclarations = 200;
-    private static readonly ImmutableArray<MetadataReference> DefaultReferences = LoadDefaultReferences();
+    private static readonly ImmutableArray<string> PlatformReferencePaths = LoadPlatformReferencePaths();
 
     public static Result<SemanticInspection> Inspect(string source, string? nameFilter = null)
     {
@@ -25,17 +25,88 @@ public static class CSharpSemanticInspector
                 new Error(CSharpErrorCodes.SourceRequired, "Source text is required."));
         }
 
-        SyntaxTree tree = CSharpSyntaxTree.ParseText(source);
+        return Inspect([new CSharpSourceFile("source.cs", source)], null, nameFilter);
+    }
+
+    /// <summary>
+    /// Compiles all supplied files as one compilation. <paramref name="referencePaths"/> names the
+    /// metadata references to use; when null, the host runtime's platform assemblies are used.
+    /// An empty or unusable reference set is reported as an inspector failure, never as
+    /// diagnostics about the supplied source.
+    /// </summary>
+    /// <returns></returns>
+    public static Result<SemanticInspection> Inspect(
+        IEnumerable<CSharpSourceFile> files,
+        IEnumerable<string>? referencePaths = null,
+        string? nameFilter = null)
+    {
+        if (files is null)
+        {
+            return Result<SemanticInspection>.Failure(
+                new Error(CSharpErrorCodes.SourceRequired, "Source files are required."));
+        }
+
+        ImmutableArray<CSharpSourceFile> fileList = [.. files];
+        if (fileList.IsEmpty)
+        {
+            return Result<SemanticInspection>.Failure(
+                new Error(CSharpErrorCodes.SourceRequired, "At least one source file is required."));
+        }
+
+        Result<ImmutableArray<MetadataReference>> references = ResolveReferences(referencePaths);
+        if (!references.IsSuccess)
+        {
+            return Result<SemanticInspection>.Failure(references.Error!);
+        }
+
+        ImmutableArray<SyntaxTree> trees = [.. fileList.Select(file => CSharpSyntaxTree.ParseText(file.Text, path: file.Path))];
         CSharpCompilation compilation = CSharpCompilation.Create(
             assemblyName: "Lattice.Inspected",
-            syntaxTrees: [tree],
-            references: DefaultReferences,
+            syntaxTrees: trees,
+            references: references.Value,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-        SemanticModel model = compilation.GetSemanticModel(tree);
         (ImmutableArray<SyntaxDiagnostic> diagnostics, bool hasError) = CollectDiagnostics(compilation);
-        ImmutableArray<SemanticSymbol> declarations = CollectDeclarations(tree, model, nameFilter);
+        ImmutableArray<SemanticSymbol> declarations = CollectDeclarations(trees, compilation, nameFilter);
         return Result<SemanticInspection>.Success(
             new SemanticInspection(!hasError, diagnostics, declarations));
+    }
+
+    private static Result<ImmutableArray<MetadataReference>> ResolveReferences(
+        IEnumerable<string>? referencePaths)
+    {
+        ImmutableArray<string> paths = referencePaths is null
+            ? PlatformReferencePaths
+            : [.. referencePaths];
+        if (paths.IsEmpty)
+        {
+            return Result<ImmutableArray<MetadataReference>>.Failure(new Error(
+                CSharpErrorCodes.ReferencesUnavailable,
+                "No metadata references were supplied, and no platform references are available."));
+        }
+
+        ImmutableArray<MetadataReference>.Builder builder = ImmutableArray.CreateBuilder<MetadataReference>();
+        foreach (string path in paths)
+        {
+            if (!File.Exists(path))
+            {
+                return Result<ImmutableArray<MetadataReference>>.Failure(new Error(
+                    CSharpErrorCodes.ReferencesUnavailable,
+                    $"Reference '{path}' does not exist."));
+            }
+
+            try
+            {
+                builder.Add(MetadataReference.CreateFromFile(path));
+            }
+            catch (Exception exception) when (exception is IOException or BadImageFormatException)
+            {
+                return Result<ImmutableArray<MetadataReference>>.Failure(new Error(
+                    CSharpErrorCodes.ReferencesUnavailable,
+                    $"Reference '{path}' could not be loaded: {exception.Message}"));
+            }
+        }
+
+        return Result<ImmutableArray<MetadataReference>>.Success(builder.ToImmutable());
     }
 
     private static (ImmutableArray<SyntaxDiagnostic> Diagnostics, bool HasError) CollectDiagnostics(
@@ -81,43 +152,54 @@ public static class CSharpSemanticInspector
     }
 
     private static ImmutableArray<SemanticSymbol> CollectDeclarations(
-        SyntaxTree tree,
-        SemanticModel model,
+        ImmutableArray<SyntaxTree> trees,
+        Compilation compilation,
         string? nameFilter)
     {
         ImmutableArray<SemanticSymbol>.Builder builder = ImmutableArray.CreateBuilder<SemanticSymbol>();
-        foreach (SyntaxNode node in tree.GetRoot().DescendantNodes())
+        foreach (SyntaxTree tree in trees)
         {
             if (builder.Count >= MaxDeclarations)
             {
                 break;
             }
 
-            ISymbol? symbol = model.GetDeclaredSymbol(node);
-            if (symbol is null)
+            SemanticModel model = compilation.GetSemanticModel(tree);
+            string path = tree.FilePath;
+            foreach (SyntaxNode node in tree.GetRoot().DescendantNodes())
             {
-                continue;
-            }
+                if (builder.Count >= MaxDeclarations)
+                {
+                    break;
+                }
 
-            if (nameFilter is not null
-                && !string.Equals(symbol.Name, nameFilter, StringComparison.Ordinal))
-            {
-                continue;
-            }
+                ISymbol? symbol = model.GetDeclaredSymbol(node);
+                if (symbol is null)
+                {
+                    continue;
+                }
 
-            Location? location = symbol.Locations.FirstOrDefault();
-            if (location is null)
-            {
-                continue;
-            }
+                if (nameFilter is not null
+                    && !string.Equals(symbol.Name, nameFilter, StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
-            LinePosition position = location.GetLineSpan().StartLinePosition;
-            builder.Add(new SemanticSymbol(
-                symbol.Name,
-                symbol.Kind.ToString(),
-                position.Line + 1,
-                position.Character + 1,
-                TypeOf(symbol)));
+                Location? location = symbol.Locations.FirstOrDefault();
+                if (location is null)
+                {
+                    continue;
+                }
+
+                LinePosition position = location.GetLineSpan().StartLinePosition;
+                builder.Add(new SemanticSymbol(
+                    path,
+                    symbol.Name,
+                    symbol.Kind.ToString(),
+                    position.Line + 1,
+                    position.Character + 1,
+                    TypeOf(symbol)));
+            }
         }
 
         return builder.ToImmutable();
@@ -136,7 +218,7 @@ public static class CSharpSemanticInspector
         };
     }
 
-    private static ImmutableArray<MetadataReference> LoadDefaultReferences()
+    private static ImmutableArray<string> LoadPlatformReferencePaths()
     {
         string? trusted = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
         if (string.IsNullOrEmpty(trusted))
@@ -144,24 +226,11 @@ public static class CSharpSemanticInspector
             return [];
         }
 
-        ImmutableArray<MetadataReference>.Builder builder = ImmutableArray.CreateBuilder<MetadataReference>();
-        foreach (string path in trusted.Split(Path.PathSeparator))
-        {
-            if (!path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            try
-            {
-                builder.Add(MetadataReference.CreateFromFile(path));
-            }
-            catch (Exception exception) when (exception is IOException or BadImageFormatException)
-            {
-                // Not every platform assembly can be loaded as metadata; skip it.
-            }
-        }
-
-        return builder.ToImmutable();
+        return
+        [
+            .. trusted
+                .Split(Path.PathSeparator)
+                .Where(path => path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)),
+        ];
     }
 }

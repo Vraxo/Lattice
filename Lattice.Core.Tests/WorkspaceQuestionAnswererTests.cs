@@ -1,12 +1,10 @@
 using System.Text.Json;
-
 namespace Lattice.Core.Tests;
-
 public sealed class WorkspaceQuestionAnswererTests
 {
-    public static TheoryData<string, string, string, string> Entries()
+    public static TheoryData<string, string, string> Entries()
     {
-        TheoryData<string, string, string, string> data = [];
+        TheoryData<string, string, string> data = [];
         string path = Path.Combine(AppContext.BaseDirectory, "corpus", "workspace", "v1.json");
         using JsonDocument document = JsonDocument.Parse(File.ReadAllText(path));
         foreach (JsonElement entry in document.RootElement.GetProperty("entries").EnumerateArray())
@@ -16,15 +14,12 @@ public sealed class WorkspaceQuestionAnswererTests
                 .Select(f => f.GetString()!)
                 .OrderBy(f => f, StringComparer.Ordinal);
             data.Add(
-                entry.GetProperty("id").GetString()!,
                 entry.GetProperty("question").GetString()!,
                 entry.GetProperty("expect").GetProperty("status").GetString()!,
                 string.Join(",", files));
         }
-
         return data;
     }
-
     [Theory]
     [MemberData(nameof(Entries))]
     public void MatchesCorpusEntry(string question, string expectedStatus, string expectedFiles)
@@ -40,7 +35,6 @@ public sealed class WorkspaceQuestionAnswererTests
                 .OrderBy(f => f, StringComparer.Ordinal));
         Assert.Equal(expectedFiles, actualFiles);
     }
-
     [Fact]
     public void AnsweredAlwaysCarriesEvidence()
     {
@@ -49,7 +43,6 @@ public sealed class WorkspaceQuestionAnswererTests
         Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
         Assert.NotEmpty(answer.Evidence);
     }
-
     [Fact]
     public void DirectoryQuestionFallsBackToListing()
     {
@@ -58,7 +51,6 @@ public sealed class WorkspaceQuestionAnswererTests
         Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
         Assert.Equal("src", answer.Evidence[0].RelativePath);
     }
-
     [Fact]
     public void UnsupportedIntentDoesNotClaimAnAnswer()
     {
@@ -67,7 +59,6 @@ public sealed class WorkspaceQuestionAnswererTests
         Assert.NotEqual(EvidenceAnswerStatus.Answered, answer.Status);
         Assert.Empty(answer.Evidence);
     }
-
     private static EvidenceAnswer Answer(TempWorkspace workspace, string question)
     {
         WorkspaceRoot root = new(workspace.Path);
@@ -84,7 +75,6 @@ public sealed class WorkspaceQuestionAnswererTests
         RequestInterpretation interpretation = Interpreter().Interpret(question);
         return answerer.Answer(interpretation);
     }
-
     private static RequestInterpreter Interpreter()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "config", "nlp", "patterns.json");
@@ -92,7 +82,6 @@ public sealed class WorkspaceQuestionAnswererTests
         Assert.True(parsed.IsSuccess, parsed.Error?.Message);
         return new RequestInterpreter(parsed.Value);
     }
-
     private static TempWorkspace BuildWorkspace()
     {
         TempWorkspace workspace = new();
@@ -104,7 +93,6 @@ public sealed class WorkspaceQuestionAnswererTests
                 file.GetProperty("path").GetString()!,
                 file.GetProperty("content").GetString()!);
         }
-
         return workspace;
     }
 }

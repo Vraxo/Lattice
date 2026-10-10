@@ -1,6 +1,7 @@
 namespace Lattice.CSharp;
-/// <summary>A declaration found in the source, with its kind, position, and type where known.</summary>
+/// <summary>A declaration found in one of the supplied source files.</summary>
 public sealed record SemanticSymbol(
+    string Path,
     string Name,
     string Kind,
     int Line,
@@ -10,7 +11,7 @@ public sealed record SemanticSymbol(
     public override string ToString()
     {
         return TypeName is null
-            ? $"{Kind} {Name} {Line}:{Column}"
-            : $"{Kind} {Name} {Line}:{Column} : {TypeName}";
+            ? $"{Path}:{Line}:{Column} {Kind} {Name}"
+            : $"{Path}:{Line}:{Column} {Kind} {Name} : {TypeName}";
     }
 }

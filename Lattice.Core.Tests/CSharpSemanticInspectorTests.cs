@@ -99,7 +99,8 @@ public sealed class CSharpSemanticInspectorTests
     [Fact]
     public void NullSourceFails()
     {
-        Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(null!);
+        // Cast disambiguates the null literal between the string and multi-file overloads.
+        Result<SemanticInspection> result = CSharpSemanticInspector.Inspect((string)null!);
         Assert.False(result.IsSuccess);
         Assert.Equal(CSharpErrorCodes.SourceRequired, result.Error!.Code);
     }
