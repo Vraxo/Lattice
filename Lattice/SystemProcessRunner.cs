@@ -1,5 +1,7 @@
 using System.Diagnostics;
+
 namespace Lattice.Core;
+
 /// <summary>
 /// Runs a process via <see cref="Process"/> with captured output, a hard timeout, and cooperative
 /// cancellation. On timeout or cancellation the entire process tree is terminated, so a hung child
@@ -21,6 +23,7 @@ public sealed class SystemProcessRunner : IProcessRunner
         {
             return new ProcessOutcome(-1, string.Empty, string.Empty, timedOut: false, cancelled: true);
         }
+
         ProcessStartInfo startInfo = new()
         {
             FileName = executable,
@@ -34,14 +37,16 @@ public sealed class SystemProcessRunner : IProcessRunner
         {
             startInfo.ArgumentList.Add(argument);
         }
+
         using Process process = new() { StartInfo = startInfo };
         process.Start();
+
         // The cancellation token is deliberately not passed to the reads. Reading buffered output
         // is not the cancellable operation; the process is. Killing the process closes the pipes,
         // which completes these reads normally. Passing the token here makes the reads throw
         // TaskCanceledException and turns a clean cancellation into an AggregateException.
-        Task<string> stdout = process.StandardOutput.ReadToEndAsync();
-        Task<string> stderr = process.StandardError.ReadToEndAsync();
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        Task<string> stderr = process.StandardError.ReadToEndAsync(cancellationToken);
         bool cancelled = false;
         using CancellationTokenRegistration registration = cancellationToken.Register(() =>
         {
@@ -53,15 +58,18 @@ public sealed class SystemProcessRunner : IProcessRunner
             cancelled = true;
             TryKill(process);
         }
+
         bool exited = process.WaitForExit((int)timeout.TotalMilliseconds);
         if (!exited)
         {
             TryKill(process);
             process.WaitForExit();
         }
+
         string output = CollectOutput(stdout);
         string error = CollectOutput(stderr);
         int exitCode = exited ? process.ExitCode : -1;
+
         // A cancellation that arrives just as the process exits is still a cancellation.
         cancelled |= cancellationToken.IsCancellationRequested;
         return new ProcessOutcome(
@@ -71,6 +79,7 @@ public sealed class SystemProcessRunner : IProcessRunner
             timedOut: !exited && !cancelled,
             cancelled: cancelled);
     }
+
     /// <summary>
     /// Collects a stream read result without letting a faulted or cancelled read escalate. A
     /// killed process can fault its output reads, and that must not become the caller's exception.
@@ -89,6 +98,7 @@ public sealed class SystemProcessRunner : IProcessRunner
             return string.Empty;
         }
     }
+
     /// <summary>
     /// Terminates the process tree, tolerating the several ways this can fail when the process
     /// has already exited. A failed kill must not escalate into an exception for the caller.

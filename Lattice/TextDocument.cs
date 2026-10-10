@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+
 namespace Lattice.Core;
 /// <summary>
 /// Immutable, terminator-preserving view of text as a sequence of lines. Reassembling the lines
@@ -12,9 +13,13 @@ public sealed record TextDocument
     {
         Lines = lines;
     }
+
     public ImmutableArray<TextLine> Lines { get; }
+
     public int LineCount => Lines.Length;
+
     /// <summary>Splits text into lines, preserving every terminator exactly.</summary>
+    /// <returns></returns>
     public static TextDocument Parse(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -22,6 +27,7 @@ public sealed record TextDocument
         {
             return new TextDocument([]);
         }
+
         ImmutableArray<TextLine>.Builder builder = ImmutableArray.CreateBuilder<TextLine>();
         int index = 0;
         while (index < text.Length)
@@ -32,14 +38,18 @@ public sealed record TextDocument
                 builder.Add(new TextLine(text[index..], string.Empty));
                 break;
             }
+
             builder.Add(new TextLine(
                 text[index..terminatorIndex],
                 text.Substring(terminatorIndex, terminatorLength)));
             index = terminatorIndex + terminatorLength;
         }
+
         return new TextDocument(builder.ToImmutable());
     }
+
     /// <summary>Reassembles the document into its original text.</summary>
+    /// <returns></returns>
     public string ToText()
     {
         StringBuilder builder = new();
@@ -47,12 +57,15 @@ public sealed record TextDocument
         {
             builder.Append(line.Text);
         }
+
         return builder.ToString();
     }
+
     /// <summary>
     /// Returns the exact source text covered by <paramref name="range"/>, terminators included.
     /// The range must lie within the document; an empty range yields an empty string.
     /// </summary>
+    /// <returns></returns>
     public Result<string> GetText(LineRange range)
     {
         if (range.End > Lines.Length)
@@ -61,17 +74,21 @@ public sealed record TextDocument
                 DocumentErrorCodes.RangeOutOfBounds,
                 $"Range {range} exceeds the document's {Lines.Length} line(s)."));
         }
+
         if (range.IsEmpty)
         {
             return Result<string>.Success(string.Empty);
         }
+
         StringBuilder builder = new();
         for (int i = range.Start; i < range.End; i++)
         {
             builder.Append(Lines[i].Text);
         }
+
         return Result<string>.Success(builder.ToString());
     }
+
     /// <summary>
     /// Finds the next terminator at or after <paramref name="start"/>. A carriage return followed
     /// by a line feed is one terminator; a lone carriage return is also a terminator.
@@ -86,6 +103,7 @@ public sealed record TextDocument
                 length = 1;
                 return i;
             }
+
             if (current == '\r')
             {
                 bool followedByLineFeed = i + 1 < text.Length && text[i + 1] == '\n';
@@ -93,13 +111,18 @@ public sealed record TextDocument
                 return i;
             }
         }
+
         length = 0;
         return -1;
     }
+
     // ImmutableArray<T> compares by reference of its backing array, so the record's
     // synthesized equality would treat equal-but-distinct line sets as unequal.
-    public bool Equals(TextDocument? other) =>
-        other is not null && Lines.SequenceEqual(other.Lines);
+    public bool Equals(TextDocument? other)
+    {
+        return other is not null && Lines.SequenceEqual(other.Lines);
+    }
+
     public override int GetHashCode()
     {
         HashCode hash = default;
@@ -107,6 +130,7 @@ public sealed record TextDocument
         {
             hash.Add(line);
         }
+
         return hash.ToHashCode();
     }
 }

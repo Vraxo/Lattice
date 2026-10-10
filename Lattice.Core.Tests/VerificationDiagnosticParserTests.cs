@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class VerificationDiagnosticParserTests
 {
     [Fact]
@@ -14,6 +15,7 @@ public sealed class VerificationDiagnosticParserTests
         Assert.Equal("CS0103", diagnostic.Code);
         Assert.Equal("The name 'x' does not exist", diagnostic.Message);
     }
+
     [Fact]
     public void ParsesWarningLine()
     {
@@ -23,6 +25,7 @@ public sealed class VerificationDiagnosticParserTests
         Assert.Equal(VerificationSeverity.Warning, diagnostic.Severity);
         Assert.Equal("CS1591", diagnostic.Code);
     }
+
     [Fact]
     public void StripsTrailingProjectSuffix()
     {
@@ -31,6 +34,7 @@ public sealed class VerificationDiagnosticParserTests
             out VerificationDiagnostic? diagnostic));
         Assert.Equal("The type 'Foo' could not be found", diagnostic.Message);
     }
+
     [Fact]
     public void ParsesSdkStyleCode()
     {
@@ -39,6 +43,7 @@ public sealed class VerificationDiagnosticParserTests
             out VerificationDiagnostic? diagnostic));
         Assert.Equal("NETSDK1057", diagnostic.Code);
     }
+
     [Fact]
     public void ParsesMsBuildStyleCode()
     {
@@ -47,6 +52,7 @@ public sealed class VerificationDiagnosticParserTests
             out VerificationDiagnostic? diagnostic));
         Assert.Equal("MSB3021", diagnostic.Code);
     }
+
     [Fact]
     public void SeverityIsCaseInsensitive()
     {
@@ -55,6 +61,7 @@ public sealed class VerificationDiagnosticParserTests
             out VerificationDiagnostic? diagnostic));
         Assert.Equal(VerificationSeverity.Error, diagnostic.Severity);
     }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -69,6 +76,7 @@ public sealed class VerificationDiagnosticParserTests
     {
         Assert.False(VerificationDiagnosticParser.TryParseLine(line, out _));
     }
+
     [Fact]
     public void ParseExtractsOnlyDiagnosticLines()
     {
@@ -89,16 +97,19 @@ public sealed class VerificationDiagnosticParserTests
         Assert.Equal(VerificationSeverity.Error, diagnostics[1].Severity);
         Assert.Equal("CS0103", diagnostics[1].Code);
     }
+
     [Fact]
     public void EmptyOutputYieldsNoDiagnostics()
     {
         Assert.Empty(VerificationDiagnosticParser.Parse(string.Empty));
     }
+
     [Fact]
     public void OutputWithNoDiagnosticsYieldsEmpty()
     {
         Assert.Empty(VerificationDiagnosticParser.Parse("Build succeeded.\n0 Error(s)"));
     }
+
     [Fact]
     public void CarriageReturnsAreTolerated()
     {
@@ -107,6 +118,7 @@ public sealed class VerificationDiagnosticParserTests
         Assert.Single(diagnostics);
         Assert.Equal("boom", diagnostics[0].Message);
     }
+
     [Fact]
     public void MessageKeepsInternalBrackets()
     {
@@ -115,6 +127,7 @@ public sealed class VerificationDiagnosticParserTests
             out VerificationDiagnostic? diagnostic));
         Assert.Equal("unexpected [ token", diagnostic.Message);
     }
+
     [Fact]
     public void ParsingIsDeterministic()
     {

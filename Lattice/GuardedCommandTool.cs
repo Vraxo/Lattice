@@ -106,6 +106,7 @@ public sealed class GuardedCommandTool : ITool
         builder.Append("command '").Append(name).Append("' exited with code ").Append(outcome.ExitCode);
         AppendSection(builder, "stdout", outcome.StandardOutput);
         AppendSection(builder, "stderr", outcome.StandardError);
+
         // Diagnostics are extracted from the combined output. The raw sections above are
         // preserved; this is an additional, machine-readable view, not a replacement.
         ImmutableArray<VerificationDiagnostic> diagnostics =
@@ -119,9 +120,11 @@ public sealed class GuardedCommandTool : ITool
                 {
                     builder.Append('\n');
                 }
+
                 builder.Append(diagnostics[i]);
             }
         }
+
         return builder.ToString();
     }
 

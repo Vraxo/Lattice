@@ -11,6 +11,8 @@ public sealed record VerificationDiagnostic(
     string Code,
     string Message)
 {
-    public override string ToString() =>
-        $"{File}({Line},{Column}): {(Severity == VerificationSeverity.Error ? "error" : "warning")} {Code}: {Message}";
+    public override string ToString()
+    {
+        return $"{File}({Line},{Column}): {(Severity == VerificationSeverity.Error ? "error" : "warning")} {Code}: {Message}";
+    }
 }

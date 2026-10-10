@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class TextDocumentTests
 {
     [Fact]
@@ -8,6 +9,7 @@ public sealed class TextDocumentTests
         Assert.Equal(0, document.LineCount);
         Assert.Equal(string.Empty, document.ToText());
     }
+
     [Fact]
     public void SingleLineWithoutTerminatorHasOneLine()
     {
@@ -16,6 +18,7 @@ public sealed class TextDocumentTests
         Assert.Equal("hello", document.Lines[0].Content);
         Assert.Equal(string.Empty, document.Lines[0].Terminator);
     }
+
     [Fact]
     public void TrailingNewlineDoesNotProduceAnExtraEmptyLine()
     {
@@ -23,6 +26,7 @@ public sealed class TextDocumentTests
         Assert.Equal(1, document.LineCount);
         Assert.Equal("\n", document.Lines[0].Terminator);
     }
+
     [Fact]
     public void BlankLineIsPreservedAsItsOwnLine()
     {
@@ -31,6 +35,7 @@ public sealed class TextDocumentTests
         Assert.Equal(string.Empty, document.Lines[1].Content);
         Assert.Equal("\n", document.Lines[1].Terminator);
     }
+
     [Theory]
     [InlineData("")]
     [InlineData("a")]
@@ -48,6 +53,7 @@ public sealed class TextDocumentTests
         TextDocument document = TextDocument.Parse(original);
         Assert.Equal(original, document.ToText());
     }
+
     [Fact]
     public void CarriageReturnLineFeedIsOneTerminator()
     {
@@ -56,6 +62,7 @@ public sealed class TextDocumentTests
         Assert.Equal("\r\n", document.Lines[0].Terminator);
         Assert.Equal("b", document.Lines[1].Content);
     }
+
     [Fact]
     public void LoneCarriageReturnIsATerminator()
     {
@@ -64,6 +71,7 @@ public sealed class TextDocumentTests
         Assert.Equal("\r", document.Lines[0].Terminator);
         Assert.Equal("b", document.Lines[1].Content);
     }
+
     [Fact]
     public void MixedTerminatorsArePreservedIndividually()
     {
@@ -73,11 +81,13 @@ public sealed class TextDocumentTests
         Assert.Equal("\n", document.Lines[1].Terminator);
         Assert.Equal(string.Empty, document.Lines[2].Terminator);
     }
+
     [Fact]
     public void NullTextIsRejected()
     {
         Assert.Throws<ArgumentNullException>(() => TextDocument.Parse(null!));
     }
+
     [Fact]
     public void GetTextReturnsRequestedLinesWithTerminators()
     {
@@ -86,6 +96,7 @@ public sealed class TextDocumentTests
         Assert.True(result.IsSuccess);
         Assert.Equal("b\nc\n", result.Value);
     }
+
     [Fact]
     public void GetTextOfEmptyRangeReturnsEmptyString()
     {
@@ -94,6 +105,7 @@ public sealed class TextDocumentTests
         Assert.True(result.IsSuccess);
         Assert.Equal(string.Empty, result.Value);
     }
+
     [Fact]
     public void GetTextBeyondTheDocumentFails()
     {
@@ -102,6 +114,7 @@ public sealed class TextDocumentTests
         Assert.False(result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
     }
+
     [Fact]
     public void GetTextOfWholeDocumentEqualsOriginal()
     {
@@ -111,11 +124,13 @@ public sealed class TextDocumentTests
         Assert.True(result.IsSuccess);
         Assert.Equal(original, result.Value);
     }
+
     [Fact]
     public void DocumentsWithSameLinesAreEqual()
     {
         Assert.Equal(TextDocument.Parse("a\r\nb"), TextDocument.Parse("a\r\nb"));
     }
+
     [Fact]
     public void DocumentsDifferingOnlyByTerminatorAreNotEqual()
     {

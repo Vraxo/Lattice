@@ -137,12 +137,15 @@ public sealed class GuardedCommandToolTests : IDisposable
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
         Assert.True(invocation.Result.IsSuccess);
         string output = invocation.Result.Output!.AsString();
+
         // Raw output is preserved...
         Assert.Contains("Build FAILED.", output, StringComparison.Ordinal);
+
         // ...and a structured view is appended.
         Assert.Contains("diagnostics:", output, StringComparison.Ordinal);
         Assert.Contains("CS0246", output, StringComparison.Ordinal);
     }
+
     [Fact]
     public void OutputWithoutDiagnosticsHasNoDiagnosticsSection()
     {
@@ -151,6 +154,7 @@ public sealed class GuardedCommandToolTests : IDisposable
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
         Assert.DoesNotContain("diagnostics:", invocation.Result.Output!.AsString(), StringComparison.Ordinal);
     }
+
     [Fact]
     public void PreCancelledTokenPreventsTheRunnerFromBeingCalled()
     {

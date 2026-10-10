@@ -56,6 +56,7 @@ public sealed class SystemProcessRunnerTests
         using TempWorkspace workspace = new();
         SystemProcessRunner runner = new();
         using CancellationTokenSource source = new();
+
         // The delay must be far shorter than the process runtime, not longer. Cancellation has to
         // land before the process exits; starting any process takes more than a millisecond, so
         // this reliably exercises the kill-during-read path without racing the command's speed.
@@ -69,6 +70,7 @@ public sealed class SystemProcessRunnerTests
         Assert.True(outcome.Cancelled);
         Assert.False(outcome.TimedOut);
     }
+
     [Fact]
     public void TimeoutTerminatesTheProcess()
     {

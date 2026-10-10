@@ -16,17 +16,27 @@ public sealed record TextLine
                 $"Terminator must be empty, \"\\n\", \"\\r\\n\", or \"\\r\"; got \"{Escape(terminator)}\".",
                 nameof(terminator));
         }
+
         Content = content;
         Terminator = terminator;
     }
-    /// <summary>The line without its terminator.</summary>
+
+    /// <summary>Gets the line without its terminator.</summary>
     public string Content { get; }
-    /// <summary>The exact terminator, or the empty string when the line is unterminated.</summary>
+
+    /// <summary>Gets the exact terminator, or the empty string when the line is unterminated.</summary>
     public string Terminator { get; }
-    /// <summary>The content and terminator as they appeared in the source.</summary>
+
+    /// <summary>Gets the content and terminator as they appeared in the source.</summary>
     public string Text => Content + Terminator;
-    private static bool IsKnownTerminator(string terminator) =>
-        terminator is "" or "\n" or "\r\n" or "\r";
-    private static string Escape(string value) =>
-        value.Replace("\r", "\\r", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal);
+
+    private static bool IsKnownTerminator(string terminator)
+    {
+        return terminator is "" or "\n" or "\r\n" or "\r";
+    }
+
+    private static string Escape(string value)
+    {
+        return value.Replace("\r", "\\r", StringComparison.Ordinal).Replace("\n", "\\n", StringComparison.Ordinal);
+    }
 }
