@@ -14,7 +14,7 @@ internal sealed class DescribableTestTool(string id, string[]? tags = null, stri
             aliases: aliases,
             tags: tags);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         return ToolResult.Success(ArgumentValue.FromBoolean(true));
     }

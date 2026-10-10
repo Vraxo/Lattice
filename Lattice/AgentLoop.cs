@@ -29,7 +29,10 @@ public sealed class AgentLoop
         _interpretation = interpretation ?? RequestInterpretation.Unknown(string.Empty, "No request interpretation was supplied.");
     }
 
-    public AgentTurnResult Run(Session session, IControlledStatement statement)
+    public AgentTurnResult Run(
+        Session session,
+        IControlledStatement statement,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(statement);
@@ -44,7 +47,7 @@ public sealed class AgentLoop
 
         ActionSelectionContext context = new(interpreted.Session, _interpretation);
         ActionSelection selection = _selector.Select(context, interpreted.Candidates);
-        return Execute(interpreted.Session, selection);
+        return Execute(interpreted.Session, selection, cancellationToken);
     }
 
     /// <summary>
@@ -53,7 +56,10 @@ public sealed class AgentLoop
     /// When nothing is discovered, the turn is blocked with a question rather than guessed.
     /// </summary>
     /// <returns></returns>
-    public AgentTurnResult Run(Session session, CapabilityRequest request)
+    public AgentTurnResult Run(
+        Session session,
+        CapabilityRequest request,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(request);
@@ -63,16 +69,16 @@ public sealed class AgentLoop
             AskUserProposal ask = new(new ClarificationRequest(
                 ClarificationKind.NoCapabilityFound,
                 $"No capability is registered for '{request.Operation}'."));
-            return Execute(session, ActionSelection.Blocked(ask, "Discovery found no candidate."));
+            return Execute(session, ActionSelection.Blocked(ask, "Discovery found no candidate."), cancellationToken);
         }
 
         ActionProposal[] proposals = [.. candidates.Select(candidate => (ActionProposal)candidate.Proposal)];
         ActionSelectionContext context = new(session, _interpretation);
         ActionSelection selection = _selector.Select(context, proposals);
-        return Execute(session, selection);
+        return Execute(session, selection, cancellationToken);
     }
 
-    private AgentTurnResult Execute(Session session, ActionSelection selection)
+    private AgentTurnResult Execute(Session session, ActionSelection selection, CancellationToken cancellationToken)
     {
         // A blocked selection carries a proposal the user should see (typically a question).
         if (!selection.IsSelected)
@@ -85,7 +91,7 @@ public sealed class AgentLoop
 
         return selection.Proposal switch
         {
-            InvokeToolProposal invoke => ExecuteTool(session, invoke),
+            InvokeToolProposal invoke => ExecuteTool(session, invoke, cancellationToken),
             AskUserProposal ask => new AgentTurnResult(session, TurnOutcome.AskedUser, ask.Request.Question),
             RespondProposal respond => new AgentTurnResult(session, TurnOutcome.Responded, respond.Text),
             ContinueProposal or FinishProposal => new AgentTurnResult(
@@ -97,7 +103,10 @@ public sealed class AgentLoop
         };
     }
 
-    private AgentTurnResult ExecuteTool(Session session, InvokeToolProposal proposal)
+    private AgentTurnResult ExecuteTool(
+        Session session,
+        InvokeToolProposal proposal,
+        CancellationToken cancellationToken)
     {
         if (!_registry.TryResolve(proposal.ToolId, out ITool? tool))
         {
@@ -115,7 +124,7 @@ public sealed class AgentLoop
                 $"The action for '{proposal.ToolId.Value}' with the same arguments was already attempted.");
         }
 
-        ToolInvocation invocation = ToolExecutor.Execute(tool, proposal.Arguments, _policy);
+        ToolInvocation invocation = ToolExecutor.Execute(tool, proposal.Arguments, _policy, cancellationToken);
         Session updated = session.AddToolInvocation(invocation);
         return new AgentTurnResult(
             updated,
@@ -135,6 +144,7 @@ public sealed class AgentLoop
         {
             "tool.permission.denied" => TurnOutcome.PermissionDenied,
             "tool.argument.unknown" or "tool.argument.type" or "tool.argument.missing" => TurnOutcome.InvalidArguments,
+            "tool.cancelled" => TurnOutcome.Cancelled,
             _ => TurnOutcome.ToolFailed,
         };
     }
@@ -151,6 +161,7 @@ public sealed class AgentLoop
             "tool.permission.denied" => $"Tool '{toolId}' was denied by policy.",
             "tool.argument.unknown" or "tool.argument.type" or "tool.argument.missing" =>
                 $"Tool '{toolId}' rejected its arguments.",
+            "tool.cancelled" => $"Tool '{toolId}' was cancelled.",
             _ => $"Tool '{toolId}' failed: {invocation.Result.Error.Message}",
         };
     }

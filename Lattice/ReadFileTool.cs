@@ -23,7 +23,7 @@ public sealed class ReadFileTool : ITool
         ToolSideEffect.ReadOnly,
         [new ToolParameter(PathParameter, ToolParameterType.String)]);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         if (!arguments.TryGetValue(PathParameter, out ArgumentValue? value) || value.Type != ToolParameterType.String)

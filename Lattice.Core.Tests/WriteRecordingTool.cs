@@ -10,7 +10,7 @@ internal sealed class WriteRecordingTool : ITool
         "A boolean.",
         ToolSideEffect.LocalWrite);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         WasExecuted = true;
         return ToolResult.Success(ArgumentValue.FromBoolean(true));

@@ -17,7 +17,7 @@ public sealed class CalculatorTool : ITool
             new ToolParameter(RightParameter, ToolParameterType.Integer),
         ]);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         if (!arguments.TryGetValue(LeftParameter, out ArgumentValue? left) || left.Type != ToolParameterType.Integer)

@@ -122,6 +122,7 @@ public sealed class CapabilityDiscoveryTests
             Descriptor("b", "Does another thing.", tags: ["shared"]));
         ImmutableArray<CapabilityCandidate> first = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("shared"));
         ImmutableArray<CapabilityCandidate> second = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("shared"));
+
         // Compare element-wise: Assert.Equal on two ImmutableArray<T> values binds to the
         // generic overload and uses ImmutableArray's reference-based struct equality.
         Assert.True(first.SequenceEqual(second));

@@ -23,7 +23,7 @@ public sealed class ListDirectoryTool : ITool
         ToolSideEffect.ReadOnly,
         [new ToolParameter(PathParameter, ToolParameterType.String, required: false)]);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         string requested = ".";

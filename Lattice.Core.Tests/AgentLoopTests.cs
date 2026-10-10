@@ -116,10 +116,12 @@ public sealed class AgentLoopTests
     public void NullStatementThrows()
     {
         AgentLoop loop = CreateLoop(new CalculatorTool());
+
         // Cast disambiguates the null literal between the statement and request overloads.
         Assert.Throws<ArgumentNullException>(
             () => loop.Run(Session.Empty(SessionId.New()), (IControlledStatement)null!));
     }
+
     [Fact]
     public void NullCapabilityRequestThrows()
     {

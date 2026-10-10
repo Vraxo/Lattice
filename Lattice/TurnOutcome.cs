@@ -14,4 +14,5 @@ public enum TurnOutcome
     AskedUser,
     Responded,
     Blocked,
+    Cancelled,
 }

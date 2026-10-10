@@ -8,7 +8,7 @@ internal sealed class FailingTool : ITool
         "Never produced.",
         ToolSideEffect.ReadOnly);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         return ToolResult.Failure(new Error("failing.tool", "The tool always fails."));
     }

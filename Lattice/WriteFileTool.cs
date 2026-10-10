@@ -36,7 +36,7 @@ public sealed class WriteFileTool : ITool
             new ToolParameter(ReplaceParameter, ToolParameterType.String),
         ]);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         if (!TryReadString(arguments, PathParameter, out string? requested)

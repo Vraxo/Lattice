@@ -11,7 +11,7 @@ internal sealed class RecordingTool : ITool
         ToolSideEffect.ReadOnly,
         [new ToolParameter("value", ToolParameterType.Integer)]);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         WasExecuted = true;
         return ToolResult.Success(ArgumentValue.FromBoolean(true));

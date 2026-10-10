@@ -1,4 +1,5 @@
 namespace Lattice.CSharp;
+
 public enum CSharpEditStatus
 {
     Applied,

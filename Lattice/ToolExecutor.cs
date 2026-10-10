@@ -2,7 +2,11 @@ namespace Lattice.Core;
 
 public static class ToolExecutor
 {
-    public static ToolInvocation Execute(ITool tool, ArgumentBag arguments, ToolPermissionPolicy policy)
+    public static ToolInvocation Execute(
+        ITool tool,
+        ArgumentBag arguments,
+        ToolPermissionPolicy policy,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(tool);
         ArgumentNullException.ThrowIfNull(arguments);
@@ -23,7 +27,17 @@ public static class ToolExecutor
             return new ToolInvocation(tool.Descriptor.Id, arguments, ToolResult.Failure(validation.Error!));
         }
 
-        ToolResult result = tool.Execute(arguments);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return new ToolInvocation(
+                tool.Descriptor.Id,
+                arguments,
+                ToolResult.Failure(new Error(
+                    ToolErrorCodes.Cancelled,
+                    $"Tool '{tool.Descriptor.Id.Value}' was cancelled before execution.")));
+        }
+
+        ToolResult result = tool.Execute(arguments, cancellationToken);
         return new ToolInvocation(tool.Descriptor.Id, arguments, result);
     }
 }

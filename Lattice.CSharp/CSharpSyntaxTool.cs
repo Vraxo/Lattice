@@ -21,7 +21,7 @@ public sealed class CSharpSyntaxTool : ITool
         ToolSideEffect.ReadOnly,
         [new ToolParameter(SourceParameter, ToolParameterType.String)]);
 
-    public ToolResult Execute(ArgumentBag arguments)
+    public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         if (!arguments.TryGetValue(SourceParameter, out ArgumentValue? value)
