@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public sealed record RespondProposal : ActionProposal
 {
     public RespondProposal(string text)
@@ -6,5 +7,6 @@ public sealed record RespondProposal : ActionProposal
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
         Text = text;
     }
+
     public string Text { get; }
 }

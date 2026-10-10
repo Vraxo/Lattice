@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public sealed record FinishProposal : ActionProposal
 {
     public FinishProposal(string reason)
@@ -6,5 +7,6 @@ public sealed record FinishProposal : ActionProposal
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
         Reason = reason;
     }
+
     public string Reason { get; }
 }

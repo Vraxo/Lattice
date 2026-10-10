@@ -1,30 +1,34 @@
 namespace Lattice.Core.Tests;
+
 public sealed class ToolRegistryTests
 {
     [Fact]
     public void ResolvesRegisteredTool()
     {
-        var registry = new ToolRegistry(new ITool[] { new CalculatorTool() });
-        Assert.True(registry.TryResolve(CalculatorTool.Id, out var tool));
+        ToolRegistry registry = new([new CalculatorTool()]);
+        Assert.True(registry.TryResolve(CalculatorTool.Id, out ITool? tool));
         Assert.IsType<CalculatorTool>(tool);
     }
+
     [Fact]
     public void UnknownToolFailsToResolve()
     {
-        var registry = new ToolRegistry(new ITool[] { new CalculatorTool() });
+        ToolRegistry registry = new([new CalculatorTool()]);
         Assert.False(registry.TryResolve(new ToolId("missing"), out _));
     }
+
     [Fact]
     public void RejectsDuplicateToolIds()
     {
-        var tools = new ITool[] { new CalculatorTool(), new CalculatorTool() };
+        ITool[] tools = [new CalculatorTool(), new CalculatorTool()];
         Assert.Throws<ArgumentException>(() => new ToolRegistry(tools));
     }
+
     [Fact]
     public void ToCatalogIncludesAllDescriptors()
     {
-        var registry = new ToolRegistry(new ITool[] { new CalculatorTool(), new FailingTool() });
-        var catalog = registry.ToCatalog();
+        ToolRegistry registry = new([new CalculatorTool(), new FailingTool()]);
+        ToolCatalog catalog = registry.ToCatalog();
         Assert.Equal(2, catalog.Descriptors.Length);
     }
 }

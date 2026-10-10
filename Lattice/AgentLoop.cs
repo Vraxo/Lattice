@@ -1,5 +1,5 @@
-using System.Globalization;
 namespace Lattice.Core;
+
 /// <summary>
 /// Runs a single bounded turn. It interprets the incoming statement into structured candidates,
 /// asks <see cref="PolicySelector"/> to choose one, executes the chosen proposal, and records the
@@ -12,6 +12,7 @@ public sealed class AgentLoop
     private readonly ToolPermissionPolicy _policy;
     private readonly PolicySelector _selector;
     private readonly RequestInterpretation _interpretation;
+
     public AgentLoop(
         ToolRegistry registry,
         ToolPermissionPolicy policy,
@@ -25,11 +26,12 @@ public sealed class AgentLoop
         _selector = selector ?? PolicySelector.Default;
         _interpretation = interpretation ?? RequestInterpretation.Unknown(string.Empty, "No request interpretation was supplied.");
     }
+
     public AgentTurnResult Run(Session session, IControlledStatement statement)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(statement);
-        var interpreted = ControlledStatementInterpreter.Interpret(session, statement);
+        InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, statement);
         if (interpreted.IsResolved)
         {
             return new AgentTurnResult(
@@ -37,10 +39,12 @@ public sealed class AgentLoop
                 interpreted.ResolvedOutcome!.Value,
                 interpreted.ResolvedResponse!);
         }
-        var context = new ActionSelectionContext(interpreted.Session, _interpretation);
-        var selection = _selector.Select(context, interpreted.Candidates);
+
+        ActionSelectionContext context = new(interpreted.Session, _interpretation);
+        ActionSelection selection = _selector.Select(context, interpreted.Candidates);
         return Execute(interpreted.Session, selection);
     }
+
     private AgentTurnResult Execute(Session session, ActionSelection selection)
     {
         // A blocked selection carries a proposal the user should see (typically a question).
@@ -51,6 +55,7 @@ public sealed class AgentLoop
                 TurnOutcome.Blocked,
                 DescribeProposal(selection.Proposal));
         }
+
         return selection.Proposal switch
         {
             InvokeToolProposal invoke => ExecuteTool(session, invoke),
@@ -64,15 +69,17 @@ public sealed class AgentLoop
                 $"Unhandled proposal type '{selection.Proposal.GetType().Name}'."),
         };
     }
+
     private AgentTurnResult ExecuteTool(Session session, InvokeToolProposal proposal)
     {
-        if (!_registry.TryResolve(proposal.ToolId, out var tool))
+        if (!_registry.TryResolve(proposal.ToolId, out ITool? tool))
         {
             return new AgentTurnResult(
                 session,
                 TurnOutcome.ToolUnavailable,
                 $"Tool '{proposal.ToolId.Value}' is not available.");
         }
+
         if (IsDuplicate(session, proposal.ToolId, proposal.Arguments))
         {
             return new AgentTurnResult(
@@ -80,20 +87,23 @@ public sealed class AgentLoop
                 TurnOutcome.DuplicateAction,
                 $"The action for '{proposal.ToolId.Value}' with the same arguments was already attempted.");
         }
-        var invocation = ToolExecutor.Execute(tool, proposal.Arguments, _policy);
-        var updated = session.AddToolInvocation(invocation);
+
+        ToolInvocation invocation = ToolExecutor.Execute(tool, proposal.Arguments, _policy);
+        Session updated = session.AddToolInvocation(invocation);
         return new AgentTurnResult(
             updated,
             Classify(invocation),
             DescribeInvocation(proposal.ToolId.Value, invocation),
             invocation);
     }
+
     private static TurnOutcome Classify(ToolInvocation invocation)
     {
         if (invocation.Result.IsSuccess)
         {
             return TurnOutcome.ToolSucceeded;
         }
+
         return invocation.Result.Error!.Code switch
         {
             "tool.permission.denied" => TurnOutcome.PermissionDenied,
@@ -101,12 +111,14 @@ public sealed class AgentLoop
             _ => TurnOutcome.ToolFailed,
         };
     }
+
     private static string DescribeInvocation(string toolId, ToolInvocation invocation)
     {
         if (invocation.Result.IsSuccess)
         {
             return $"Tool '{toolId}' succeeded with result {invocation.Result.Output!.Type}.";
         }
+
         return invocation.Result.Error!.Code switch
         {
             "tool.permission.denied" => $"Tool '{toolId}' was denied by policy.",
@@ -115,24 +127,30 @@ public sealed class AgentLoop
             _ => $"Tool '{toolId}' failed: {invocation.Result.Error.Message}",
         };
     }
-    private static string DescribeProposal(ActionProposal proposal) => proposal switch
+
+    private static string DescribeProposal(ActionProposal proposal)
     {
-        AskUserProposal ask => ask.Request.Question,
-        ContinueProposal cont => $"Continuing: {cont.Reason}",
-        FinishProposal finish => $"Finishing: {finish.Reason}",
-        RespondProposal respond => respond.Text,
-        InvokeToolProposal invoke => $"Invoking '{invoke.ToolId.Value}'.",
-        _ => proposal.GetType().Name,
-    };
+        return proposal switch
+        {
+            AskUserProposal ask => ask.Request.Question,
+            ContinueProposal cont => $"Continuing: {cont.Reason}",
+            FinishProposal finish => $"Finishing: {finish.Reason}",
+            RespondProposal respond => respond.Text,
+            InvokeToolProposal invoke => $"Invoking '{invoke.ToolId.Value}'.",
+            _ => proposal.GetType().Name,
+        };
+    }
+
     private static bool IsDuplicate(Session session, ToolId toolId, ArgumentBag arguments)
     {
-        foreach (var existing in session.ToolInvocations)
+        foreach (ToolInvocation existing in session.ToolInvocations)
         {
             if (existing.ToolId == toolId && existing.Arguments == arguments)
             {
                 return true;
             }
         }
+
         return false;
     }
 }

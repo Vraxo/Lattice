@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public sealed record AskUserProposal : ActionProposal
 {
     public AskUserProposal(ClarificationRequest request)
@@ -6,5 +7,6 @@ public sealed record AskUserProposal : ActionProposal
         ArgumentNullException.ThrowIfNull(request);
         Request = request;
     }
+
     public ClarificationRequest Request { get; }
 }

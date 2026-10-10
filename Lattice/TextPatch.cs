@@ -12,6 +12,8 @@ public sealed record TextPatch
         Find = find;
         Replace = replace;
     }
+
     public string Find { get; }
+
     public string Replace { get; }
 }

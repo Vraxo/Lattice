@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
+
 namespace Lattice.Core;
+
 public sealed record RequestInterpretation
 {
     private RequestInterpretation(
@@ -21,15 +23,24 @@ public sealed record RequestInterpretation
         Diagnostic = diagnostic;
         MissingSlotName = missingSlotName;
     }
+
     public IntentMatchKind Kind { get; }
+
     public RequestIntentKind Intent { get; }
+
     public IntentMatch? Match { get; }
+
     public ImmutableArray<IntentMatch> Candidates { get; }
+
     public string Text { get; }
+
     public SourceSpan Span { get; }
+
     public string? Diagnostic { get; }
-    /// <summary>The slot name that was left empty, when <see cref="Kind"/> is MissingValue.</summary>
+
+    /// <summary>Gets the slot name that was left empty, when <see cref="Kind"/> is MissingValue.</summary>
     public string? MissingSlotName { get; }
+
     public static RequestInterpretation Matched(string text, IntentMatch match)
     {
         ArgumentNullException.ThrowIfNull(match);
@@ -37,12 +48,13 @@ public sealed record RequestInterpretation
             IntentMatchKind.Matched,
             match.Intent,
             match,
-            ImmutableArray<IntentMatch>.Empty,
+            [],
             text,
             new SourceSpan(0, text.Length),
             null,
             null);
     }
+
     public static RequestInterpretation Unknown(string text, string diagnostic)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(diagnostic);
@@ -50,20 +62,22 @@ public sealed record RequestInterpretation
             IntentMatchKind.Unknown,
             RequestIntentKind.Unknown,
             null,
-            ImmutableArray<IntentMatch>.Empty,
+            [],
             text,
             new SourceSpan(0, text.Length),
             diagnostic,
             null);
     }
+
     public static RequestInterpretation Ambiguous(string text, IEnumerable<IntentMatch> candidates)
     {
         ArgumentNullException.ThrowIfNull(candidates);
-        var array = candidates.ToImmutableArray();
+        ImmutableArray<IntentMatch> array = [.. candidates];
         if (array.Length < 2)
         {
             throw new ArgumentException("An ambiguous interpretation requires at least two candidates.", nameof(candidates));
         }
+
         return new RequestInterpretation(
             IntentMatchKind.Ambiguous,
             RequestIntentKind.Unknown,
@@ -74,6 +88,7 @@ public sealed record RequestInterpretation
             "More than one pattern matched with equal specificity.",
             null);
     }
+
     public static RequestInterpretation MissingValue(string text, IntentMatch match, string missingSlotName)
     {
         ArgumentNullException.ThrowIfNull(match);
@@ -82,12 +97,13 @@ public sealed record RequestInterpretation
             IntentMatchKind.MissingValue,
             match.Intent,
             match,
-            ImmutableArray<IntentMatch>.Empty,
+            [],
             text,
             new SourceSpan(0, text.Length),
             $"The value for '{missingSlotName}' is missing.",
             missingSlotName);
     }
+
     // ImmutableArray<T> compares by reference of its backing array, so the record's
     // synthesized equality would treat equal-but-distinct candidate sets as unequal.
     public bool Equals(RequestInterpretation? other)
@@ -96,6 +112,7 @@ public sealed record RequestInterpretation
         {
             return false;
         }
+
         return Kind == other.Kind
             && Intent == other.Intent
             && Match == other.Match
@@ -105,9 +122,10 @@ public sealed record RequestInterpretation
             && MissingSlotName == other.MissingSlotName
             && Candidates.SequenceEqual(other.Candidates);
     }
+
     public override int GetHashCode()
     {
-        var hash = new HashCode();
+        HashCode hash = default;
         hash.Add(Kind);
         hash.Add(Intent);
         hash.Add(Match);
@@ -115,10 +133,11 @@ public sealed record RequestInterpretation
         hash.Add(Span);
         hash.Add(Diagnostic);
         hash.Add(MissingSlotName);
-        foreach (var candidate in Candidates)
+        foreach (IntentMatch candidate in Candidates)
         {
             hash.Add(candidate);
         }
+
         return hash.ToHashCode();
     }
 }

@@ -1,11 +1,14 @@
 using System.Collections.Immutable;
+
 namespace Lattice.Core;
+
 public static class ClarificationGenerator
 {
     /// <summary>
     /// Produces a clarifying question for an interpretation that is not confidently matched.
     /// Returns <see langword="null"/> when the interpretation needs no clarification.
     /// </summary>
+    /// <returns></returns>
     public static ClarificationRequest? TryCreate(RequestInterpretation interpretation)
     {
         ArgumentNullException.ThrowIfNull(interpretation);
@@ -24,28 +27,33 @@ public static class ClarificationGenerator
             _ => throw new InvalidOperationException($"Unhandled interpretation kind '{interpretation.Kind}'."),
         };
     }
+
     private static string BuildAmbiguousQuestion(ImmutableArray<IntentMatch> candidates)
     {
-        var intents = candidates
+        ImmutableArray<RequestIntentKind> intents = [.. candidates
             .Select(candidate => candidate.Intent)
             .Distinct()
-            .OrderBy(intent => (int)intent)
-            .ToImmutableArray();
+            .OrderBy(intent => (int)intent),];
         if (intents.Length < 2)
         {
             return "I found more than one possible reading. Could you be more specific?";
         }
-        var phrases = intents.Select(Describe).ToImmutableArray();
+
+        ImmutableArray<string> phrases = [.. intents.Select(Describe)];
         return phrases.Length == 2
             ? $"Did you mean {phrases[0]} or {phrases[1]}?"
             : $"Did you mean {string.Join(", ", phrases.Take(phrases.Length - 1))}, or {phrases[^1]}?";
     }
-    private static string Describe(RequestIntentKind intent) => intent switch
+
+    private static string Describe(RequestIntentKind intent)
     {
-        RequestIntentKind.Question => "a question",
-        RequestIntentKind.Explanation => "an explanation",
-        RequestIntentKind.FindSymbol => "a symbol lookup",
-        RequestIntentKind.InspectPath => "a file inspection",
-        _ => "a request",
-    };
+        return intent switch
+        {
+            RequestIntentKind.Question => "a question",
+            RequestIntentKind.Explanation => "an explanation",
+            RequestIntentKind.FindSymbol => "a symbol lookup",
+            RequestIntentKind.InspectPath => "a file inspection",
+            _ => "a request",
+        };
+    }
 }

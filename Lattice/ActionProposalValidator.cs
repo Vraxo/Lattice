@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public static class ActionProposalValidator
 {
     /// <summary>
@@ -6,6 +7,7 @@ public static class ActionProposalValidator
     /// non-null payloads) is already enforced at construction; this covers the semantic
     /// checks that need context.
     /// </summary>
+    /// <returns></returns>
     public static Result Validate(ActionProposal proposal, ToolCatalog catalog)
     {
         ArgumentNullException.ThrowIfNull(proposal);
@@ -21,14 +23,16 @@ public static class ActionProposalValidator
                 $"Unhandled proposal type '{proposal.GetType().Name}'."),
         };
     }
+
     private static Result ValidateInvoke(InvokeToolProposal proposal, ToolCatalog catalog)
     {
-        if (!catalog.TryResolve(proposal.ToolId, out var descriptor))
+        if (!catalog.TryResolve(proposal.ToolId, out ToolDescriptor? descriptor))
         {
             return Result.Failure(new Error(
                 "action.tool.unknown",
                 $"Tool '{proposal.ToolId.Value}' is not registered."));
         }
+
         return ToolArgumentValidator.Validate(descriptor, proposal.Arguments);
     }
 }

@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class ActionProposalExhaustivenessTests
 {
     /// <summary>
@@ -13,15 +14,15 @@ public sealed class ActionProposalExhaustivenessTests
         "InvokeToolProposal",
         "RespondProposal",
     ];
+
     [Fact]
     public void EveryConcreteProposalTypeIsAccountedFor()
     {
-        var actual = typeof(ActionProposal).Assembly
+        string[] actual = [.. typeof(ActionProposal).Assembly
             .GetTypes()
             .Where(type => !type.IsAbstract && typeof(ActionProposal).IsAssignableFrom(type))
             .Select(type => type.Name)
-            .OrderBy(name => name, StringComparer.Ordinal)
-            .ToArray();
+            .OrderBy(name => name, StringComparer.Ordinal),];
         Assert.True(
             Expected.SequenceEqual(actual, StringComparer.Ordinal),
             $"Expected: {string.Join(", ", Expected)}{Environment.NewLine}Actual: {string.Join(", ", actual)}");

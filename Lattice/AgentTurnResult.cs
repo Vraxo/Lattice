@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public sealed record AgentTurnResult
 {
     public AgentTurnResult(
@@ -14,8 +15,12 @@ public sealed record AgentTurnResult
         Response = response;
         Invocation = invocation;
     }
+
     public Session Session { get; }
+
     public TurnOutcome Outcome { get; }
+
     public string Response { get; }
+
     public ToolInvocation? Invocation { get; }
 }

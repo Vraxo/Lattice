@@ -13,12 +13,19 @@ public sealed record EvidenceReference
         EndLine = endLine;
         Snippet = snippet;
     }
+
     public string RelativePath { get; }
+
     public int StartLine { get; }
+
     public int EndLine { get; }
+
     public string Snippet { get; }
-    public override string ToString() =>
-        StartLine == EndLine
+
+    public override string ToString()
+    {
+        return StartLine == EndLine
             ? $"{RelativePath}:{StartLine}"
             : $"{RelativePath}:{StartLine}-{EndLine}";
+    }
 }

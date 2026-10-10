@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 public static class FileToolErrorCodes
 {
     public const string PathOutsideRoot = "files.path.outside-root";

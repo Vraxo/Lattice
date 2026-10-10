@@ -10,5 +10,6 @@ public sealed record ContinueProposal : ActionProposal
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
         Reason = reason;
     }
+
     public string Reason { get; }
 }

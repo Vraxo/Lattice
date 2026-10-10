@@ -1,14 +1,15 @@
 namespace Lattice.Core.Tests;
-internal sealed class FakeRule : IActionRule
+
+internal sealed class FakeRule(string id, int priority, ActionProposal? proposal) : IActionRule
 {
-    private readonly ActionProposal? _proposal;
-    public FakeRule(string id, int priority, ActionProposal? proposal)
+    private readonly ActionProposal? _proposal = proposal;
+
+    public string Id { get; } = id;
+
+    public int Priority { get; } = priority;
+
+    public ActionProposal? TryPropose(ActionSelectionContext context)
     {
-        Id = id;
-        Priority = priority;
-        _proposal = proposal;
+        return _proposal;
     }
-    public string Id { get; }
-    public int Priority { get; }
-    public ActionProposal? TryPropose(ActionSelectionContext context) => _proposal;
 }

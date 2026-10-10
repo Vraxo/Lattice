@@ -1,4 +1,5 @@
 namespace Lattice.CSharp;
+
 public sealed record SyntaxDiagnostic(
     string Id,
     SyntaxDiagnosticSeverity Severity,
@@ -6,6 +7,8 @@ public sealed record SyntaxDiagnostic(
     int Column,
     string Message)
 {
-    public override string ToString() =>
-        $"{Id} {Severity.ToString().ToLowerInvariant()} {Line}:{Column} {Message}";
+    public override string ToString()
+    {
+        return $"{Id} {Severity.ToString().ToLowerInvariant()} {Line}:{Column} {Message}";
+    }
 }

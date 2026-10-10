@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class TextPatchTests
 {
     [Fact]
@@ -6,17 +7,20 @@ public sealed class TextPatchTests
     {
         Assert.Throws<ArgumentException>(() => new TextPatch(string.Empty, "x"));
     }
+
     [Fact]
     public void RejectsNullReplace()
     {
         Assert.Throws<ArgumentNullException>(() => new TextPatch("a", null!));
     }
+
     [Fact]
     public void AllowsEmptyReplaceForDeletion()
     {
-        var patch = new TextPatch("remove me", string.Empty);
+        TextPatch patch = new("remove me", string.Empty);
         Assert.Equal(string.Empty, patch.Replace);
     }
+
     [Fact]
     public void PatchesWithSameContentAreEqual()
     {

@@ -9,6 +9,8 @@ public sealed record ActionSelectionContext
         Session = session;
         Interpretation = interpretation;
     }
+
     public Session Session { get; }
+
     public RequestInterpretation Interpretation { get; }
 }

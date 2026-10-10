@@ -1,27 +1,31 @@
 using System.Collections.Immutable;
+
 namespace Lattice.Core;
+
 /// <summary>Maps tool identifiers to executable implementations.</summary>
 public sealed class ToolRegistry
 {
-    private readonly ImmutableArray<ITool> _tools;
     public ToolRegistry(IEnumerable<ITool> tools)
     {
         ArgumentNullException.ThrowIfNull(tools);
-        var array = tools.ToImmutableArray();
-        var seen = new HashSet<ToolId>();
-        foreach (var tool in array)
+        ImmutableArray<ITool> array = [.. tools];
+        HashSet<ToolId> seen = [];
+        foreach (ITool tool in array)
         {
             if (!seen.Add(tool.Descriptor.Id))
             {
                 throw new ArgumentException($"Duplicate tool id: {tool.Descriptor.Id.Value}", nameof(tools));
             }
         }
-        _tools = array;
+
+        Tools = array;
     }
-    public ImmutableArray<ITool> Tools => _tools;
+
+    public ImmutableArray<ITool> Tools { get; }
+
     public bool TryResolve(ToolId id, out ITool tool)
     {
-        foreach (var candidate in _tools)
+        foreach (ITool candidate in Tools)
         {
             if (candidate.Descriptor.Id == id)
             {
@@ -29,8 +33,13 @@ public sealed class ToolRegistry
                 return true;
             }
         }
+
         tool = null!;
         return false;
     }
-    public ToolCatalog ToCatalog() => new(_tools.Select(tool => tool.Descriptor));
+
+    public ToolCatalog ToCatalog()
+    {
+        return new(Tools.Select(tool => tool.Descriptor));
+    }
 }

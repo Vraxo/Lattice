@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 /// <summary>A disposable temporary directory used as a workspace root in tests.</summary>
 internal sealed class TempWorkspace : IDisposable
 {
@@ -9,22 +10,29 @@ internal sealed class TempWorkspace : IDisposable
             "lattice-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path);
     }
+
     public string Path { get; }
+
     public string WriteFile(string relativePath, string contents)
     {
-        var full = System.IO.Path.Combine(Path, relativePath);
+        string full = System.IO.Path.Combine(Path, relativePath);
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(full)!);
         File.WriteAllText(full, contents);
         return full;
     }
+
     public void WriteBytes(string relativePath, byte[] bytes)
     {
-        var full = System.IO.Path.Combine(Path, relativePath);
+        string full = System.IO.Path.Combine(Path, relativePath);
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(full)!);
         File.WriteAllBytes(full, bytes);
     }
-    public void CreateDirectory(string relativePath) =>
+
+    public void CreateDirectory(string relativePath)
+    {
         Directory.CreateDirectory(System.IO.Path.Combine(Path, relativePath));
+    }
+
     public void Dispose()
     {
         try
