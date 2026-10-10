@@ -164,6 +164,13 @@
 
 **Gate:** identical state gives identical action in deterministic fixtures; no eligible action leads to clarification/blocked status, not a crash. Commit: `feat(agent): select eligible next actions`.
 
+> **Follow-up recorded (M7.2a — descriptor-based capability discovery):** M5.3 as originally
+> written left capability selection unimplemented. The loop executed explicitly named tools but
+> Core could not *choose* a capability. That gap was closed after M7.2 by `CapabilityDiscovery`,
+> which matches a structured operation against generic descriptor metadata (id, aliases, tags,
+> description) and routes candidates through the existing `PolicySelector`. The original M5.3
+> acceptance gate was therefore **not** satisfied as written at the time; this note records the
+> correction rather than pretending otherwise.
 ### M5.3 — Implement one-turn tool loop
 - Interpret a controlled request, select a tool, execute it, store the result, and form a response.
 - Keep loop iteration count bounded.

@@ -116,7 +116,16 @@ public sealed class AgentLoopTests
     public void NullStatementThrows()
     {
         AgentLoop loop = CreateLoop(new CalculatorTool());
-        Assert.Throws<ArgumentNullException>(() => loop.Run(Session.Empty(SessionId.New()), null!));
+        // Cast disambiguates the null literal between the statement and request overloads.
+        Assert.Throws<ArgumentNullException>(
+            () => loop.Run(Session.Empty(SessionId.New()), (IControlledStatement)null!));
+    }
+    [Fact]
+    public void NullCapabilityRequestThrows()
+    {
+        AgentLoop loop = CreateLoop(new CalculatorTool());
+        Assert.Throws<ArgumentNullException>(
+            () => loop.Run(Session.Empty(SessionId.New()), (CapabilityRequest)null!));
     }
 
     private static AgentLoop CreateLoop(params ITool[] tools)

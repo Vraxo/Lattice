@@ -7,4 +7,5 @@ public enum ClarificationKind
     UnknownIntent,
     NoEligibleAction,
     MultipleCandidates,
+    NoCapabilityFound,
 }

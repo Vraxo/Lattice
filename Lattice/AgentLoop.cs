@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Lattice.Core;
 
 /// <summary>
@@ -43,6 +45,31 @@ public sealed class AgentLoop
         ActionSelectionContext context = new(interpreted.Session, _interpretation);
         ActionSelection selection = _selector.Select(context, interpreted.Candidates);
         return Execute(interpreted.Session, selection);
+    }
+
+    /// <summary>
+    /// Runs a turn from a structured capability request. Candidates are discovered from generic
+    /// descriptor metadata and then chosen by the same policy selector the controlled path uses.
+    /// When nothing is discovered, the turn is blocked with a question rather than guessed.
+    /// </summary>
+    /// <returns></returns>
+    public AgentTurnResult Run(Session session, CapabilityRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(request);
+        ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(_registry.ToCatalog(), request);
+        if (candidates.IsEmpty)
+        {
+            AskUserProposal ask = new(new ClarificationRequest(
+                ClarificationKind.NoCapabilityFound,
+                $"No capability is registered for '{request.Operation}'."));
+            return Execute(session, ActionSelection.Blocked(ask, "Discovery found no candidate."));
+        }
+
+        ActionProposal[] proposals = [.. candidates.Select(candidate => (ActionProposal)candidate.Proposal)];
+        ActionSelectionContext context = new(session, _interpretation);
+        ActionSelection selection = _selector.Select(context, proposals);
+        return Execute(session, selection);
     }
 
     private AgentTurnResult Execute(Session session, ActionSelection selection)
