@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 /// <summary>
 /// Applies validated line-range edits to an immutable <see cref="TextDocument"/>. Content outside
 /// the edited range is preserved character for character, including its original terminators.
@@ -14,6 +15,7 @@ public static class TextEditor
     /// <summary>
     /// Replaces the lines in <paramref name="range"/> with <paramref name="replacement"/>.
     /// </summary>
+    /// <returns></returns>
     public static Result<TextDocument> Replace(TextDocument document, LineRange range, string replacement)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -24,16 +26,19 @@ public static class TextEditor
                 DocumentErrorCodes.RangeOutOfBounds,
                 $"Range {range} exceeds the document's {document.LineCount} line(s)."));
         }
+
         string source = document.ToText();
         int start = CharacterOffset(document, range.Start);
         int end = CharacterOffset(document, range.End);
         string updated = string.Concat(source.AsSpan(0, start), replacement, source.AsSpan(end));
         return Result<TextDocument>.Success(TextDocument.Parse(updated));
     }
+
     /// <summary>
     /// Inserts <paramref name="text"/> immediately before the zero-based <paramref name="lineIndex"/>.
     /// An index equal to the line count appends at the end of the document.
     /// </summary>
+    /// <returns></returns>
     public static Result<TextDocument> Insert(TextDocument document, int lineIndex, string text)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -44,14 +49,18 @@ public static class TextEditor
                 DocumentErrorCodes.RangeOutOfBounds,
                 $"Insertion line {lineIndex} is outside the document's {document.LineCount} line(s)."));
         }
+
         return Replace(document, LineRange.At(lineIndex), text);
     }
+
     /// <summary>Removes the lines in <paramref name="range"/>.</summary>
+    /// <returns></returns>
     public static Result<TextDocument> Delete(TextDocument document, LineRange range)
     {
         ArgumentNullException.ThrowIfNull(document);
         return Replace(document, range, string.Empty);
     }
+
     /// <summary>Character offset at which the zero-based <paramref name="lineIndex"/> begins.</summary>
     private static int CharacterOffset(TextDocument document, int lineIndex)
     {
@@ -60,6 +69,7 @@ public static class TextEditor
         {
             offset += document.Lines[i].Text.Length;
         }
+
         return offset;
     }
 }

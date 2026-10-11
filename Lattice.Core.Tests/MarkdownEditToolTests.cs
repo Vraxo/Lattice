@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class MarkdownEditToolTests : IDisposable
 {
     private const string Document =
@@ -8,8 +9,14 @@ public sealed class MarkdownEditToolTests : IDisposable
         "alpha body\n" +
         "## Beta\n" +
         "beta body\n";
+
     private readonly TempWorkspace _workspace = new();
-    public void Dispose() => _workspace.Dispose();
+
+    public void Dispose()
+    {
+        _workspace.Dispose();
+    }
+
     [Fact]
     public void ReplacesSectionContentAndPreservesHeading()
     {
@@ -23,6 +30,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.Contains("new alpha\n", updated, StringComparison.Ordinal);
         Assert.DoesNotContain("alpha body", updated, StringComparison.Ordinal);
     }
+
     [Fact]
     public void ContentOutsideTheSectionIsUntouched()
     {
@@ -34,6 +42,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.StartsWith("# Title\nintro\n## Alpha\n", updated, StringComparison.Ordinal);
         Assert.EndsWith("## Beta\nbeta body\n", updated, StringComparison.Ordinal);
     }
+
     [Fact]
     public void StaleSectionHashIsRejectedAndFileUnchanged()
     {
@@ -44,18 +53,21 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.Equal(DocumentErrorCodes.StaleContent, invocation.Result.Error!.Code);
         Assert.Equal(Document, File.ReadAllText(path));
     }
+
     [Fact]
     public void ChangeElsewhereInTheFileDoesNotInvalidateTheSectionHash()
     {
         string path = _workspace.WriteFile("doc.md", Document);
         MarkdownEditTool tool = Create();
         string hash = HashOfSection(Document, "Alpha");
+
         // Edit a different section first, then apply the Alpha edit with its original hash.
         Run(tool, "doc.md", "Beta", "changed beta\n", HashOfSection(Document, "Beta"));
         ToolInvocation invocation = Run(tool, "doc.md", "Alpha", "new alpha\n", hash);
         Assert.True(invocation.Result.IsSuccess);
         Assert.Contains("new alpha", File.ReadAllText(path), StringComparison.Ordinal);
     }
+
     [Fact]
     public void MissingSectionIsRejected()
     {
@@ -65,6 +77,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.False(invocation.Result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.TargetNotFound, invocation.Result.Error!.Code);
     }
+
     [Fact]
     public void AmbiguousSectionIsRejected()
     {
@@ -75,6 +88,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.False(invocation.Result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.TargetAmbiguous, invocation.Result.Error!.Code);
     }
+
     [Fact]
     public void LevelDisambiguatesDuplicateHeadings()
     {
@@ -85,6 +99,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.True(invocation.Result.IsSuccess);
         Assert.Contains("# Same\n## Same\nnew\n", File.ReadAllText(path), StringComparison.Ordinal);
     }
+
     [Fact]
     public void EmptyExpectedHashIsRejected()
     {
@@ -94,6 +109,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.False(invocation.Result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.ExpectedHashMissing, invocation.Result.Error!.Code);
     }
+
     [Fact]
     public void TraversalIsRejected()
     {
@@ -102,6 +118,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.False(invocation.Result.IsSuccess);
         Assert.Equal(FileToolErrorCodes.PathOutsideRoot, invocation.Result.Error!.Code);
     }
+
     [Fact]
     public void MissingFileIsRejected()
     {
@@ -110,6 +127,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.False(invocation.Result.IsSuccess);
         Assert.Equal(FileToolErrorCodes.PathNotFound, invocation.Result.Error!.Code);
     }
+
     [Fact]
     public void DeniedPolicyPreventsAnyWrite()
     {
@@ -124,6 +142,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
         Assert.Equal(Document, File.ReadAllText(path));
     }
+
     [Fact]
     public void SuccessfulEditCreatesBackup()
     {
@@ -135,6 +154,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.True(File.Exists(backup));
         Assert.Equal(Document, File.ReadAllText(backup));
     }
+
     [Fact]
     public void SuccessfulEditReturnsADiff()
     {
@@ -146,6 +166,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.Contains("-alpha body", output, StringComparison.Ordinal);
         Assert.Contains("+new", output, StringComparison.Ordinal);
     }
+
     [Fact]
     public void CarriageReturnTerminatorsSurviveAnEdit()
     {
@@ -156,7 +177,12 @@ public sealed class MarkdownEditToolTests : IDisposable
         Run(tool, "doc.md", "A", "new\r\n", hash);
         Assert.Equal("# A\r\nnew\r\n# B\r\nkeep\r\n", File.ReadAllText(path));
     }
-    private MarkdownEditTool Create() => new(new WorkspaceRoot(_workspace.Path));
+
+    private MarkdownEditTool Create()
+    {
+        return new(new WorkspaceRoot(_workspace.Path));
+    }
+
     private static string HashOfSection(string source, string heading)
     {
         MarkdownDocument document = MarkdownDocument.Parse(source);
@@ -166,17 +192,21 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.True(content.IsSuccess);
         return ContentHash.Of(content.Value);
     }
+
     private static ToolInvocation Run(
         MarkdownEditTool tool,
         string path,
         string heading,
         string replacement,
         string expectedHash,
-        int? level = null) =>
-        ToolExecutor.Execute(
+        int? level = null)
+    {
+        return ToolExecutor.Execute(
             tool,
             Arguments(path, heading, replacement, expectedHash, level),
             ToolPermissionPolicy.AllowAll);
+    }
+
     private static ArgumentBag Arguments(
         string path,
         string heading,
@@ -195,6 +225,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         {
             entries.Add(new ArgumentEntry("level", ArgumentValue.FromInteger(level.Value)));
         }
+
         return ArgumentBag.From(entries);
     }
 }

@@ -1,4 +1,5 @@
 namespace Lattice.Core;
+
 /// <summary>
 /// Applies a single literal patch to a file inside the workspace and writes the result. Because
 /// this tool has <see cref="ToolSideEffect.LocalWrite"/>, <see cref="ToolExecutor"/> refuses to
@@ -13,12 +14,15 @@ public sealed class WriteFileTool : ITool
     private const string FindParameter = "find";
     private const string ReplaceParameter = "replace";
     private readonly WorkspaceRoot _root;
+
     public WriteFileTool(WorkspaceRoot root)
     {
         ArgumentNullException.ThrowIfNull(root);
         _root = root;
     }
+
     public static ToolId Id { get; } = new("files.write");
+
     public ToolDescriptor Descriptor { get; } = new(
         Id,
         "Applies a single literal patch to a file inside the workspace.",
@@ -29,6 +33,7 @@ public sealed class WriteFileTool : ITool
             new ToolParameter(FindParameter, ToolParameterType.String),
             new ToolParameter(ReplaceParameter, ToolParameterType.String),
         ]);
+
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
@@ -40,22 +45,26 @@ public sealed class WriteFileTool : ITool
                 FileToolErrorCodes.WriteFailed,
                 "Arguments 'path', 'find', and 'replace' must all be strings."));
         }
+
         if (find.Length == 0)
         {
             return ToolResult.Failure(new Error(
                 FileToolErrorCodes.WriteFailed,
                 "Argument 'find' must not be empty."));
         }
+
         Result<string> resolved = WorkspaceFileAccess.ResolveReadableFile(_root, requested);
         if (!resolved.IsSuccess)
         {
             return ToolResult.Failure(resolved.Error!);
         }
+
         Result<string> read = WorkspaceFileAccess.Read(resolved.Value, requested);
         if (!read.IsSuccess)
         {
             return ToolResult.Failure(read.Error!);
         }
+
         string original = read.Value;
         TextPatch patch = new(find, replace);
         PatchPreview preview = TextPatcher.Apply(original, patch);
@@ -68,12 +77,14 @@ public sealed class WriteFileTool : ITool
                 code,
                 $"Patch to '{requested}' was not applied ({preview.Status})."));
         }
+
         string diff = UnifiedDiff.Create(original, preview.PatchedText!);
         Result write = WorkspaceFileAccess.Write(resolved.Value, requested, original, preview.PatchedText!);
         if (!write.IsSuccess)
         {
             return ToolResult.Failure(write.Error!);
         }
+
         return ToolResult.Success(ArgumentValue.FromString(diff));
     }
 }

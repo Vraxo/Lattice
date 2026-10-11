@@ -1,4 +1,5 @@
 namespace Lattice.Core.Tests;
+
 public sealed class TextEditorTests
 {
     [Fact]
@@ -9,6 +10,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nX\nc\n", result.Value.ToText());
     }
+
     [Fact]
     public void ReplacePreservesLinesOutsideTheRange()
     {
@@ -17,6 +19,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("keep1\nnew\nkeep2\n", result.Value.ToText());
     }
+
     [Fact]
     public void ReplacementWithoutTerminatorMergesWithTheFollowingLine()
     {
@@ -27,6 +30,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nXc\n", result.Value.ToText());
     }
+
     [Fact]
     public void ReplaceCanConsumeAndReplaceMultipleLines()
     {
@@ -35,6 +39,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nX\nY\nd\n", result.Value.ToText());
     }
+
     [Fact]
     public void ReplaceWithEmptyRangeInserts()
     {
@@ -43,6 +48,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nX\nb\n", result.Value.ToText());
     }
+
     [Fact]
     public void ReplaceBeyondTheDocumentFails()
     {
@@ -51,6 +57,7 @@ public sealed class TextEditorTests
         Assert.False(result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
     }
+
     [Fact]
     public void DeleteRemovesTheTargetedLines()
     {
@@ -59,6 +66,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nc\n", result.Value.ToText());
     }
+
     [Fact]
     public void DeleteAtEndRemovesTrailingLines()
     {
@@ -67,6 +75,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nb\n", result.Value.ToText());
     }
+
     [Fact]
     public void DeleteOfEverythingLeavesAnEmptyDocument()
     {
@@ -76,6 +85,7 @@ public sealed class TextEditorTests
         Assert.Equal(0, result.Value.LineCount);
         Assert.Equal(string.Empty, result.Value.ToText());
     }
+
     [Fact]
     public void EmptyRangeDeletesNothing()
     {
@@ -84,6 +94,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nb\n", result.Value.ToText());
     }
+
     [Fact]
     public void InsertAtStartPrependsLines()
     {
@@ -92,6 +103,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("X\na\nb\n", result.Value.ToText());
     }
+
     [Fact]
     public void InsertInMiddleAddsLines()
     {
@@ -100,6 +112,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nX\nb\n", result.Value.ToText());
     }
+
     [Fact]
     public void InsertAtLineCountAppends()
     {
@@ -108,6 +121,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nb\nX\n", result.Value.ToText());
     }
+
     [Fact]
     public void InsertIntoEmptyDocumentProducesContent()
     {
@@ -116,6 +130,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("X\n", result.Value.ToText());
     }
+
     [Fact]
     public void InsertBeyondTheDocumentFails()
     {
@@ -124,6 +139,7 @@ public sealed class TextEditorTests
         Assert.False(result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
     }
+
     [Fact]
     public void InsertAtNegativeLineFails()
     {
@@ -132,6 +148,7 @@ public sealed class TextEditorTests
         Assert.False(result.IsSuccess);
         Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
     }
+
     [Fact]
     public void CarriageReturnLineFeedTerminatorsArePreserved()
     {
@@ -140,6 +157,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\r\nX\r\nc\r\n", result.Value.ToText());
     }
+
     [Fact]
     public void UntouchedLinesKeepTheirOwnTerminatorsInAMixedDocument()
     {
@@ -148,6 +166,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\r\nX\nc\r\n", result.Value.ToText());
     }
+
     [Fact]
     public void EditingADocumentWithoutAFinalNewlineIsFine()
     {
@@ -156,6 +175,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("a\nX\n", result.Value.ToText());
     }
+
     [Fact]
     public void OriginalDocumentIsNotMutated()
     {
@@ -163,6 +183,7 @@ public sealed class TextEditorTests
         TextEditor.Replace(document, new LineRange(1, 2), "X\n");
         Assert.Equal("a\nb\nc\n", document.ToText());
     }
+
     [Fact]
     public void ReplacingTheWholeDocumentEqualsTheReplacement()
     {
@@ -171,6 +192,7 @@ public sealed class TextEditorTests
         Assert.True(result.IsSuccess);
         Assert.Equal("X\nY\n", result.Value.ToText());
     }
+
     [Fact]
     public void EditingIsDeterministic()
     {
@@ -179,6 +201,7 @@ public sealed class TextEditorTests
         Result<TextDocument> second = TextEditor.Replace(document, new LineRange(1, 2), "X\n");
         Assert.Equal(first.Value, second.Value);
     }
+
     [Fact]
     public void NullDocumentIsRejected()
     {
@@ -186,6 +209,7 @@ public sealed class TextEditorTests
         Assert.Throws<ArgumentNullException>(() => TextEditor.Insert(null!, 0, "X"));
         Assert.Throws<ArgumentNullException>(() => TextEditor.Delete(null!, LineRange.Empty));
     }
+
     [Fact]
     public void NullReplacementIsRejected()
     {
