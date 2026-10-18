@@ -83,9 +83,12 @@ slot is filled from an observed value (a tool result, a parsed question, or a de
   contains braces is not expanded.
 - Counts are pluralized by `EnglishPlural`: exactly one uses the singular form, everything else the
   plural. This fixes the previously ungrammatical `entr(y/ies)` output.
-- Templates live in code, not configuration. They are fixed system output, not user-extensible
-  coverage, so a parser and schema would not be justified. (Contrast `config/nlp/patterns.json`,
-  which is data because adding coverage there is the point.)
+- Templates live in code, not configuration. They are fixed, system-owned response structures, not a
+  user-extensible content library, so a parser and schema would not be justified. (Contrast
+  `config/nlp/patterns.json`, which is data because adding coverage there is the point.) This
+  decision is **local to M8.3**; it does not establish that all future templates must be hard-coded.
+  Revisit the storage decision if localization, user-authored templates, runtime customization, or
+  independently versioned template packages become actual requirements.
 ### Tests
 - `tests/corpus/responses/v1.json` holds one entry per template with its expected realized text,
   plus negative `missingSlotCases`. A wording change that alters meaning must change the fixture
@@ -99,3 +102,30 @@ slot is filled from an observed value (a tool result, a parsed question, or a de
 - No unrestricted prose generation, and no model of tone, style, or paraphrase.
 - No template selection by scoring; the caller chooses the template that matches its evidence.
 - No localization or message catalogs.
+## 7. Edit instructions and preservation constraints (M8.1)
+M8.1 requires that edit *instructions* and preservation *constraints* be represented explicitly,
+independent of any particular tool or document format.
+### Representation
+- `EditInstruction` records an `Operation` (`EditOperationKind`), a `Target` (`EditTarget`), combined
+  `Constraints` (`PreservationConstraint` flags), and `Parameters` (an immutable, case-sensitive map
+  for format-specific detail such as a heading level).
+- `EditTarget` names what the edit applies to (`Section`, `Path`, `Document`) without embedding
+  Markdown or path syntax in the instruction itself.
+- `PreservationConstraint` is a flags enum: `PreserveMeaning`, `RestrictToTarget`,
+  `PreserveUntouchedContent`, or `None`.
+### Honest execution status
+Representing an operation does **not** mean the editor can perform it. `EditOperationSupport` is the
+single support table; `EditInstruction.Status` reports `Executable` or `Unsupported`. Only
+`ReplaceSection` is executable today. `Shorten` and `ChangeTone` can be represented faithfully but
+are `Unsupported`.
+`EditInstruction.RequireExecutable()` returns a typed failure (`edit.operation-unsupported`) for an
+unsupported operation, so a caller cannot proceed to report a transformation that was never applied.
+The agent must not claim `Shorten`/`ChangeTone` was performed.
+### Scope
+This models intent and constraints; it does not implement semantic rewriting. Adding a new executable
+operation means extending `EditOperationSupport` and adding tests, not widening this document.
+### Tests
+`EditInstructionTests` covers: a supported `ReplaceSection`; `Shorten` and `ChangeTone` represented
+but `Unsupported`; the typed refusal from `RequireExecutable`; combinable and inspectable constraint
+flags; `None` when no constraints are given; parameter case-sensitivity and defensive copy; target
+kind/reference distinction; empty-reference rejection; and value equality.

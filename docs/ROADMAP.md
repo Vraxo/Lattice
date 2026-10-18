@@ -250,11 +250,19 @@
 - Represent target spans and constraints explicitly.
 
 **Gate:** fixture tests confirm scope restrictions and preservation criteria. Commit: `feat(text): model scoped prose edits`.
+> **Corrective follow-up (M8.1a — explicit edit-instruction model):** Section-scoped editing met the
+> targeting and "do not modify other sections" criteria, but the milestone's edit *instructions*
+> (shorten, change tone, preserve meaning) were not represented. `EditInstruction`, `EditTarget`, and
+> `PreservationConstraint` now model the operation, target, and preservation requirements explicitly,
+> with `EditInstruction.Status` distinguishing executable from unsupported operations. Representing
+> `Shorten`/`ChangeTone` does **not** mean the editor can perform them; `RequireExecutable` refuses
+> unsupported operations with `edit.operation-unsupported`. Tests in `EditInstructionTests` cover the
+> supported/unsupported distinction. Commit: `feat(text): model edit instructions and preservation constraints`.
 
 ### M8.2 — Add deterministic document transformation baseline
 - Start with operations that can be performed reliably using explicit rules/templates; retain original text and diff.
 
-**Gate:** tests cover headings, lists, code fences, and unchanged-region preservation. Commit: `feat(markdown): add safe structured document edits`.
+**Gate:** tests cover heading-based targeting, fenced-code exclusion during heading detection, preservation of list content in untouched regions, and unchanged-region preservation generally. List nesting and list-specific structural editing are outside M8's scope. Commit: `feat(markdown): add safe structured document edits`.
 
 ### M8.3 — Add first English realization templates
 - Produce natural-enough explanations from known facts/tool results with templates and grammar-safe slots.

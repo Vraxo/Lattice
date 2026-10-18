@@ -168,6 +168,27 @@ public sealed class MarkdownEditToolTests : IDisposable
     }
 
     [Fact]
+    public void MarkdownListOutsideTheTargetIsUnchanged()
+    {
+        // M8 does not parse or target list structure. This proves the weaker, required guarantee:
+        // a list in an untouched region is not damaged by an edit elsewhere.
+        const string source =
+            "# A\n" +
+            "- one\n" +
+            "  - nested\n" +
+            "- two\n" +
+            "# B\n" +
+            "old\n";
+        const string listBlock = "- one\n  - nested\n- two\n";
+        string path = _workspace.WriteFile("doc.md", source);
+        MarkdownEditTool tool = Create();
+        ToolInvocation invocation = Run(tool, "doc.md", "B", "new\n", ContentHash.Of("old\n"));
+        Assert.True(invocation.Result.IsSuccess);
+        string updated = File.ReadAllText(path);
+        Assert.Contains(listBlock, updated, StringComparison.Ordinal);
+        Assert.EndsWith("# B\nnew\n", updated, StringComparison.Ordinal);
+    }
+    [Fact]
     public void CarriageReturnTerminatorsSurviveAnEdit()
     {
         const string crlf = "# A\r\nold\r\n# B\r\nkeep\r\n";
