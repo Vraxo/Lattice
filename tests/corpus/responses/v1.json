@@ -1,0 +1,94 @@
+{
+  "corpusVersion": "1.0",
+  "entries": [
+    {
+      "id": "find-symbol.answered.singular",
+      "template": "find-symbol.answered",
+      "slots": { "symbol": "Strings", "files": "1 file", "lines": "1 line" },
+      "expect": "Found 'Strings' in 1 file, on 1 line."
+    },
+    {
+      "id": "find-symbol.answered.plural",
+      "template": "find-symbol.answered",
+      "slots": { "symbol": "Calculator", "files": "2 files", "lines": "3 lines" },
+      "expect": "Found 'Calculator' in 2 files, on 3 lines."
+    },
+    {
+      "id": "find-symbol.not-found",
+      "template": "find-symbol.not-found",
+      "slots": { "symbol": "Missing" },
+      "expect": "No occurrences of 'Missing' were found in the workspace."
+    },
+    {
+      "id": "search.failed",
+      "template": "search.failed",
+      "slots": { "errorCode": "files.search.query-empty" },
+      "expect": "The search failed: files.search.query-empty."
+    },
+    {
+      "id": "search.unavailable",
+      "template": "search.unavailable",
+      "slots": {},
+      "expect": "The search capability is not available."
+    },
+    {
+      "id": "read.answered",
+      "template": "read.answered",
+      "slots": { "path": "README.md", "lines": "3 lines" },
+      "expect": "Read 'README.md' (3 lines)."
+    },
+    {
+      "id": "read.failed",
+      "template": "read.failed",
+      "slots": { "path": "missing.md", "errorCode": "files.path.not-found" },
+      "expect": "'missing.md' could not be read: files.path.not-found."
+    },
+    {
+      "id": "read.unavailable",
+      "template": "read.unavailable",
+      "slots": {},
+      "expect": "The read capability is not available."
+    },
+    {
+      "id": "directory.answered.singular",
+      "template": "directory.answered",
+      "slots": { "path": "src", "entries": "1 entry" },
+      "expect": "'src' is a directory containing 1 entry."
+    },
+    {
+      "id": "directory.answered.plural",
+      "template": "directory.answered",
+      "slots": { "path": "src", "entries": "2 entries" },
+      "expect": "'src' is a directory containing 2 entries."
+    },
+    {
+      "id": "directory.answered.empty",
+      "template": "directory.answered",
+      "slots": { "path": "empty", "entries": "0 entries" },
+      "expect": "'empty' is a directory containing 0 entries."
+    },
+    {
+      "id": "directory.failed",
+      "template": "directory.failed",
+      "slots": { "path": "gone" },
+      "expect": "'gone' could not be listed."
+    },
+    {
+      "id": "interpretation.unsupported",
+      "template": "interpretation.unsupported",
+      "slots": {},
+      "expect": "I could not interpret that as a supported workspace question."
+    },
+    {
+      "id": "intent.unsupported",
+      "template": "intent.unsupported",
+      "slots": {},
+      "expect": "I can only search for a symbol or inspect a path so far."
+    }
+  ],
+  "missingSlotCases": [
+    { "id": "find-symbol.answered.no-symbol", "template": "find-symbol.answered", "slots": { "files": "1 file", "lines": "1 line" }, "missing": "symbol" },
+    { "id": "read.answered.no-lines", "template": "read.answered", "slots": { "path": "a.md" }, "missing": "lines" },
+    { "id": "directory.answered.no-entries", "template": "directory.answered", "slots": { "path": "src" }, "missing": "entries" }
+  ]
+}

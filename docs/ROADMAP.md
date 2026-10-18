@@ -262,6 +262,20 @@
 
 **Gate:** response fixtures verify semantic slots are correct and unverified claims are not introduced. Commit: `feat(nlg): realize evidence-based responses`.
 
+### M8.4 — Refuse edits that cannot preserve encoding
+- Purpose: prevent document edits from silently transcoding files or changing their BOM.
+- Detect the existing file encoding from its bytes before any destructive write or backup operation.
+- Permit supported UTF-8-without-BOM edits when strict validation and existing write safeguards pass.
+- Reject UTF-8 BOM, UTF-16, UTF-32, and other recognised encodings when their preservation is unsupported, using an appropriate typed error.
+- Reject unsupported edits before creating or replacing a backup and before modifying the original file.
+- Verify that rejected edits leave the original bytes unchanged.
+- Enforce the guard at the shared write boundary and test the observable behaviour through both `WriteFileTool` and `MarkdownEditTool`.
+- Preserve permissive reads for supported BOM-marked Unicode files; the restriction applies to editing, not reading.
+- Run the build and full test suite and record the actual results.
+**Gate:** UTF-8-without-BOM edits succeed; UTF-8 BOM, UTF-16 LE/BE, and UTF-32 LE/BE edits are refused with `EncodingPreservationUnsupported`; a refused edit leaves the original bytes unchanged and creates or replaces no backup; both write tools exhibit the refusal through the shared boundary; marked files still read successfully; the full build and test suite pass with recorded results. Commit: `feat(files): refuse edits that cannot preserve encoding`.
+> **Introduced later:** M8.4 is a separately introduced safety requirement resulting from the
+> encoding-preservation ruling that followed the original M8.1–M8.3 plan. M8.1, M8.2, and M8.3 are
+> unchanged. The detailed design and acceptance criteria live in `docs/M8_DESIGN.md`.
 ## M9 — Retrieval improvement and package extensibility
 
 **Outcome:** evidence-based retrieval and external capabilities scale without rewriting the core.

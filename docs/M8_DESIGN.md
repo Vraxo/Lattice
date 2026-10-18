@@ -53,7 +53,7 @@ bytes.
 - No automatic transcoding, ever, as a side effect of a content edit.
 - The read tools (`files.read`, `files.search`) are not refactored by this change and keep their
   existing behaviour: they read supported BOM-marked Unicode files and reject invalid UTF-8.
-## 5. Acceptance criteria for the encoding substep
+## 5. Acceptance criteria for the encoding substep (M8.4)
 - UTF-8 without a BOM edits normally; the result has no BOM.
 - UTF-8 with a BOM, UTF-16 LE, UTF-16 BE, UTF-32 LE, and UTF-32 BE are each refused with
   `EncodingPreservationUnsupported`.
@@ -64,3 +64,38 @@ bytes.
 - Reads of marked files still succeed; a rejected edit is not confused with a stale-content or
   parsing error.
 - `dotnet build` and `dotnet test` pass with a reported, real test count.
+## 6. English realization templates (M8.3)
+Response text is produced by filling fixed templates (`ResponseTemplates`) with values the engine
+observed. This replaces ad-hoc string interpolation at the answer sites.
+### Invariant
+A realized response states only what its supplied slots establish. A template cannot introduce a
+fact that was not passed to it, because every variable part of a response is a named slot and every
+slot is filled from an observed value (a tool result, a parsed question, or a derived count).
+### Rules
+- A template is a fixed string with named slots written `{name}`. Its slot names are discovered from
+  the text, not declared separately.
+- Realization fails with the typed error `ResponseErrorCodes.MissingSlot` when a slot has no value.
+  A placeholder is never emitted; the caller either supplies the slot or the realization is a
+  failure.
+- At the answer boundary (`WorkspaceQuestionAnswerer`) a missing slot is a programming error — a
+  call site and its template disagree — so it throws rather than returning a half-formed answer.
+- Slot values are inserted verbatim and are not re-scanned for slots, so a value that itself
+  contains braces is not expanded.
+- Counts are pluralized by `EnglishPlural`: exactly one uses the singular form, everything else the
+  plural. This fixes the previously ungrammatical `entr(y/ies)` output.
+- Templates live in code, not configuration. They are fixed system output, not user-extensible
+  coverage, so a parser and schema would not be justified. (Contrast `config/nlp/patterns.json`,
+  which is data because adding coverage there is the point.)
+### Tests
+- `tests/corpus/responses/v1.json` holds one entry per template with its expected realized text,
+  plus negative `missingSlotCases`. A wording change that alters meaning must change the fixture
+  deliberately.
+- `ResponseRealizationTests` drives the corpus, asserts every catalog template is covered, that no
+  realized text leaves a `{`/`}`, that a brace-containing value is not re-expanded, and that
+  `EnglishPlural` behaves for 0/1/2 and rejects negatives.
+- `WorkspaceQuestionAnswererTests` adds end-to-end assertions that answered text is fully realized
+  and grammatically singular where expected.
+### Non-goals
+- No unrestricted prose generation, and no model of tone, style, or paraphrase.
+- No template selection by scoring; the caller chooses the template that matches its evidence.
+- No localization or message catalogs.

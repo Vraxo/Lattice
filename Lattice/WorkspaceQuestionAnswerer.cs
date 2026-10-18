@@ -1,11 +1,11 @@
 using System.Collections.Immutable;
-
 namespace Lattice.Core;
-
 /// <summary>
 /// Answers a narrow set of workspace questions from file evidence. Every answered question
 /// cites the files and lines it relied on; anything it cannot ground in evidence is reported
-/// as insufficient or unsupported rather than guessed.
+/// as insufficient or unsupported rather than guessed. Response text is realized from
+/// <see cref="ResponseTemplates"/>; each slot is filled from an observed fact or tool result, so
+/// the wording cannot introduce a claim the evidence does not support.
 /// </summary>
 public sealed class WorkspaceQuestionAnswerer
 {
@@ -14,7 +14,6 @@ public sealed class WorkspaceQuestionAnswerer
     private readonly ToolRegistry _registry;
     private readonly ToolPermissionPolicy _policy;
     private readonly WorkspaceToolset _tools;
-
     public WorkspaceQuestionAnswerer(
         ToolRegistry registry,
         ToolPermissionPolicy policy,
@@ -27,7 +26,6 @@ public sealed class WorkspaceQuestionAnswerer
         _policy = policy;
         _tools = tools;
     }
-
     public EvidenceAnswer Answer(RequestInterpretation interpretation)
     {
         ArgumentNullException.ThrowIfNull(interpretation);
@@ -35,9 +33,8 @@ public sealed class WorkspaceQuestionAnswerer
         {
             return EvidenceAnswer.Unsupported(
                 interpretation.Text,
-                "I could not interpret that as a supported workspace question.");
+                Realize(ResponseTemplates.UnsupportedInterpretation));
         }
-
         string target = interpretation.Match.Slot.Value;
         return interpretation.Intent switch
         {
@@ -45,10 +42,9 @@ public sealed class WorkspaceQuestionAnswerer
             RequestIntentKind.InspectPath => AnswerInspectPath(interpretation.Text, target),
             _ => EvidenceAnswer.Unsupported(
                 interpretation.Text,
-                "I can only search for a symbol or inspect a path so far."),
+                Realize(ResponseTemplates.UnsupportedIntent)),
         };
     }
-
     private EvidenceAnswer AnswerFindSymbol(string question, string symbol)
     {
         ArgumentBag arguments = ArgumentBag.From(
@@ -58,31 +54,33 @@ public sealed class WorkspaceQuestionAnswerer
         ToolInvocation? invocation = Invoke(_tools.Search, arguments);
         if (invocation is null)
         {
-            return EvidenceAnswer.Unsupported(question, "The search capability is not available.");
+            return EvidenceAnswer.Unsupported(
+                question,
+                Realize(ResponseTemplates.SearchUnavailable));
         }
-
         if (!invocation.Result.IsSuccess)
         {
             return EvidenceAnswer.Insufficient(
                 question,
-                $"The search failed: {invocation.Result.Error!.Code}.");
+                Realize(ResponseTemplates.SearchFailed, ("errorCode", invocation.Result.Error!.Code)));
         }
-
         ImmutableArray<EvidenceReference> evidence = ParseSearchEvidence(invocation.Result.Output!.AsString());
         if (evidence.IsEmpty)
         {
             return EvidenceAnswer.Insufficient(
                 question,
-                $"No occurrences of '{symbol}' were found in the workspace.");
+                Realize(ResponseTemplates.FindSymbolNotFound, ("symbol", symbol)));
         }
-
         int files = evidence.Select(reference => reference.RelativePath).Distinct().Count();
         return EvidenceAnswer.Answered(
             question,
-            $"Found '{symbol}' in {files} file(s), on {evidence.Length} line(s).",
+            Realize(
+                ResponseTemplates.FindSymbolAnswered,
+                ("symbol", symbol),
+                ("files", EnglishPlural.Of(files, "file", "files")),
+                ("lines", EnglishPlural.Of(evidence.Length, "line", "lines"))),
             evidence);
     }
-
     private EvidenceAnswer AnswerInspectPath(string question, string path)
     {
         ArgumentBag readArguments = ArgumentBag.From(
@@ -92,9 +90,10 @@ public sealed class WorkspaceQuestionAnswerer
         ToolInvocation? read = Invoke(_tools.Read, readArguments);
         if (read is null)
         {
-            return EvidenceAnswer.Unsupported(question, "The read capability is not available.");
+            return EvidenceAnswer.Unsupported(
+                question,
+                Realize(ResponseTemplates.ReadUnavailable));
         }
-
         if (read.Result.IsSuccess)
         {
             string text = read.Result.Output!.AsString();
@@ -102,20 +101,23 @@ public sealed class WorkspaceQuestionAnswerer
             EvidenceReference reference = new(path, 1, lines, Snippet(text));
             return EvidenceAnswer.Answered(
                 question,
-                $"Read '{path}' ({lines} line(s)).",
+                Realize(
+                    ResponseTemplates.ReadAnswered,
+                    ("path", path),
+                    ("lines", EnglishPlural.Of(lines, "line", "lines"))),
                 [reference]);
         }
-
         if (read.Result.Error!.Code == FileToolErrorCodes.NotAFile)
         {
             return AnswerDirectoryListing(question, path);
         }
-
         return EvidenceAnswer.Insufficient(
             question,
-            $"'{path}' could not be read: {read.Result.Error.Code}.");
+            Realize(
+                ResponseTemplates.ReadFailed,
+                ("path", path),
+                ("errorCode", read.Result.Error.Code)));
     }
-
     private EvidenceAnswer AnswerDirectoryListing(string question, string path)
     {
         ArgumentBag arguments = ArgumentBag.From(
@@ -125,28 +127,48 @@ public sealed class WorkspaceQuestionAnswerer
         ToolInvocation? listing = Invoke(_tools.List, arguments);
         if (listing is null || !listing.Result.IsSuccess)
         {
-            return EvidenceAnswer.Insufficient(question, $"'{path}' could not be listed.");
+            return EvidenceAnswer.Insufficient(
+                question,
+                Realize(ResponseTemplates.DirectoryFailed, ("path", path)));
         }
-
         string text = listing.Result.Output!.AsString();
         int count = text.Length == 0 ? 0 : text.Split('\n').Length;
         EvidenceReference reference = new(path, 1, 1, Snippet(text));
         return EvidenceAnswer.Answered(
             question,
-            $"'{path}' is a directory containing {count} entr(y/ies).",
+            Realize(
+                ResponseTemplates.DirectoryAnswered,
+                ("path", path),
+                ("entries", EnglishPlural.Of(count, "entry", "entries"))),
             [reference]);
     }
-
     private ToolInvocation? Invoke(ToolId toolId, ArgumentBag arguments)
     {
         if (!_registry.TryResolve(toolId, out ITool? tool))
         {
             return null;
         }
-
         return ToolExecutor.Execute(tool, arguments, _policy);
     }
-
+    /// <summary>
+    /// Fills a template from observed values. A missing slot here means a call site and its
+    /// template disagree, which is a programming error rather than an operational failure, so it
+    /// throws instead of producing text with an unfilled placeholder.
+    /// </summary>
+    private static string Realize(ResponseTemplate template, params (string Name, string Value)[] slots)
+    {
+        Dictionary<string, string> values = new(StringComparer.Ordinal);
+        foreach ((string name, string value) in slots)
+        {
+            values[name] = value;
+        }
+        Result<string> realized = template.Realize(values);
+        if (!realized.IsSuccess)
+        {
+            throw new InvalidOperationException(realized.Error!.Message);
+        }
+        return realized.Value;
+    }
     private static ImmutableArray<EvidenceReference> ParseSearchEvidence(string output)
     {
         ImmutableArray<EvidenceReference>.Builder builder = ImmutableArray.CreateBuilder<EvidenceReference>();
@@ -154,14 +176,12 @@ public sealed class WorkspaceQuestionAnswerer
         {
             return builder.ToImmutable();
         }
-
         foreach (string line in output.Split('\n'))
         {
             if (builder.Count >= MaxEvidence)
             {
                 break;
             }
-
             if (SearchMatch.TryParse(line, out SearchMatch? match))
             {
                 builder.Add(new EvidenceReference(
@@ -171,10 +191,8 @@ public sealed class WorkspaceQuestionAnswerer
                     Snippet(match.LineText)));
             }
         }
-
         return builder.ToImmutable();
     }
-
     private static string Snippet(string text)
     {
         string single = text.Replace('\n', ' ').Replace('\r', ' ').Trim();

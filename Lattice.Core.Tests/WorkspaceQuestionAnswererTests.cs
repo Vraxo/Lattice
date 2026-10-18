@@ -41,6 +41,24 @@ public sealed class WorkspaceQuestionAnswererTests
     }
 
     [Fact]
+    public void AnsweredTextIsFullyRealizedWithNoPlaceholders()
+    {
+        using TempWorkspace workspace = BuildWorkspace();
+        EvidenceAnswer answer = Answer(workspace, "find symbol Calculator");
+        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
+        Assert.DoesNotContain('{', answer.Text);
+        Assert.DoesNotContain('}', answer.Text);
+        Assert.Contains("'Calculator'", answer.Text, StringComparison.Ordinal);
+    }
+    [Fact]
+    public void AnsweredSingularSymbolTextIsGrammatical()
+    {
+        using TempWorkspace workspace = BuildWorkspace();
+        EvidenceAnswer answer = Answer(workspace, "find symbol Strings");
+        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
+        Assert.Equal("Found 'Strings' in 1 file, on 1 line.", answer.Text);
+    }
+    [Fact]
     public void AnsweredAlwaysCarriesEvidence()
     {
         using TempWorkspace workspace = BuildWorkspace();
