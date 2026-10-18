@@ -1,0 +1,74 @@
+{
+  "corpusVersion": "1.0",
+  "packageId": "example.physics",
+  "notes": "Hand-authored retrieval benchmark. Each entry states a query, the query class, and the set of concept ids that would be a correct retrieval. Entries are not edited to make a regression disappear. The 'baseline' block records the metrics the current exact-id/exact-alias lookup achieves, so adding retrieval sophistication must move these numbers deliberately.",
+  "metricConvention": {
+    "precision": "totalTruePositives / totalRetrieved, or 1.0 when totalRetrieved is 0 and totalExpected is 0, otherwise 0.0 when totalRetrieved is 0",
+    "recall": "totalTruePositives / totalExpected, or 1.0 when totalExpected is 0",
+    "aggregation": "micro-averaged per query class"
+  },
+  "entries": [
+    {
+      "id": "exact-symbol.water",
+      "class": "exact-symbol",
+      "query": "concept.water",
+      "expectedIds": ["concept.water"],
+      "rationale": "An exact concept id must resolve to that concept."
+    },
+    {
+      "id": "exact-symbol.steam",
+      "class": "exact-symbol",
+      "query": "concept.steam",
+      "expectedIds": ["concept.steam"],
+      "rationale": "An exact concept id must resolve to that concept."
+    },
+    {
+      "id": "alias.h2o",
+      "class": "alias",
+      "query": "H2O",
+      "expectedIds": ["concept.water"],
+      "rationale": "Declared alias of concept.water; alias matching is case-insensitive."
+    },
+    {
+      "id": "alias.water-vapor-case",
+      "class": "alias",
+      "query": "Water Vapor",
+      "expectedIds": ["concept.steam"],
+      "rationale": "Declared alias 'water vapor' with different casing."
+    },
+    {
+      "id": "related-concept.boiling",
+      "class": "related-concept",
+      "query": "boiling point",
+      "expectedIds": ["concept.water"],
+      "rationale": "concept.water is the subject of the boiling-point fact; a relation-aware retriever should return it. The current exact lookup cannot."
+    },
+    {
+      "id": "related-concept.phase-gas",
+      "class": "related-concept",
+      "query": "phase gas",
+      "expectedIds": ["concept.steam"],
+      "rationale": "concept.steam has phase=gas; relation-aware retrieval should return it. Not served today."
+    },
+    {
+      "id": "documentation.liquid-definition",
+      "class": "documentation",
+      "query": "liquid commonly denoted",
+      "expectedIds": ["concept.water"],
+      "rationale": "Words from concept.water's definition. Full-text/documentation retrieval should return it. Not served today."
+    },
+    {
+      "id": "documentation.gaseous-definition",
+      "class": "documentation",
+      "query": "gaseous phase of water",
+      "expectedIds": ["concept.steam"],
+      "rationale": "Words from concept.steam's definition. Not served today."
+    }
+  ],
+  "baseline": [
+    { "class": "exact-symbol", "precision": 1.0, "recall": 1.0 },
+    { "class": "alias", "precision": 1.0, "recall": 1.0 },
+    { "class": "related-concept", "precision": 0.0, "recall": 0.0 },
+    { "class": "documentation", "precision": 0.0, "recall": 0.0 }
+  ]
+}

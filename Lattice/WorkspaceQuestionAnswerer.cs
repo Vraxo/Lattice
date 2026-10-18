@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
+
 namespace Lattice.Core;
+
 /// <summary>
 /// Answers a narrow set of workspace questions from file evidence. Every answered question
 /// cites the files and lines it relied on; anything it cannot ground in evidence is reported
@@ -14,6 +16,7 @@ public sealed class WorkspaceQuestionAnswerer
     private readonly ToolRegistry _registry;
     private readonly ToolPermissionPolicy _policy;
     private readonly WorkspaceToolset _tools;
+
     public WorkspaceQuestionAnswerer(
         ToolRegistry registry,
         ToolPermissionPolicy policy,
@@ -26,6 +29,7 @@ public sealed class WorkspaceQuestionAnswerer
         _policy = policy;
         _tools = tools;
     }
+
     public EvidenceAnswer Answer(RequestInterpretation interpretation)
     {
         ArgumentNullException.ThrowIfNull(interpretation);
@@ -35,6 +39,7 @@ public sealed class WorkspaceQuestionAnswerer
                 interpretation.Text,
                 Realize(ResponseTemplates.UnsupportedInterpretation));
         }
+
         string target = interpretation.Match.Slot.Value;
         return interpretation.Intent switch
         {
@@ -45,6 +50,7 @@ public sealed class WorkspaceQuestionAnswerer
                 Realize(ResponseTemplates.UnsupportedIntent)),
         };
     }
+
     private EvidenceAnswer AnswerFindSymbol(string question, string symbol)
     {
         ArgumentBag arguments = ArgumentBag.From(
@@ -58,12 +64,14 @@ public sealed class WorkspaceQuestionAnswerer
                 question,
                 Realize(ResponseTemplates.SearchUnavailable));
         }
+
         if (!invocation.Result.IsSuccess)
         {
             return EvidenceAnswer.Insufficient(
                 question,
                 Realize(ResponseTemplates.SearchFailed, ("errorCode", invocation.Result.Error!.Code)));
         }
+
         ImmutableArray<EvidenceReference> evidence = ParseSearchEvidence(invocation.Result.Output!.AsString());
         if (evidence.IsEmpty)
         {
@@ -71,6 +79,7 @@ public sealed class WorkspaceQuestionAnswerer
                 question,
                 Realize(ResponseTemplates.FindSymbolNotFound, ("symbol", symbol)));
         }
+
         int files = evidence.Select(reference => reference.RelativePath).Distinct().Count();
         return EvidenceAnswer.Answered(
             question,
@@ -81,6 +90,7 @@ public sealed class WorkspaceQuestionAnswerer
                 ("lines", EnglishPlural.Of(evidence.Length, "line", "lines"))),
             evidence);
     }
+
     private EvidenceAnswer AnswerInspectPath(string question, string path)
     {
         ArgumentBag readArguments = ArgumentBag.From(
@@ -94,6 +104,7 @@ public sealed class WorkspaceQuestionAnswerer
                 question,
                 Realize(ResponseTemplates.ReadUnavailable));
         }
+
         if (read.Result.IsSuccess)
         {
             string text = read.Result.Output!.AsString();
@@ -107,10 +118,12 @@ public sealed class WorkspaceQuestionAnswerer
                     ("lines", EnglishPlural.Of(lines, "line", "lines"))),
                 [reference]);
         }
+
         if (read.Result.Error!.Code == FileToolErrorCodes.NotAFile)
         {
             return AnswerDirectoryListing(question, path);
         }
+
         return EvidenceAnswer.Insufficient(
             question,
             Realize(
@@ -118,6 +131,7 @@ public sealed class WorkspaceQuestionAnswerer
                 ("path", path),
                 ("errorCode", read.Result.Error.Code)));
     }
+
     private EvidenceAnswer AnswerDirectoryListing(string question, string path)
     {
         ArgumentBag arguments = ArgumentBag.From(
@@ -131,6 +145,7 @@ public sealed class WorkspaceQuestionAnswerer
                 question,
                 Realize(ResponseTemplates.DirectoryFailed, ("path", path)));
         }
+
         string text = listing.Result.Output!.AsString();
         int count = text.Length == 0 ? 0 : text.Split('\n').Length;
         EvidenceReference reference = new(path, 1, 1, Snippet(text));
@@ -142,14 +157,17 @@ public sealed class WorkspaceQuestionAnswerer
                 ("entries", EnglishPlural.Of(count, "entry", "entries"))),
             [reference]);
     }
+
     private ToolInvocation? Invoke(ToolId toolId, ArgumentBag arguments)
     {
         if (!_registry.TryResolve(toolId, out ITool? tool))
         {
             return null;
         }
+
         return ToolExecutor.Execute(tool, arguments, _policy);
     }
+
     /// <summary>
     /// Fills a template from observed values. A missing slot here means a call site and its
     /// template disagree, which is a programming error rather than an operational failure, so it
@@ -162,13 +180,16 @@ public sealed class WorkspaceQuestionAnswerer
         {
             values[name] = value;
         }
+
         Result<string> realized = template.Realize(values);
         if (!realized.IsSuccess)
         {
             throw new InvalidOperationException(realized.Error!.Message);
         }
+
         return realized.Value;
     }
+
     private static ImmutableArray<EvidenceReference> ParseSearchEvidence(string output)
     {
         ImmutableArray<EvidenceReference>.Builder builder = ImmutableArray.CreateBuilder<EvidenceReference>();
@@ -176,12 +197,14 @@ public sealed class WorkspaceQuestionAnswerer
         {
             return builder.ToImmutable();
         }
+
         foreach (string line in output.Split('\n'))
         {
             if (builder.Count >= MaxEvidence)
             {
                 break;
             }
+
             if (SearchMatch.TryParse(line, out SearchMatch? match))
             {
                 builder.Add(new EvidenceReference(
@@ -191,8 +214,10 @@ public sealed class WorkspaceQuestionAnswerer
                     Snippet(match.LineText)));
             }
         }
+
         return builder.ToImmutable();
     }
+
     private static string Snippet(string text)
     {
         string single = text.Replace('\n', ' ').Replace('\r', ' ').Trim();

@@ -11,12 +11,31 @@ public sealed record EditTarget
         Kind = kind;
         Reference = reference;
     }
+
     public EditTargetKind Kind { get; }
+
     public string Reference { get; }
-    public static EditTarget Section(string heading) => Create(EditTargetKind.Section, heading);
-    public static EditTarget Path(string relativePath) => Create(EditTargetKind.Path, relativePath);
-    public static EditTarget Document(string relativePath) => Create(EditTargetKind.Document, relativePath);
-    public override string ToString() => $"{Kind}:{Reference}";
+
+    public static EditTarget Section(string heading)
+    {
+        return Create(EditTargetKind.Section, heading);
+    }
+
+    public static EditTarget Path(string relativePath)
+    {
+        return Create(EditTargetKind.Path, relativePath);
+    }
+
+    public static EditTarget Document(string relativePath)
+    {
+        return Create(EditTargetKind.Document, relativePath);
+    }
+
+    public override string ToString()
+    {
+        return $"{Kind}:{Reference}";
+    }
+
     private static EditTarget Create(EditTargetKind kind, string reference)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(reference);

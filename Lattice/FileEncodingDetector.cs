@@ -1,5 +1,7 @@
 using System.Text;
+
 namespace Lattice.Core;
+
 /// <summary>
 /// Classifies a file's encoding from its raw bytes. Detection is explicit rather than delegated to
 /// a text reader's implicit byte-order-mark handling, because that implicit handling is exactly what
@@ -16,34 +18,41 @@ internal static class FileEncodingDetector
     private static readonly byte[] Utf16LeBom = [0xFF, 0xFE];
     private static readonly UTF8Encoding StrictUtf8 =
         new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
     /// <summary>
     /// Detects the encoding of <paramref name="bytes"/>. Byte-order marks are checked longest and
     /// most specific first: UTF-32 LE's mark (FF FE 00 00) shares its first two bytes with UTF-16
     /// LE's (FF FE), so it must be tested before UTF-16 LE. Bytes with no mark are classified by
     /// strict UTF-8 validation.
     /// </summary>
+    /// <returns></returns>
     public static FileEncodingKind Detect(ReadOnlySpan<byte> bytes)
     {
         if (bytes.StartsWith(Utf32BeBom))
         {
             return FileEncodingKind.Utf32Be;
         }
+
         if (bytes.StartsWith(Utf32LeBom))
         {
             return FileEncodingKind.Utf32Le;
         }
+
         if (bytes.StartsWith(Utf8Bom))
         {
             return FileEncodingKind.Utf8WithBom;
         }
+
         if (bytes.StartsWith(Utf16BeBom))
         {
             return FileEncodingKind.Utf16Be;
         }
+
         if (bytes.StartsWith(Utf16LeBom))
         {
             return FileEncodingKind.Utf16Le;
         }
+
         try
         {
             StrictUtf8.GetString(bytes);

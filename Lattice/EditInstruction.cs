@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+
 namespace Lattice.Core;
 /// <summary>
 /// A represented edit request: what transformation is wanted, what it applies to, what must be
@@ -19,12 +20,19 @@ public sealed record EditInstruction
         Constraints = constraints;
         Parameters = parameters;
     }
+
     public EditOperationKind Operation { get; }
+
     public EditTarget Target { get; }
+
     public PreservationConstraint Constraints { get; }
+
     public ImmutableDictionary<string, string> Parameters { get; }
+
     public EditInstructionStatus Status => EditOperationSupport.StatusOf(Operation);
+
     public bool IsExecutable => Status == EditInstructionStatus.Executable;
+
     public static EditInstruction Create(
         EditOperationKind operation,
         EditTarget target,
@@ -43,22 +51,27 @@ public sealed record EditInstruction
                 builder[pair.Key] = pair.Value;
             }
         }
+
         return new EditInstruction(operation, target, constraints, builder.ToImmutable());
     }
+
     /// <summary>
     /// Succeeds only when the current editor can perform this operation. An unsupported operation is
     /// represented faithfully but refused, so it is never reported as applied.
     /// </summary>
+    /// <returns></returns>
     public Result RequireExecutable()
     {
         if (IsExecutable)
         {
             return Result.Success();
         }
+
         return Result.Failure(new Error(
             EditErrorCodes.OperationUnsupported,
             $"Edit operation '{Operation}' is not supported by the current editor; it was represented but not applied."));
     }
+
     // ImmutableDictionary<TKey, TValue> compares by reference to its backing store, so the record's
     // synthesized equality would treat two equal-but-distinct parameter maps as unequal. Compare
     // parameters by content instead.
@@ -68,29 +81,35 @@ public sealed record EditInstruction
         {
             return false;
         }
+
         if (ReferenceEquals(this, other))
         {
             return true;
         }
+
         return Operation == other.Operation
             && Target == other.Target
             && Constraints == other.Constraints
             && ParametersEqual(Parameters, other.Parameters);
     }
+
     public override int GetHashCode()
     {
         HashCode hash = default;
         hash.Add(Operation);
         hash.Add(Target);
         hash.Add(Constraints);
+
         // Order by key so the hash is independent of dictionary enumeration order.
         foreach (KeyValuePair<string, string> pair in Parameters.OrderBy(p => p.Key, StringComparer.Ordinal))
         {
             hash.Add(pair.Key, StringComparer.Ordinal);
             hash.Add(pair.Value, StringComparer.Ordinal);
         }
+
         return hash.ToHashCode();
     }
+
     private static bool ParametersEqual(
         ImmutableDictionary<string, string> left,
         ImmutableDictionary<string, string> right)
@@ -99,6 +118,7 @@ public sealed record EditInstruction
         {
             return false;
         }
+
         foreach (KeyValuePair<string, string> pair in left)
         {
             if (!right.TryGetValue(pair.Key, out string? value)
@@ -107,6 +127,7 @@ public sealed record EditInstruction
                 return false;
             }
         }
+
         return true;
     }
 }

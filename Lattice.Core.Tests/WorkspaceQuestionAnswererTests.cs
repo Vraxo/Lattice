@@ -50,6 +50,7 @@ public sealed class WorkspaceQuestionAnswererTests
         Assert.DoesNotContain('}', answer.Text);
         Assert.Contains("'Calculator'", answer.Text, StringComparison.Ordinal);
     }
+
     [Fact]
     public void AnsweredSingularSymbolTextIsGrammatical()
     {
@@ -58,6 +59,7 @@ public sealed class WorkspaceQuestionAnswererTests
         Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
         Assert.Equal("Found 'Strings' in 1 file, on 1 line.", answer.Text);
     }
+
     [Fact]
     public void AnsweredAlwaysCarriesEvidence()
     {

@@ -188,6 +188,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         Assert.Contains(listBlock, updated, StringComparison.Ordinal);
         Assert.EndsWith("# B\nnew\n", updated, StringComparison.Ordinal);
     }
+
     [Fact]
     public void CarriageReturnTerminatorsSurviveAnEdit()
     {

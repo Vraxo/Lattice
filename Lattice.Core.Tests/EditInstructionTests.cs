@@ -1,5 +1,5 @@
-using System.Collections.Immutable;
 namespace Lattice.Core.Tests;
+
 /// <summary>
 /// Verifies that edit instructions and preservation constraints can be represented and validated,
 /// and that an unsupported semantic transformation is represented honestly and refused rather than
@@ -18,6 +18,7 @@ public sealed class EditInstructionTests
         Assert.True(instruction.IsExecutable);
         Assert.True(instruction.RequireExecutable().IsSuccess);
     }
+
     [Fact]
     public void ShortenIsRepresentedButNotExecutable()
     {
@@ -28,6 +29,7 @@ public sealed class EditInstructionTests
         Assert.Equal(EditInstructionStatus.Unsupported, instruction.Status);
         Assert.False(instruction.IsExecutable);
     }
+
     [Fact]
     public void ChangeToneIsRepresentedButNotExecutable()
     {
@@ -37,6 +39,7 @@ public sealed class EditInstructionTests
             PreservationConstraint.PreserveMeaning);
         Assert.False(instruction.IsExecutable);
     }
+
     [Fact]
     public void UnsupportedOperationIsRefusedWithATypedError()
     {
@@ -47,6 +50,7 @@ public sealed class EditInstructionTests
         Assert.False(result.IsSuccess);
         Assert.Equal(EditErrorCodes.OperationUnsupported, result.Error!.Code);
     }
+
     [Fact]
     public void ConstraintsAreCombinableAndInspectable()
     {
@@ -60,6 +64,7 @@ public sealed class EditInstructionTests
         Assert.True(instruction.Constraints.HasFlag(PreservationConstraint.RestrictToTarget));
         Assert.True(instruction.Constraints.HasFlag(PreservationConstraint.PreserveUntouchedContent));
     }
+
     [Fact]
     public void NoConstraintsIsNone()
     {
@@ -68,6 +73,7 @@ public sealed class EditInstructionTests
             EditTarget.Section("Alpha"));
         Assert.Equal(PreservationConstraint.None, instruction.Constraints);
     }
+
     [Fact]
     public void ParametersArePreservedAndCaseSensitive()
     {
@@ -78,6 +84,7 @@ public sealed class EditInstructionTests
         Assert.Equal("2", instruction.Parameters["level"]);
         Assert.False(instruction.Parameters.ContainsKey("Level"));
     }
+
     [Fact]
     public void ParametersAreCopiedNotAliased()
     {
@@ -89,6 +96,7 @@ public sealed class EditInstructionTests
         source["level"] = "3";
         Assert.Equal("2", instruction.Parameters["level"]);
     }
+
     [Fact]
     public void TargetsDistinguishKindAndReference()
     {
@@ -97,11 +105,13 @@ public sealed class EditInstructionTests
         Assert.Equal(EditTargetKind.Document, EditTarget.Document("a.md").Kind);
         Assert.NotEqual(EditTarget.Section("A"), EditTarget.Section("B"));
     }
+
     [Fact]
     public void EmptyTargetReferenceIsRejected()
     {
         Assert.Throws<ArgumentException>(() => EditTarget.Section("  "));
     }
+
     [Fact]
     public void InstructionsWithEqualButDistinctParameterMapsAreEqual()
     {
@@ -120,6 +130,7 @@ public sealed class EditInstructionTests
         Assert.Equal(a, b);
         Assert.Equal(a.GetHashCode(), b.GetHashCode());
     }
+
     [Fact]
     public void InstructionsWithDifferentParametersAreNotEqual()
     {
@@ -133,6 +144,7 @@ public sealed class EditInstructionTests
             parameters: new Dictionary<string, string>(StringComparer.Ordinal) { ["level"] = "3" });
         Assert.NotEqual(a, b);
     }
+
     [Fact]
     public void InstructionsWithSameContentAreEqual()
     {
