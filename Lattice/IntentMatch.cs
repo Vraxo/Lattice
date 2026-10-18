@@ -2,6 +2,12 @@ namespace Lattice.Core;
 
 public sealed record IntentMatch
 {
+    public string PatternId { get; }
+
+    public RequestIntentKind Intent { get; }
+
+    public IntentSlot? Slot { get; }
+
     public IntentMatch(string patternId, RequestIntentKind intent, IntentSlot? slot)
     {
         if (string.IsNullOrWhiteSpace(patternId))
@@ -18,10 +24,4 @@ public sealed record IntentMatch
         Intent = intent;
         Slot = slot;
     }
-
-    public string PatternId { get; }
-
-    public RequestIntentKind Intent { get; }
-
-    public IntentSlot? Slot { get; }
 }

@@ -13,8 +13,8 @@ public sealed class CalculatorTool : ITool
         "An integer sum.",
         ToolSideEffect.ReadOnly,
         [
-            new ToolParameter(LeftParameter, ToolParameterType.Integer),
-            new ToolParameter(RightParameter, ToolParameterType.Integer),
+            new(LeftParameter, ToolParameterType.Integer),
+            new(RightParameter, ToolParameterType.Integer),
         ]);
 
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
@@ -22,12 +22,16 @@ public sealed class CalculatorTool : ITool
         ArgumentNullException.ThrowIfNull(arguments);
         if (!arguments.TryGetValue(LeftParameter, out ArgumentValue? left) || left.Type != ToolParameterType.Integer)
         {
-            return ToolResult.Failure(new Error("calculator.left", "Missing or invalid 'left' integer."));
+            return ToolResult.Failure(new(
+                "calculator.left",
+                "Missing or invalid 'left' integer."));
         }
 
         if (!arguments.TryGetValue(RightParameter, out ArgumentValue? right) || right.Type != ToolParameterType.Integer)
         {
-            return ToolResult.Failure(new Error("calculator.right", "Missing or invalid 'right' integer."));
+            return ToolResult.Failure(new(
+                "calculator.right",
+                "Missing or invalid 'right' integer."));
         }
 
         return ToolResult.Success(ArgumentValue.FromInteger(left.AsInteger() + right.AsInteger()));

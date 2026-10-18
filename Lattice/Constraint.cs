@@ -2,6 +2,8 @@ namespace Lattice.Core;
 
 public sealed record Constraint
 {
+    public string Description { get; }
+
     public Constraint(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
@@ -11,6 +13,4 @@ public sealed record Constraint
 
         Description = description;
     }
-
-    public string Description { get; }
 }
