@@ -55,6 +55,7 @@ Build output goes to `artifacts/`, which is git-ignored.
 ## 🛠️ Tools
 
 | Tool | Behaviour |
+|---|---|
 | `calculator` | arithmetic; the one tool the CLI registers today |
 | `files.search`, `files.read`, `files.list` | read-only workspace inspection |
 | `files.write`, `markdown.edit` | edits; refused when byte encoding or BOM can't be preserved |
@@ -66,6 +67,7 @@ Permissions are policy-gated (currently read-only by default), and tool output i
 ## 🗂️ Layout
 
 | Path | Contents |
+|---|---|
 | `Lattice/` | `Lattice.Core` — domain types, agent loop, tools, knowledge and retrieval |
 | `Lattice.CSharp/` | `Lattice.CSharp` — syntax and semantic inspection, source edits |
 | `Lattice.Cli/` | console REPL; composition root, no domain logic |
@@ -77,6 +79,7 @@ Permissions are policy-gated (currently read-only by default), and tool output i
 ## 📚 Docs
 
 | Document | Covers |
+|---|---|
 | [PRD](docs/PRD.md) | vision, thesis, target use cases |
 | [Architecture](docs/ARCHITECTURE.md) | components and boundaries |
 | [Roadmap](docs/ROADMAP.md) | milestones M0–M10, each split into gated substeps |
