@@ -36,25 +36,25 @@ public sealed class ResponseRealizationTests
 
     [Theory]
     [MemberData(nameof(RealizationCases))]
-    public void RealizesToExpectedText(string entryJson)
+    public void RealizesToExpectedText(string id, string entryJson)
     {
         using JsonDocument document = JsonDocument.Parse(entryJson);
         JsonElement entry = document.RootElement;
         ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
         Result<string> realized = template.Realize(Slots(entry.GetProperty("slots")));
-        Assert.True(realized.IsSuccess, realized.Error?.Message);
+        Assert.True(realized.IsSuccess, $"{id}: {realized.Error?.Message}");
         Assert.Equal(entry.GetProperty("expect").GetString(), realized.Value);
     }
 
     [Theory]
     [MemberData(nameof(MissingSlotCases))]
-    public void MissingSlotIsRejectedRatherThanLeftUnfilled(string entryJson, string missing)
+    public void MissingSlotIsRejectedRatherThanLeftUnfilled(string id, string entryJson, string missing)
     {
         using JsonDocument document = JsonDocument.Parse(entryJson);
         JsonElement entry = document.RootElement;
         ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
         Result<string> realized = template.Realize(Slots(entry.GetProperty("slots")));
-        Assert.False(realized.IsSuccess);
+        Assert.False(realized.IsSuccess, $"{id}: expected a rejection but realization succeeded.");
         Assert.Equal(ResponseErrorCodes.MissingSlot, realized.Error!.Code);
         Assert.Contains($"'{missing}'", realized.Error.Message, StringComparison.Ordinal);
     }
