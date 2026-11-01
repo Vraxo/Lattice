@@ -1,0 +1,304 @@
+{
+  "platform": "linux-x86_64-cp311",
+  "python": "3.11.2",
+  "packages": [
+    {
+      "name": "anyio",
+      "version": "4.16.0",
+      "wheel": "anyio-4.16.0-py3-none-any.whl",
+      "sha256": "c66ae634e0b8228396b801741beb3294326d4b6102f7bba4041c0dfb58c29026",
+      "url": "https://files.pythonhosted.org/packages/a9/16/7757fb84c819accc7d7e9af5291b261e4abb8627ee040f99e7d35ef2457a/anyio-4.16.0-py3-none-any.whl",
+      "licenseDeclared": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.23",
+      "wheel": "certifi-2026.10.23-py3-none-any.whl",
+      "sha256": "e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1",
+      "url": "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl",
+      "licenseDeclared": "MPL-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "wheel": "click-8.5.0-py3-none-any.whl",
+      "sha256": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+      "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+      "licenseDeclared": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "coloredlogs",
+      "version": "15.0.1",
+      "wheel": "coloredlogs-15.0.1-py2.py3-none-any.whl",
+      "sha256": "612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934",
+      "url": "https://files.pythonhosted.org/packages/a7/06/3d6badcf13db419e25b07041d9c7b4a2c331d3f4e7134445ec5df57714cd/coloredlogs-15.0.1-py2.py3-none-any.whl",
+      "licenseDeclared": "MIT",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "filelock",
+      "version": "4.2.6",
+      "wheel": "filelock-4.2.6-py3-none-any.whl",
+      "sha256": "fd7d4fca497bf3e3d0945a13261f8e684f2aef12ce7cf76aef26e13bf7388b88",
+      "url": "https://files.pythonhosted.org/packages/b7/8d/3f849fcb79359259737bc2d8ddcaee6149ffb773239a260c9ff20179736f/filelock-4.2.6-py3-none-any.whl",
+      "licenseDeclared": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "wheel": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+      "sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+      "url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl",
+      "licenseDeclared": "Apache 2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "licenseFileNote": "Wheel did not bundle a license file; text copied from the upstream project at the matching version tag.",
+      "allFileHashesCount": 1
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.9.0",
+      "wheel": "fsspec-2026.9.0-py3-none-any.whl",
+      "sha256": "8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f",
+      "url": "https://files.pythonhosted.org/packages/6c/c0/a98505f18594f1bce828bb159cec0fcf9860562f1a2c85913409fc8f3d9e/fsspec-2026.9.0-py3-none-any.whl",
+      "licenseDeclared": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "wheel": "h11-0.16.0-py3-none-any.whl",
+      "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+      "licenseDeclared": "MIT",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.8.0",
+      "wheel": "hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "29dab7c904cd1914a0439c6e1306c12c7497c8bd32290fbe563ebf51ca4b6d6d",
+      "url": "https://files.pythonhosted.org/packages/f8/1e/1e8ecc05ef034e9a95c18ed32d2ec07905a7cd2ca611a9d88e25ee1f4850/hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "licenseDeclared": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 17
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "wheel": "httpcore-1.0.9-py3-none-any.whl",
+      "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+      "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+      "licenseDeclared": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE.md"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "wheel": "httpx-0.28.1-py3-none-any.whl",
+      "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+      "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+      "licenseDeclared": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE.md"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "huggingface_hub",
+      "version": "1.33.0",
+      "wheel": "huggingface_hub-1.33.0-py3-none-any.whl",
+      "sha256": "04e434b06e100eddbce9a6e817d72693a7884b10a79bd67ab48080d5c07eb899",
+      "url": "https://files.pythonhosted.org/packages/fc/16/963096d224b80909432dc16561a615fd33d2d13beef3ce4c63fa25e40867/huggingface_hub-1.33.0-py3-none-any.whl",
+      "licenseDeclared": "Apache-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "humanfriendly",
+      "version": "10.0",
+      "wheel": "humanfriendly-10.0-py2.py3-none-any.whl",
+      "sha256": "1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477",
+      "url": "https://files.pythonhosted.org/packages/f0/0f/310fb31e39e2d734ccaa2c0fb981ee41f7bd5056ce9bc29b2248bd569169/humanfriendly-10.0-py2.py3-none-any.whl",
+      "licenseDeclared": "MIT",
+      "licenseFiles": [
+        "LICENSE.txt"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "wheel": "idna-3.20-py3-none-any.whl",
+      "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+      "licenseDeclared": "BSD-3-Clause",
+      "licenseFiles": [
+        "LICENSE.md"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0",
+      "wheel": "mpmath-1.3.0-py3-none-any.whl",
+      "sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+      "url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl",
+      "licenseDeclared": "BSD",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "numpy",
+      "version": "2.3.4",
+      "wheel": "numpy-2.3.4-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "a7b2f9a18b5ff9824a6af80de4f37f4ec3c2aab05ef08f51c77a093f5b89adda",
+      "url": "https://files.pythonhosted.org/packages/bb/32/67e3b0f07b0aba57a078c4ab777a9e8e6bc62f24fb53a2337f75f9691699/numpy-2.3.4-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "licenseDeclared": "Copyright (c) 2005-2025, NumPy Developers.",
+      "licenseFiles": [
+        "LICENSE.txt",
+        "ma-LICENSE",
+        "random-LICENSE.md",
+        "random-include-LICENSE.txt"
+      ],
+      "licenseFileNote": "LICENSE.txt is the principal NumPy distribution license including bundled-component notices; ma-LICENSE and random-LICENSE.md cover numpy.ma and numpy.random respectively.",
+      "allFileHashesCount": 74
+    },
+    {
+      "name": "onnxruntime",
+      "version": "1.23.2",
+      "wheel": "onnxruntime-1.23.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "da44b99206e77734c5819aa2142c69e64f3b46edc3bd314f6a45a932defc0b3e",
+      "url": "https://files.pythonhosted.org/packages/e9/80/113381ba832d5e777accedc6cb41d10f9eca82321ae31ebb6bcede530cea/onnxruntime-1.23.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "licenseDeclared": "MIT License",
+      "licenseFiles": [
+        "LICENSE",
+        "ThirdPartyNotices.txt"
+      ],
+      "allFileHashesCount": 22
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "wheel": "packaging-26.3-py3-none-any.whl",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "licenseDeclared": "Apache-2.0 OR BSD-2-Clause",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE.APACHE",
+        "LICENSE.BSD"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "protobuf",
+      "version": "7.36.2",
+      "wheel": "protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl",
+      "sha256": "89f23aa53c24553a2416fd4fd1ec06f74fa42b14b546d8883128813f775bbfd2",
+      "url": "https://files.pythonhosted.org/packages/db/f3/3996583dd2906297a637af12114deddf7658af6e683fedb83be061983fb5/protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl",
+      "licenseDeclared": "3-Clause BSD License",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 8
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "wheel": "pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "b8bb0864c5a28024fac8a632c443c87c5aa6f215c0b126c449ae1a150412f31d",
+      "url": "https://files.pythonhosted.org/packages/71/60/917329f640924b18ff085ab889a11c763e0b573da888e8404ff486657602/pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "licenseDeclared": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 73
+    },
+    {
+      "name": "sympy",
+      "version": "1.14.0",
+      "wheel": "sympy-1.14.0-py3-none-any.whl",
+      "sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+      "url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl",
+      "licenseDeclared": "BSD",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.22.1",
+      "wheel": "tokenizers-0.22.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "e2ef6063d7a84994129732b47e7915e8710f27f99f3a3260b8a38fc7ccd083f4",
+      "url": "https://files.pythonhosted.org/packages/d0/c6/dc3a0db5a6766416c32c034286d7c2d406da1f498e4de04ab1b8959edd00/tokenizers-0.22.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "licenseDeclared": "",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "licenseFileNote": "Wheel did not bundle a license file; text copied from the upstream project at the matching version tag.",
+      "allFileHashesCount": 15
+    },
+    {
+      "name": "tqdm",
+      "version": "4.70.1",
+      "wheel": "tqdm-4.70.1-py3-none-any.whl",
+      "sha256": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+      "url": "https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl",
+      "licenseDeclared": "MPL-2.0 AND MIT",
+      "licenseFiles": [
+        "LICENCE"
+      ],
+      "allFileHashesCount": 2
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "wheel": "typing_extensions-4.16.0-py3-none-any.whl",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "licenseDeclared": "PSF-2.0",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "allFileHashesCount": 2
+    }
+  ],
+  "lockPolicy": "requirements.lock records every published file hash per pinned version; dependencies.json records the exact wheel selected on the reference platform."
+}

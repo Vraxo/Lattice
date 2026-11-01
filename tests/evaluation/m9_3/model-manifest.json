@@ -1,0 +1,42 @@
+{
+  "manifestVersion": "1.0",
+  "purpose": "M9.3 evaluation-only frozen embedding candidate. Not a production dependency.",
+  "model": {
+    "canonicalUpstream": "sentence-transformers/all-MiniLM-L6-v2",
+    "canonicalOnnxExport": "qdrant/all-MiniLM-L6-v2-onnx",
+    "fastEmbedModelId": "sentence-transformers/all-MiniLM-L6-v2",
+    "mirrorRepository": "sspcodeflix/textembedding-model-weights",
+    "mirrorCommit": "70df87c74905102ee14f2ee3ae33ccb5cb6a4825",
+    "mirrorPath": "all-MiniLM-L6-v2-onnx",
+    "licenseDeclared": "Apache-2.0",
+    "dimension": 384,
+    "maxContextTokens": 256,
+    "queryPrefix": null,
+    "documentPrefix": null,
+    "pooling": "attention-mask mean pooling",
+    "normalization": "L2, eps=1e-12",
+    "provenanceQualification": "The model payload was verified by the user against the official Qdrant artifact checksums. The mirror commit history was not independently authenticated; the pinned commit is a content source, not an authenticated upstream release."
+  },
+  "semanticsReference": {
+    "repository": "qdrant/fastembed",
+    "tag": "v0.8.1",
+    "commit": "8de28b8f2d4525167c7ebe988aa06b740a59e0c0",
+    "files": [
+      "fastembed/common/preprocessor_utils.py",
+      "fastembed/common/utils.py",
+      "fastembed/text/onnx_text_model.py",
+      "fastembed/text/pooled_normalized_embedding.py"
+    ],
+    "notes": "Tokenizer truncation uses the stricter valid model_max_length/max_length from tokenizer_config.json. Padding is normalized to batch-longest. token_type_ids are zeros. Post-processing is attention-mask mean pooling followed by L2 normalization."
+  },
+  "files": [
+    { "path": "model.onnx", "sha256": "bbd7b466f6d58e646fdc2bd5fd67b2f5e93c0b687011bd4548c420f7bd46f0c5", "bytes": 90387630 },
+    { "path": "config.json", "sha256": "1b4d8e2a3988377ed8b519a31d8d31025a25f1c5f8606998e8014111438efcd7" },
+    { "path": "tokenizer.json", "sha256": "59f410da6d9dad2025f0e53b6c45554a3b3a0a5c574927f201e99d0217c1a26b" },
+    { "path": "tokenizer_config.json", "sha256": "abda01c8c14c5151ae498aceb30db406d6b91242c394fd88d3b6fd5a63a101e6" },
+    { "path": "special_tokens_map.json", "sha256": "5d5b662e421ea9fac075174bb0688ee0d9431699900b90662acd44b2a350503a" },
+    { "path": "vocab.txt", "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3" },
+    { "path": "SHA256SUMS", "sha256": "6160ef7cf023d8cfe804c9f1ccc49a29d546c9a422393ed186aeec738574f3a3" }
+  ],
+  "licenseFile": { "path": "LICENSE", "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30", "sourcePath": "LICENSE" }
+}
