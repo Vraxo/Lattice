@@ -69,7 +69,7 @@ foreach (JsonElement entry in fixtureRoot.GetProperty("entries").EnumerateArray(
     }
 
     ImmutableArray<RetrievalCandidate> top = paraphraseLookup.Search(query, limit: 5);
-    int rank = Rank(top, expectedId);
+    int rank = RankOf(top, expectedId);
     bool lowOverlap = overlapRatio <= 0.25;
     if (lowOverlap)
     {
@@ -113,7 +113,7 @@ foreach (JsonElement entry in corpus.RootElement.GetProperty("entries").Enumerat
     string queryClass = entry.GetProperty("class").GetString()!;
     string[] expectedIds = entry.GetProperty("expectedIds").EnumerateArray().Select(value => value.GetString()!).ToArray();
     ImmutableArray<RetrievalCandidate> top = physicsLookup.Search(query, limit: 5);
-    int rank = Rank(top, expectedIds);
+    int rank = RankOfAny(top, expectedIds);
     corpusRows.Add(new
     {
         id,
@@ -137,7 +137,7 @@ foreach (JsonElement entry in corpus.RootElement.GetProperty("entries").Enumerat
         string query = entry.GetProperty("query").GetString()!;
         string expectedId = entry.GetProperty("expectedIds")[0].GetString()!;
         ImmutableArray<RetrievalCandidate> top = physicsLookup.Search(query, limit: 5);
-        int rank = Rank(top, expectedId);
+        int rank = RankOf(top, expectedId);
         exactControls.Add(new
         {
             id,
@@ -160,7 +160,7 @@ foreach ((KnowledgePackage package, KnowledgeLookup lookup) in new[] { (paraphra
         foreach ((string kind, string query) in ExactQueries(concept))
         {
             ImmutableArray<RetrievalCandidate> top = lookup.Search(query, limit: 5);
-            int rank = Rank(top, concept.Id);
+            int rank = RankOf(top, concept.Id);
             generatedExactControls.Add(new
             {
                 packageId = package.Id,
@@ -337,7 +337,7 @@ static IEnumerable<(string Kind, string Query)> ExactQueries(KnowledgeConcept co
     }
 }
 
-static int Rank(ImmutableArray<RetrievalCandidate> candidates, string expectedId)
+static int RankOf(ImmutableArray<RetrievalCandidate> candidates, string expectedId)
 {
     for (int index = 0; index < candidates.Length; index++)
     {
@@ -350,7 +350,7 @@ static int Rank(ImmutableArray<RetrievalCandidate> candidates, string expectedId
     return 0;
 }
 
-static int Rank(ImmutableArray<RetrievalCandidate> candidates, string[] expectedIds)
+static int RankOfAny(ImmutableArray<RetrievalCandidate> candidates, string[] expectedIds)
 {
     for (int index = 0; index < candidates.Length; index++)
     {
