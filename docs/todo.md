@@ -106,17 +106,21 @@ integration proposal only. No production provider or dependency was approved or 
 
 **Gate:** the new capability can be installed/disabled without changes to core orchestration beyond
 its generic contracts.
+**Status (2026-11-02):** complete. The optional Python syntax adapter is outside Core; submitted
+source is inspected as Python AST syntax and is never executed. PR #6 merged at `9071b19`; CI
+build/test passed.
 
-- [ ] **ASK** which ecosystem/capability (roadmap says "non-C#"; the concrete choice needs a ruling).
-- [ ] Inspect `CapabilityDiscovery`, `ToolDescriptor`, `ToolRegistry`, `ToolExecutor`, and how
+- [x] **ASK** which ecosystem/capability (roadmap says "non-C#"; the concrete choice needs a ruling).
+- [x] Inspect `CapabilityDiscovery`, `ToolDescriptor`, `ToolRegistry`, `ToolExecutor`, and how
       `Lattice.CSharp` registers itself.
-- [ ] Implement the adapter outside Core; Core gains no reference to it.
-- [ ] Supply descriptor metadata (id, aliases, tags, description) so it is discoverable from the
+- [x] Implement the adapter outside Core; Core gains no reference to it.
+- [x] Supply descriptor metadata (id, aliases, tags, description) so it is discoverable from the
       descriptor alone.
-- [ ] Test discovery and invocation through the generic boundary.
-- [ ] Test clean disable with no change to Core orchestration.
-- [ ] Test the permission gate still applies — no bypass via the new adapter.
-- [ ] Run build + tests; reconcile count; report; stop.
+- [x] Test discovery and invocation through the generic boundary.
+- [x] Test clean disable with no change to Core orchestration.
+- [x] Test the permission gate still applies — no bypass via the new adapter.
+- [x] Run build + tests; reconcile count; report; stop. CI passed; exact test count was not
+      available in the CI summary retained for this queue.
 
 ---
 
@@ -124,13 +128,15 @@ its generic contracts.
 
 **Gate:** fixtures version-controlled with explanations for expected results.
 
-- [ ] Inspect existing corpora (`controlled`, `workspace`, `responses`, `retrieval`) and the
-      `tests/corpus` copy rules in `Lattice.Core.Tests.csproj`.
-- [ ] Build fixtures covering: understanding, clarification, tool selection, state updates, tool
-      errors, permissions, file preservation, output grounding.
-- [ ] Give each entry an explicit rationale for its expected result.
-- [ ] Assert the fixtures in tests; document that expected answers are not changed casually.
-- [ ] Run build + tests; reconcile count; report; stop.
+- [x] Inspect existing corpora (`controlled`, `workspace`, `responses`, `retrieval`) and the
+      `tests/corpus` copy rules in `Lattice.Core.Tests.csproj`; JSON fixtures preserve nested
+      directories under `corpus/` in test output.
+- [x] Build versioned fixtures covering: understanding, clarification, tool selection, state
+      updates, tool errors, permissions, file preservation, and output grounding.
+- [x] Give each entry an explicit rationale for its expected result.
+- [x] Assert the fixtures in tests; document that expected answers are not changed casually.
+- [ ] Run build + tests; reconcile count; report; stop. Local .NET SDK is unavailable; no test
+      result or current suite count is claimed. Await user test output before passing the gate.
 
 ---
 
