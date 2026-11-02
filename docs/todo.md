@@ -127,6 +127,10 @@ build/test passed.
 ### M10.1 — Lock a regression request set
 
 **Gate:** fixtures version-controlled with explanations for expected results.
+**Status (2026-11-02):** complete. PR #7 CI build and tests passed. The regression theory has nine
+rows. Based on the last recorded 714-test baseline, nine M9.4 test cases, and these nine rows, the
+expected total is 732; the CI status summary did not expose an observed test count, so 732 is an
+arithmetic estimate, not a reported test-run total.
 
 - [x] Inspect existing corpora (`controlled`, `workspace`, `responses`, `retrieval`) and the
       `tests/corpus` copy rules in `Lattice.Core.Tests.csproj`; JSON fixtures preserve nested
@@ -135,8 +139,8 @@ build/test passed.
       updates, tool errors, permissions, file preservation, and output grounding.
 - [x] Give each entry an explicit rationale for its expected result.
 - [x] Assert the fixtures in tests; document that expected answers are not changed casually.
-- [ ] Run build + tests; reconcile count; report; stop. Local .NET SDK is unavailable; no test
-      result or current suite count is claimed. Await user test output before passing the gate.
+- [x] Run build + tests; CI passed. Nine theory rows add nine test cases; arithmetic estimate is
+      732 total (714 + 9 M9.4 tests + 9 M10.1 rows), not an observed CI test count. Report and stop.
 
 ---
 
