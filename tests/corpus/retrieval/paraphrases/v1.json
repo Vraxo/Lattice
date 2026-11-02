@@ -1,0 +1,331 @@
+{
+  "corpusVersion": "1.0",
+  "packageId": "example.software-documentation",
+  "reviewStatus": "human-reviewed",
+  "notes": "M9.3 documentation-paraphrase evaluation. Each query has one relevant target and an explicit relevance judgment. Queries target equivalent meaning with low lexical overlap, not relation traversal. Freeze this file before embedding inference; do not tune a provider or rewrite judgments in response to measured rankings.",
+  "controlledPilot": "This is a deliberately bounded controlled pilot, not a representative measure of arbitrary documentation search. Real documentation retrieval may have multiple relevant results per query.",
+  "singleRelevantTargetAssumption": "Each pilot query has exactly one assigned relevant target so Recall@5 and MRR@5 are unambiguous. This assumption is a corpus design choice, not a claim about documentation retrieval generally.",
+  "metricConvention": {
+    "recallAt5": "Queries whose relevant target appears in the first five results divided by all queries; every query has exactly one relevant target.",
+    "mrrAt5": "Mean of 1/rank for the relevant target in the first five results, or zero when absent.",
+    "lowLexicalOverlap": "At most 0.25 of distinct query tokens occur anywhere in the target's definition, preferred name, aliases, or id, using the M9.2 tokenizer.",
+    "tieBreak": "Descending score, then concept id ordinal."
+  },
+  "concepts": [
+    {
+      "id": "doc.di.scoped",
+      "preferred": "scoped service lifetime",
+      "aliases": [
+        "scoped lifetime",
+        "request scope"
+      ],
+      "definition": "Services registered with a scoped lifetime are instantiated once per request scope."
+    },
+    {
+      "id": "doc.di.transient",
+      "preferred": "transient service lifetime",
+      "aliases": [
+        "transient lifetime",
+        "fresh service"
+      ],
+      "definition": "A transient service is created anew each time it is requested from the container."
+    },
+    {
+      "id": "doc.di.singleton",
+      "preferred": "singleton service lifetime",
+      "aliases": [
+        "singleton lifetime",
+        "shared service"
+      ],
+      "definition": "A singleton service shares one instance across all consumers for the application's lifetime."
+    },
+    {
+      "id": "doc.http.idempotency",
+      "preferred": "idempotent operation",
+      "aliases": [
+        "idempotency",
+        "repeatable request"
+      ],
+      "definition": "Repeating an idempotent operation has no additional effect after the first successful call."
+    },
+    {
+      "id": "doc.storage.index",
+      "preferred": "database index",
+      "aliases": [
+        "index",
+        "lookup structure"
+      ],
+      "definition": "An index accelerates row lookup at the cost of extra storage and slower writes."
+    },
+    {
+      "id": "doc.security.least-privilege",
+      "preferred": "least privilege",
+      "aliases": [
+        "minimal permissions",
+        "need-to-know access"
+      ],
+      "definition": "Grant each process only the permissions required for its task, and revoke access when the task ends."
+    },
+    {
+      "id": "doc.files.encoding-preservation",
+      "preferred": "encoding preservation",
+      "aliases": [
+        "preserve encoding",
+        "BOM preservation"
+      ],
+      "definition": "Preserve a document's original character encoding and byte-order mark when saving edits."
+    },
+    {
+      "id": "doc.async.cancellation",
+      "preferred": "asynchronous cancellation",
+      "aliases": [
+        "cancellation propagation",
+        "cooperative cancellation"
+      ],
+      "definition": "Propagate cancellation through asynchronous work so obsolete operations stop promptly and release resources."
+    }
+  ],
+  "entries": [
+    {
+      "id": "paraphrase.scoped.separate-instance",
+      "class": "documentation-paraphrase",
+      "query": "How do I make sure a dependency gets a separate instance for each web request?",
+      "expectedIds": [
+        "doc.di.scoped"
+      ],
+      "relevanceJudgment": "Relevant: the document specifies one instance per request scope, which supplies the requested per-request lifetime.",
+      "rationale": "Tests the architectural ruling's example without requiring the words scoped or instantiated."
+    },
+    {
+      "id": "paraphrase.scoped.single-exchange",
+      "class": "documentation-paraphrase",
+      "query": "Which lifetime keeps one object alive throughout a single HTTP exchange?",
+      "expectedIds": [
+        "doc.di.scoped"
+      ],
+      "relevanceJudgment": "Relevant: one instance per request scope is the lifetime spanning one HTTP exchange.",
+      "rationale": "Distinguishes request scope from application-wide sharing and fresh-per-resolution behavior."
+    },
+    {
+      "id": "paraphrase.scoped.page-load",
+      "class": "documentation-paraphrase",
+      "query": "How can two services share the same dependency during one server-side request without sharing it with other requests?",
+      "expectedIds": [
+        "doc.di.scoped"
+      ],
+      "relevanceJudgment": "Relevant: one instance per request scope is shared by services within that request and isolated from other requests.",
+      "rationale": "Tests sharing within a request and isolation across requests without naming the scoped lifetime."
+    },
+    {
+      "id": "paraphrase.transient.fresh-object",
+      "class": "documentation-paraphrase",
+      "query": "Which registration gives me a fresh object whenever something asks for it?",
+      "expectedIds": [
+        "doc.di.transient"
+      ],
+      "relevanceJudgment": "Relevant: the document defines creation anew on every container request.",
+      "rationale": "Paraphrases requested-from-the-container as something asking for an object."
+    },
+    {
+      "id": "paraphrase.transient.different-consumers",
+      "class": "documentation-paraphrase",
+      "query": "How can two consumers receive different instances even during the same operation?",
+      "expectedIds": [
+        "doc.di.transient"
+      ],
+      "relevanceJudgment": "Relevant: separate container requests create separate transient instances, even within one operation.",
+      "rationale": "Contrasts with scoped sharing without naming either lifetime."
+    },
+    {
+      "id": "paraphrase.transient.no-reuse",
+      "class": "documentation-paraphrase",
+      "query": "How can separate components avoid receiving the same dependency instance when they are constructed?",
+      "expectedIds": [
+        "doc.di.transient"
+      ],
+      "relevanceJudgment": "Relevant: creating a new transient service for each container request gives separately constructed components distinct dependency instances.",
+      "rationale": "Expresses fresh-per-resolution through non-sharing between components without naming the transient lifetime."
+    },
+    {
+      "id": "paraphrase.singleton.program-wide",
+      "class": "documentation-paraphrase",
+      "query": "How do I make every part of the program share the same cache object?",
+      "expectedIds": [
+        "doc.di.singleton"
+      ],
+      "relevanceJudgment": "Relevant: a singleton shares one instance across all consumers for the application's lifetime.",
+      "rationale": "Describes application-wide sharing without the singleton term."
+    },
+    {
+      "id": "paraphrase.singleton.process-exit",
+      "class": "documentation-paraphrase",
+      "query": "Which setting keeps one shared helper available until the application shuts down?",
+      "expectedIds": [
+        "doc.di.singleton"
+      ],
+      "relevanceJudgment": "Relevant: a singleton shares one instance across consumers for the application's lifetime.",
+      "rationale": "Paraphrases application-lifetime sharing as one shared helper available until shutdown."
+    },
+    {
+      "id": "paraphrase.singleton.load-once",
+      "class": "documentation-paraphrase",
+      "query": "I want every component to use the same configuration-provider instance throughout the application.",
+      "expectedIds": [
+        "doc.di.singleton"
+      ],
+      "relevanceJudgment": "Relevant: a singleton provides one configuration-provider instance to all components for the application's lifetime.",
+      "rationale": "Uses a concrete configuration-provider example to describe application-wide instance sharing."
+    },
+    {
+      "id": "paraphrase.idempotency.payment-retry",
+      "class": "documentation-paraphrase",
+      "query": "Why can a client safely retry a payment without charging twice?",
+      "expectedIds": [
+        "doc.http.idempotency"
+      ],
+      "relevanceJudgment": "Relevant: no additional effect after the first successful call explains why a retry does not duplicate the charge.",
+      "rationale": "Concrete payment paraphrase with no idempotency terminology."
+    },
+    {
+      "id": "paraphrase.idempotency.duplicate-submit",
+      "class": "documentation-paraphrase",
+      "query": "What property prevents duplicate submissions from applying the same change again?",
+      "expectedIds": [
+        "doc.http.idempotency"
+      ],
+      "relevanceJudgment": "Relevant: idempotency prevents repeated calls from adding effects after the first success.",
+      "rationale": "Describes the guarantee rather than naming the property."
+    },
+    {
+      "id": "paraphrase.idempotency.redelivery",
+      "class": "documentation-paraphrase",
+      "query": "How should an API handle the same operation being delivered twice without applying its effect again?",
+      "expectedIds": [
+        "doc.http.idempotency"
+      ],
+      "relevanceJudgment": "Relevant: an idempotent operation has no additional effect when the same operation is delivered again after its first success.",
+      "rationale": "Tests duplicate operation delivery against the no-additional-effect guarantee without naming idempotency."
+    },
+    {
+      "id": "paraphrase.index.avoid-scan",
+      "class": "documentation-paraphrase",
+      "query": "How can a database locate matching records more quickly in a very large collection?",
+      "expectedIds": [
+        "doc.storage.index"
+      ],
+      "relevanceJudgment": "Relevant: an index accelerates row lookup, which is the documented mechanism for locating matching records faster.",
+      "rationale": "Paraphrases accelerated row lookup as faster record location in a large collection."
+    },
+    {
+      "id": "paraphrase.index.read-write-tradeoff",
+      "class": "documentation-paraphrase",
+      "query": "What tradeoff makes reads quicker but inserts more expensive?",
+      "expectedIds": [
+        "doc.storage.index"
+      ],
+      "relevanceJudgment": "Relevant: the document states faster lookup at the cost of extra storage and slower writes.",
+      "rationale": "Tests the documented tradeoff using read/insert synonyms."
+    },
+    {
+      "id": "paraphrase.index.disk-cost",
+      "class": "documentation-paraphrase",
+      "query": "Why does the database take up more space after I optimize searches?",
+      "expectedIds": [
+        "doc.storage.index"
+      ],
+      "relevanceJudgment": "Relevant: the index document identifies extra storage as the cost of accelerated lookup.",
+      "rationale": "Describes the storage cost as increased database space after search optimization, without naming an index."
+    },
+    {
+      "id": "paraphrase.privilege.blast-radius",
+      "class": "documentation-paraphrase",
+      "query": "What limits the damage if one component is compromised?",
+      "expectedIds": [
+        "doc.security.least-privilege"
+      ],
+      "relevanceJudgment": "Relevant: granting only task-required permissions limits what a compromised component can access.",
+      "rationale": "Describes the security consequence without naming the principle."
+    },
+    {
+      "id": "paraphrase.privilege.worker-authority",
+      "class": "documentation-paraphrase",
+      "query": "How much authority should a background worker receive?",
+      "expectedIds": [
+        "doc.security.least-privilege"
+      ],
+      "relevanceJudgment": "Relevant: the document answers that a process should receive only permissions required for its task.",
+      "rationale": "Paraphrases permissions as authority and process as background worker."
+    },
+    {
+      "id": "paraphrase.privilege.revoke",
+      "class": "documentation-paraphrase",
+      "query": "Should a program keep powerful access after finishing a job?",
+      "expectedIds": [
+        "doc.security.least-privilege"
+      ],
+      "relevanceJudgment": "Relevant: the document says to revoke access when the task ends.",
+      "rationale": "Tests the revocation clause using job-completion wording."
+    },
+    {
+      "id": "paraphrase.encoding.representation",
+      "class": "documentation-paraphrase",
+      "query": "How do I keep the file's original text representation intact while changing its contents?",
+      "expectedIds": [
+        "doc.files.encoding-preservation"
+      ],
+      "relevanceJudgment": "Relevant: preserving encoding and byte-order mark while saving edits preserves the original text representation.",
+      "rationale": "Paraphrases encoding preservation without using encoding or BOM."
+    },
+    {
+      "id": "paraphrase.encoding.unicode-rewrite",
+      "class": "documentation-paraphrase",
+      "query": "What must survive unchanged when a Unicode document is rewritten?",
+      "expectedIds": [
+        "doc.files.encoding-preservation"
+      ],
+      "relevanceJudgment": "Relevant: the original character encoding and byte-order mark must survive the edit unchanged.",
+      "rationale": "Uses Unicode/rewrite wording rather than the document's preservation terminology."
+    },
+    {
+      "id": "paraphrase.encoding.bom",
+      "class": "documentation-paraphrase",
+      "query": "How do I stop a text editor from stripping the invisible marker at the beginning of a file?",
+      "expectedIds": [
+        "doc.files.encoding-preservation"
+      ],
+      "relevanceJudgment": "Relevant: the document requires preserving the byte-order mark when saving edits; the query describes that mark without naming it.",
+      "rationale": "Paraphrases byte-order mark as an invisible marker at the beginning of a file."
+    },
+    {
+      "id": "paraphrase.cancellation.navigate-away",
+      "class": "documentation-paraphrase",
+      "query": "How can I abandon a background job when the user navigates away?",
+      "expectedIds": [
+        "doc.async.cancellation"
+      ],
+      "relevanceJudgment": "Relevant: propagating cancellation stops work whose result is obsolete after navigation.",
+      "rationale": "Describes an obsolete-operation scenario without cancellation vocabulary."
+    },
+    {
+      "id": "paraphrase.cancellation.unneeded-result",
+      "class": "documentation-paraphrase",
+      "query": "What tells an in-flight task to stop after its result is no longer needed?",
+      "expectedIds": [
+        "doc.async.cancellation"
+      ],
+      "relevanceJudgment": "Relevant: cancellation propagation tells obsolete asynchronous operations to stop.",
+      "rationale": "Paraphrases obsolete operations as results no longer needed."
+    },
+    {
+      "id": "paraphrase.cancellation.release-handles",
+      "class": "documentation-paraphrase",
+      "query": "How should obsolete async calls release their handles promptly?",
+      "expectedIds": [
+        "doc.async.cancellation"
+      ],
+      "relevanceJudgment": "Relevant: the document links cancellation propagation to prompt stopping and resource release.",
+      "rationale": "Paraphrases asynchronous work and resources while retaining some strong lexical cues."
+    }
+  ],
+  "reviewNotes": "Human review approved the 24 target assignments after eight required wording revisions. The fixture is a controlled pilot; relevance judgments must not change in response to embedding results."
+}

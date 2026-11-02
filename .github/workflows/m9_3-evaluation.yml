@@ -1,0 +1,114 @@
+name: M9.3 retrieval evaluation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/m9_3-evaluation.yml'
+      - 'tests/evaluation/m9_3/**'
+      - 'tests/corpus/retrieval/paraphrases/**'
+      - 'tests/corpus/retrieval/v1.json'
+      - 'knowledge/example.physics/package.json'
+      - 'Lattice/KnowledgeLookup.cs'
+      - 'Lattice/LexicalScorer.cs'
+      - 'Lattice/LexicalRetrievalWeights.cs'
+  push:
+    branches:
+      - arena/effad8bb-lattice
+    paths:
+      - '.github/workflows/m9_3-evaluation.yml'
+      - 'tests/evaluation/m9_3/**'
+      - 'tests/corpus/retrieval/paraphrases/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m9-3-evaluation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache model artifact
+        uses: actions/cache@v4
+        with:
+          path: artifacts/evaluation/m9_3/model
+          key: m9-3-model-${{ hashFiles('tests/evaluation/m9_3/model-manifest.json') }}
+
+      # The full solution build/test gate runs in ci.yml on windows-latest.
+      # This job only builds Lattice.Core transitively via the isolated harness,
+      # so a platform-specific suite difference cannot mask the evaluation.
+      - name: Real C# lexical baseline
+        run: dotnet run --project tests/evaluation/m9_3/baseline --configuration Release -- . artifacts/evaluation/m9_3/baseline.json
+
+      - name: Install evaluation dependencies
+        run: |
+          python -m venv artifacts/evaluation/m9_3/venv
+          artifacts/evaluation/m9_3/venv/bin/python -m pip install --disable-pip-version-check --only-binary=:all: --require-hashes -r tests/evaluation/m9_3/requirements.lock
+
+      - name: Provision frozen model
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python tests/evaluation/m9_3/provision.py
+
+      - name: Model semantic self-test
+        run: artifacts/evaluation/m9_3/venv/bin/python tests/evaluation/m9_3/evaluate.py --self-test --output artifacts/evaluation/m9_3/self-test.json
+
+      - name: Embedding comparison
+        run: artifacts/evaluation/m9_3/venv/bin/python tests/evaluation/m9_3/evaluate.py --baseline artifacts/evaluation/m9_3/baseline.json --output artifacts/evaluation/m9_3/embedding-results.json
+
+      - name: Summarize results
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          summary = Path(os.environ['GITHUB_STEP_SUMMARY'])
+          baseline_path = Path('artifacts/evaluation/m9_3/baseline.json')
+          results_path = Path('artifacts/evaluation/m9_3/embedding-results.json')
+          lines = ['## M9.3 retrieval evaluation', '']
+          if baseline_path.exists():
+              baseline = json.loads(baseline_path.read_text())
+              lines += ['### Real C# lexical baseline', '', '```json', json.dumps({
+                  'lowOverlapIds': baseline['lowOverlapIds'],
+                  'paraphraseAll': baseline['paraphrase']['all'],
+                  'paraphraseLowOverlap': baseline['paraphrase']['lowOverlap'],
+                  'existingAll': baseline['existingBenchmark']['all'],
+                  'exactExisting': baseline['exactMatchControls']['existing']['metrics'],
+                  'exactGenerated': baseline['exactMatchControls']['generatedIdentifierNameAlias']['metrics'],
+              }, indent=2), '```', '']
+          if results_path.exists():
+              results = json.loads(results_path.read_text())
+              lines += ['### Guarded embedding comparison', '', '```json', json.dumps({
+                  'guardedEmbeddingMetrics': results['guardedEmbeddingMetrics'],
+                  'deltasGuardedMinusLexical': results['deltasGuardedMinusLexical'],
+                  'thresholds': results['thresholds'],
+                  'operational': results['operational'],
+              }, indent=2), '```', '']
+          if not baseline_path.exists() and not results_path.exists():
+              lines += ['Evaluation did not produce result files.', '']
+          summary.write_text('\n'.join(lines), encoding='utf-8')
+          PY
+
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m9-3-evaluation
+          path: |
+            artifacts/evaluation/m9_3/baseline.json
+            artifacts/evaluation/m9_3/self-test.json
+            artifacts/evaluation/m9_3/embedding-results.json
+          if-no-files-found: warn
