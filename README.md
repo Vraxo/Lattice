@@ -1,12 +1,14 @@
 # Lattice
 
-A symbolic, tool-using agent that plans, edits and checks code from explicit state — no trained generative model in the loop.
+A research prototype of a symbolic, tool-using agent built around explicit state and inspectable components — not a trained generative model.
 
-Lattice keeps its reasoning in typed data: goals, facts, constraints, rules, tool results. A derived fact records the rule and premises that produced it, so any decision can be traced and disputed. Natural language is the boundary; structured state is the control interface.
+Lattice represents goals, facts, constraints, rules, and tool results as typed data. The repository contains separate, bounded components; the capability matrix describes what is integrated, what is only an optional API, and what remains unsupported.
 
-> ⚠️ **Status:** research code, not a product. The agent loop, knowledge packages, C# inspection and Markdown editing are built and tested; the CLI is a demo harness that wires up one tool.
+> ⚠️ **Status:** research code, not a product. The CLI demo accepts controlled statements and registers only the calculator. Other tools and adapters require explicit host composition; see the [capability matrix](docs/CAPABILITIES.md).
 
-## 🔁 Turn loop
+## 🔁 Intended turn loop
+
+The following is the architectural direction, **not a fully wired default runtime path**:
 
 1. Parse input into a structured statement, or map an ordinary request onto a known intent — and say so when nothing matches.
 2. Update session state immutably, keeping provenance for every fact.
@@ -26,7 +28,7 @@ constraint Do not change other sections.
 action calculator | left=2 | right=3
 ```
 
-Ordinary requests go through a separate, deliberately small [pattern set](docs/NATURAL_LANGUAGE.md) that stays silent when it doesn't match.
+The library includes a separate, deliberately small [pattern-based interpreter](docs/NATURAL_LANGUAGE.md) that stays silent when it doesn't match; the demo CLI currently accepts controlled statements only and does not route ordinary requests through that interpreter.
 
 ## 🚀 Get started
 
@@ -61,15 +63,17 @@ Build output goes to `artifacts/`, which is git-ignored.
 | `files.write`, `markdown.edit` | edits; refused when byte encoding or BOM can't be preserved |
 | `command.run` | allowlisted verification commands |
 | `csharp.syntax` | Roslyn diagnostics over C# source text |
+| `python.syntax` | Optional Python AST syntax check; requires a configured Python interpreter |
 
-Permissions are policy-gated (currently read-only by default), and tool output is validated before it enters state.
+These are implementations available for explicit host composition, not a list of tools enabled by the CLI. `ToolExecutor` validates arguments and enforces permissions before invocation. There is no general semantic validator for tool outputs: results are recorded as data, and callers must treat them as untrusted. The demo CLI uses a read-only policy.
 
 ## 🗂️ Layout
 
 | Path | Contents |
 |---|---|
 | `Lattice/` | `Lattice.Core` — domain types, agent loop, tools, knowledge and retrieval |
-| `Lattice.CSharp/` | `Lattice.CSharp` — syntax and semantic inspection, source edits |
+| `Lattice.CSharp/` | `Lattice.CSharp` — optional syntax/semantic inspection and narrow source edit API |
+| `Lattice.Python/` | `Lattice.Python` — optional Python AST syntax adapter; requires a configured interpreter |
 | `Lattice.Cli/` | console REPL; composition root, no domain logic |
 | `Lattice.Core.Tests/` | xunit tests, corpora and fixtures |
 | `knowledge/` | example knowledge package (`package.json`) |
@@ -89,6 +93,7 @@ Permissions are policy-gated (currently read-only by default), and tool output i
 | [Knowledge packages](docs/KNOWLEDGE_PACKAGE.md) | data format; packages are never executed |
 | [Retrieval benchmark](docs/RETRIEVAL_BENCHMARK.md) | query set, metrics, measured baseline |
 | [M8 design](docs/M8_DESIGN.md) | prose and document editing invariants |
+| [Capability matrix](docs/CAPABILITIES.md) | implemented scope, test references, and known limitations |
 | [Working protocol](docs/AI_WORK_PROTOCOL.md) | how changes get scoped and reviewed |
 
 ## 📌 Working rules
