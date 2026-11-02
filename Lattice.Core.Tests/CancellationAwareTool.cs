@@ -1,20 +1,15 @@
 namespace Lattice.Core.Tests;
 
-internal sealed class CancellationAwareTool : ITool, IDisposable
+internal sealed class CancellationAwareTool(TimeSpan timeout) : ITool, IDisposable
 {
     private readonly ManualResetEventSlim _started = new();
 
-    public CancellationAwareTool(TimeSpan timeout)
-    {
-        Descriptor = new ToolDescriptor(
+    public ToolDescriptor Descriptor { get; } = new ToolDescriptor(
             new ToolId("cancellation-aware"),
             "Waits for executor cancellation.",
             "A boolean.",
             ToolSideEffect.ReadOnly,
             limits: new ToolExecutionLimits(timeout));
-    }
-
-    public ToolDescriptor Descriptor { get; }
 
     public bool WasExecuted { get; private set; }
 
