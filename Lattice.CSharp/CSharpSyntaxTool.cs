@@ -24,6 +24,7 @@ public sealed class CSharpSyntaxTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!arguments.TryGetValue(SourceParameter, out ArgumentValue? value)
             || value.Type != ToolParameterType.String)
         {

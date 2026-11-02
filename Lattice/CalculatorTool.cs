@@ -20,6 +20,7 @@ public sealed class CalculatorTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!arguments.TryGetValue(LeftParameter, out ArgumentValue? left) || left.Type != ToolParameterType.Integer)
         {
             return ToolResult.Failure(new(

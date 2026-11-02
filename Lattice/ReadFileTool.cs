@@ -26,6 +26,7 @@ public sealed class ReadFileTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!arguments.TryGetValue(PathParameter, out ArgumentValue? value) || value.Type != ToolParameterType.String)
         {
             return ToolResult.Failure(new Error(

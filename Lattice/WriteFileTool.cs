@@ -37,6 +37,7 @@ public sealed class WriteFileTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!ToolArguments.TryReadString(arguments, PathParameter, out string? requested)
             || !ToolArguments.TryReadString(arguments, FindParameter, out string? find)
             || !ToolArguments.TryReadString(arguments, ReplaceParameter, out string? replace))
@@ -78,6 +79,7 @@ public sealed class WriteFileTool : ITool
                 $"Patch to '{requested}' was not applied ({preview.Status})."));
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         string diff = UnifiedDiff.Create(original, preview.PatchedText!);
         Result write = WorkspaceFileAccess.Write(resolved.Value, requested, original, preview.PatchedText!);
         if (!write.IsSuccess)

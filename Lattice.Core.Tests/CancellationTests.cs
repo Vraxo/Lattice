@@ -49,6 +49,25 @@ public sealed class CancellationTests
     }
 
     [Fact]
+    public void CancellationDoesNotApplyControlledStateChanges()
+    {
+        AgentLoop loop = new(
+            new ToolRegistry([new RecordingTool()]),
+            ToolPermissionPolicy.ReadOnlyOnly);
+        Result<IControlledStatement> parsed = ControlledLanguageParser.Parse("fact water | boils_at | 100C");
+        Assert.True(parsed.IsSuccess);
+        Session original = Session.Empty(SessionId.New());
+        using CancellationTokenSource source = new();
+        source.Cancel();
+
+        AgentTurnResult result = loop.Run(original, parsed.Value, source.Token);
+
+        Assert.Equal(TurnOutcome.Cancelled, result.Outcome);
+        Assert.Same(original, result.Session);
+        Assert.Empty(result.Session.Facts);
+    }
+
+    [Fact]
     public void AgentLoopReportsCancelledOutcome()
     {
         AgentLoop loop = new(

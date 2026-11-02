@@ -34,20 +34,19 @@ public sealed class AgentLoop
         IControlledStatement statement,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(session);
-        ArgumentNullException.ThrowIfNull(statement);
-        InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, statement);
-        if (interpreted.IsResolved)
-        {
-            return new AgentTurnResult(
-                interpreted.Session,
-                interpreted.ResolvedOutcome!.Value,
-                interpreted.ResolvedResponse!);
-        }
+        return RunStatement(session, statement, runContext: null, cancellationToken);
+    }
 
-        ActionSelectionContext context = new(interpreted.Session, _interpretation);
-        ActionSelection selection = _selector.Select(context, interpreted.Candidates);
-        return Execute(interpreted.Session, selection, cancellationToken);
+    /// <summary>Runs one turn within a shared, bounded logical run context.</summary>
+    /// <returns></returns>
+    public AgentTurnResult Run(
+        Session session,
+        AgentRunContext runContext,
+        IControlledStatement statement,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(runContext);
+        return RunStatement(session, statement, runContext, cancellationToken);
     }
 
     /// <summary>
@@ -61,8 +60,66 @@ public sealed class AgentLoop
         CapabilityRequest request,
         CancellationToken cancellationToken = default)
     {
+        return RunCapabilityRequest(session, request, runContext: null, cancellationToken);
+    }
+
+    /// <summary>Runs a capability request within a shared, bounded logical run context.</summary>
+    /// <returns></returns>
+    public AgentTurnResult Run(
+        Session session,
+        AgentRunContext runContext,
+        CapabilityRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(runContext);
+        return RunCapabilityRequest(session, request, runContext, cancellationToken);
+    }
+
+    private AgentTurnResult RunStatement(
+        Session session,
+        IControlledStatement statement,
+        AgentRunContext? runContext,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(statement);
+        if (!TryConsumeStep(session, runContext, out AgentTurnResult? exhausted))
+        {
+            return exhausted!;
+        }
+
+        InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, statement);
+        if (interpreted.IsResolved)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Cancelled(session);
+            }
+
+            return new AgentTurnResult(
+                interpreted.Session,
+                interpreted.ResolvedOutcome!.Value,
+                interpreted.ResolvedResponse!);
+        }
+
+        ActionSelectionContext context = new(interpreted.Session, _interpretation);
+        ActionSelection selection = _selector.Select(context, interpreted.Candidates);
+        return Execute(interpreted.Session, selection, cancellationToken);
+    }
+
+    private AgentTurnResult RunCapabilityRequest(
+        Session session,
+        CapabilityRequest request,
+        AgentRunContext? runContext,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(request);
+        if (!TryConsumeStep(session, runContext, out AgentTurnResult? exhausted))
+        {
+            return exhausted!;
+        }
+
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(_registry.ToCatalog(), request);
         if (candidates.IsEmpty)
         {
@@ -78,8 +135,36 @@ public sealed class AgentLoop
         return Execute(session, selection, cancellationToken);
     }
 
+    private static bool TryConsumeStep(
+        Session session,
+        AgentRunContext? runContext,
+        out AgentTurnResult? exhausted)
+    {
+        exhausted = null;
+        if (runContext is null || runContext.TryConsumeStep())
+        {
+            return true;
+        }
+
+        exhausted = new AgentTurnResult(
+            session,
+            TurnOutcome.StepLimitExceeded,
+            $"The run exhausted its {runContext.MaxSteps}-step limit.");
+        return false;
+    }
+
+    private static AgentTurnResult Cancelled(Session session)
+    {
+        return new AgentTurnResult(session, TurnOutcome.Cancelled, "The turn was cancelled before completion.");
+    }
+
     private AgentTurnResult Execute(Session session, ActionSelection selection, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested && selection.Proposal is not InvokeToolProposal)
+        {
+            return Cancelled(session);
+        }
+
         // A blocked selection carries a proposal the user should see (typically a question).
         if (!selection.IsSelected)
         {
@@ -144,7 +229,8 @@ public sealed class AgentLoop
         {
             "tool.permission.denied" => TurnOutcome.PermissionDenied,
             "tool.argument.unknown" or "tool.argument.type" or "tool.argument.missing" => TurnOutcome.InvalidArguments,
-            "tool.cancelled" => TurnOutcome.Cancelled,
+            ToolErrorCodes.Cancelled => TurnOutcome.Cancelled,
+            ToolErrorCodes.TimedOut => TurnOutcome.ToolTimedOut,
             _ => TurnOutcome.ToolFailed,
         };
     }
@@ -161,7 +247,8 @@ public sealed class AgentLoop
             "tool.permission.denied" => $"Tool '{toolId}' was denied by policy.",
             "tool.argument.unknown" or "tool.argument.type" or "tool.argument.missing" =>
                 $"Tool '{toolId}' rejected its arguments.",
-            "tool.cancelled" => $"Tool '{toolId}' was cancelled.",
+            ToolErrorCodes.Cancelled => $"Tool '{toolId}' was cancelled.",
+            ToolErrorCodes.TimedOut => $"Tool '{toolId}' exceeded its execution timeout.",
             _ => $"Tool '{toolId}' failed: {invocation.Result.Error.Message}",
         };
     }

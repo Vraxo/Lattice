@@ -6,9 +6,11 @@ public sealed record ToolExecutionLimits
 
     public ToolExecutionLimits(TimeSpan timeout)
     {
-        if (timeout <= TimeSpan.Zero)
+        if (timeout <= TimeSpan.Zero || timeout.TotalMilliseconds > uint.MaxValue - 1)
         {
-            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive.");
+            throw new ArgumentOutOfRangeException(
+                nameof(timeout),
+                "Timeout must be positive and within the cancellation timer range.");
         }
 
         Timeout = timeout;

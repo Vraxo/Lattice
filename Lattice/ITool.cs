@@ -5,8 +5,10 @@ public interface ITool
     ToolDescriptor Descriptor { get; }
 
     /// <summary>
-    /// Executes the tool. <paramref name="cancellationToken"/> is optional for callers that have
-    /// no cancellation source, but implementations that can observe it should.
+    /// Executes the tool. Implementations must observe <paramref name="cancellationToken"/>
+    /// during long-running work so caller cancellation and descriptor timeouts can stop execution
+    /// cooperatively. <see cref="ToolExecutor"/> reports a timeout only after the tool returns or
+    /// observes cancellation; it does not abandon a still-running tool on another thread.
     /// </summary>
     /// <returns></returns>
     ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default);

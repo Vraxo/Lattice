@@ -15,4 +15,6 @@ public enum TurnOutcome
     Responded,
     Blocked,
     Cancelled,
+    ToolTimedOut,
+    StepLimitExceeded,
 }

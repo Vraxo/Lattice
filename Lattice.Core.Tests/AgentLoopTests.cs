@@ -63,12 +63,15 @@ public sealed class AgentLoopTests
     {
         AgentLoop loop = CreateLoop(new CalculatorTool());
         Session session = Session.Empty(SessionId.New());
+        AgentRunContext context = new(maxSteps: 2);
         IControlledStatement statement = Parse("action calculator | left=2 | right=3");
-        AgentTurnResult first = loop.Run(session, statement);
-        AgentTurnResult second = loop.Run(first.Session, statement);
+        AgentTurnResult first = loop.Run(session, context, statement);
+        AgentTurnResult second = loop.Run(first.Session, context, statement);
         Assert.Equal(TurnOutcome.ToolSucceeded, first.Outcome);
         Assert.Equal(TurnOutcome.DuplicateAction, second.Outcome);
         Assert.Single(second.Session.ToolInvocations);
+        Assert.Equal(2, context.StepsUsed);
+        Assert.Equal(0, context.RemainingSteps);
     }
 
     [Fact]
