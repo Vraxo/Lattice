@@ -171,12 +171,17 @@ nine M9.4 and nine M10.1 cases; this is arithmetic only, not an observed test-ru
 ### M10.3 — Adversarial tool-output tests
 
 **Gate:** untrusted content cannot bypass executor permissions.
+**Status (2026-11-02):** versioned adversarial fixtures and a boundary test are added. The file case
+uses `ReadFileTool`; web/tool cases use offline text-source doubles. Current code leaves tool output
+on the invocation as data and routes explicit write attempts through the executor permission gate;
+no production change was needed. Build/test gate remains pending.
 
-- [ ] Inspect `ToolExecutor`, permission policy, and how tool output reaches state.
-- [ ] Fixtures: file/web/tool text attempting to override policy or trigger unauthorized actions.
-- [ ] Test permissions are not bypassed; untrusted text is never executed as control.
-- [ ] No production change unless a real defect is found — if found, **ASK** before altering
-      security behavior.
+- [x] Inspect `ToolExecutor`, permission policy, and how tool output reaches state: successful raw
+      output is retained on `ToolInvocation` in the session, not automatically parsed into control.
+- [x] Fixtures: file/web/tool text attempting to override policy or trigger unauthorized actions.
+- [x] Add tests that check permissions are not bypassed and untrusted text is not auto-executed as
+      control; an explicit writer action remains denied under `ReadOnlyOnly`.
+- [x] No production change; inspection found no security defect requiring a behavior change.
 - [ ] Run build + tests; reconcile count; report; stop.
 
 ---
