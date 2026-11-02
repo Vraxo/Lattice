@@ -304,6 +304,8 @@
 
 **Gate:** documented measured benefit, operational cost, licensing, and opt-out behavior before adoption. If the benefit is not clear, do not merge it. Commit: `docs(retrieval): evaluate optional embedding provider` (or stop without implementation).
 
+**M9.3 evaluation outcome (2026-11-02):** The frozen Qdrant all-MiniLM-L6-v2 candidate passed the pre-declared low-overlap thresholds against the real C# M9.2 baseline, with no exact-control or overall regression. See section 9 of `docs/RETRIEVAL_BENCHMARK.md` for measured results, operational cost, licensing/provenance qualifications, and opt-out status. The result supports only a separate integration proposal; no production provider/dependency or graph traversal is approved.
+
 ### M9.4 — Add one non-C# package/tool adapter
 - Prove extensibility with a second capability or language rather than a generic plugin system built only in theory.
 
