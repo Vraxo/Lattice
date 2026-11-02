@@ -325,23 +325,21 @@ public sealed class RegressionRequestSetTests
         Equal(id, rationale, "status", Enum.Parse<EvidenceAnswerStatus>(String(expected, "status")), answer.Status);
         Equal(id, rationale, "text", String(expected, "text"), answer.Text);
 
-        string[] expectedEvidence = expected.GetProperty("evidence")
+        string[] expectedEvidence = [.. expected.GetProperty("evidence")
             .EnumerateArray()
             .Select(item => EvidenceSignature(
                 String(item, "relativePath"),
                 item.GetProperty("startLine").GetInt32(),
                 item.GetProperty("endLine").GetInt32(),
                 String(item, "snippet")))
-            .OrderBy(value => value, StringComparer.Ordinal)
-            .ToArray();
-        string[] actualEvidence = answer.Evidence
+            .OrderBy(value => value, StringComparer.Ordinal)];
+        string[] actualEvidence = [.. answer.Evidence
             .Select(reference => EvidenceSignature(
                 reference.RelativePath,
                 reference.StartLine,
                 reference.EndLine,
                 reference.Snippet))
-            .OrderBy(value => value, StringComparer.Ordinal)
-            .ToArray();
+            .OrderBy(value => value, StringComparer.Ordinal)];
         SequenceEqual(id, rationale, "evidence", expectedEvidence, actualEvidence);
     }
 
