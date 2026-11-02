@@ -227,4 +227,3 @@ public sealed class PythonSyntaxTool : ITool
         return ToolResult.Failure(new Error(code, message));
     }
 }
-"}
