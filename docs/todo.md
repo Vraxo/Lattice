@@ -76,25 +76,30 @@ a checkbox — the bullets are rules you obey, not things you "finish".
 
 ### M9.3 — Evaluate optional frozen embeddings (retrieval provider only)
 
-**Gate:** documented measured benefit, operational cost, licensing, and opt-out behavior **before**
-adoption. If benefit is not clear: do **not** implement — record the evaluation and stop.
-**Context:** M9.2 already moved `documentation` recall off zero with lexical matching, so the case
-for embeddings is weaker than when the roadmap was written. "Evaluated; insufficient benefit; not
-adopted" is a legitimate and expected outcome.
+**Gate:** document measured benefit, operational cost, licensing, and opt-out behavior before adoption.
+If benefit is unclear, do not implement; record the evaluation and stop.
+**Status (2026-11-02):** evaluation complete; quantitative gate passed. Recommendation is a separate
+integration proposal only. No production provider or dependency was approved or added.
 
-- [ ] **ASK** which query class is expected to improve that lexical retrieval cannot serve, and what
-      evidence threshold justifies adoption.
-- [ ] Inspect the M9.1/M9.2 benchmark and `docs/RETRIEVAL_BENCHMARK.md`; identify the measured gap.
-- [ ] If no gap justifies it: record the evaluation and rationale in `docs/RETRIEVAL_BENCHMARK.md`,
-      update the roadmap note, run build/tests, report, stop.
-- [ ] If a gap does justify it: **ASK** before adding any dependency (license, source, maintenance
-      cost, opt-out design approved first).
-- [ ] If approved: retrieval provider only — no fine-tuning, no generative model, no mandatory
-      dependency; project must remain fully useful without it.
-- [ ] Verify exact/alias recall stays 1.0; targeted class improves measurably; opt-out path tested.
-- [ ] Update before/after metrics in `docs/RETRIEVAL_BENCHMARK.md`.
-- [ ] Run build + tests; reconcile count; report; stop.
-
+- [x] **ASK** which query class should improve beyond lexical retrieval and what evidence threshold
+      justifies a proposal: documentation paraphrases with low lexical overlap; ≥ +10 pp Recall@5,
+      ≥ +0.05 MRR@5, no exact-match or overall regression, plus acceptable qualitative gates.
+- [x] Inspect M9.1/M9.2 benchmark and identify the measured gap: lexical documentation search still
+      misses independently classified low-overlap paraphrases.
+- [x] Gap branch selected: measured gains clear the thresholds; no “insufficient benefit” stop.
+- [x] **ASK** before evaluation dependencies/model: approved for isolated evaluation only, with
+      licensing, source/provenance, maintenance cost, and optionality reviewed first.
+- [x] Keep the experiment evaluation-only: frozen model, no training/fine-tuning/generative use, no
+      mandatory production dependency, no provider or graph traversal.
+- [x] Verify results: low-overlap Recall@5 improves by +28.57 pp and MRR@5 by +0.4063; existing
+      exact/alias controls remain 1.0 and overall metrics do not regress. Lexical remains the only
+      production path. A provider-specific opt-out switch is not applicable here; any separate
+      provider proposal must implement and test explicit disable/fallback.
+- [x] Record before/after metrics, operational measurements, licensing, provenance limits, and
+      opt-out status in `docs/RETRIEVAL_BENCHMARK.md` §9; update the roadmap outcome note.
+- [x] CI build/test and M9.3 evaluation passed. Existing suite count: 714 passed, 0 failed, 0 skipped
+      (612 + 46 + 29 + 14 + 3 + 4 + 6 = 714); evaluation harness is separate from normal tests.
+      Report and stop; do not begin integration or M9.4 without a separate request.
 ---
 
 ### M9.4 — Add one non-C# package/tool adapter
