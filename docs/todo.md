@@ -189,15 +189,20 @@ no production change was needed. Build/test gate remains pending.
 ### M10.4 — Capability matrix and known limitations
 
 **Gate:** each advertised capability points to test coverage or a clearly marked manual limitation.
+**Status (2026-11-02):** drafted `docs/CAPABILITIES.md`, linked it from the README, and narrowed
+README claims about CLI composition, natural-language routing, and generic tool-output validation.
+Documentation checks are complete; build/test verification is pending. The local environment has no
+`dotnet` executable, so report the failed attempts and retain this gate as incomplete unless CI is run.
 
-- [ ] Enumerate capabilities from the tool registry and roadmap.
-- [ ] Classify each: supported / partial / unsupported, with a pointer to tests or a marked
+- [x] Enumerate capabilities from the tool registry and roadmap.
+- [x] Classify each: supported / partial / unsupported, with a pointer to tests or a marked
       limitation.
-- [ ] State the Markdown subset honestly: ATX headings (≤3 leading spaces, optional closing hashes),
+- [x] State the Markdown subset honestly: ATX headings (≤3 leading spaces, optional closing hashes),
       fenced code (3+ backticks/tildes). **Setext headings, tab indentation, inline formatting, and
       list nesting are NOT supported.**
-- [ ] State encoding honestly: reads permissive; edits refuse anything but UTF‑8-no-BOM.
-- [ ] No overclaiming — every line backed by a test or explicitly marked as a limitation.
+- [x] State encoding honestly: reads are BOM-aware/permissive for recognized marked Unicode (with
+      the tested read cases identified); edits accept only UTF‑8 without BOM.
+- [x] No overclaiming — every line backed by a test or explicitly marked as a limitation.
 - [ ] Run build + tests; report; stop.
 
 ---
