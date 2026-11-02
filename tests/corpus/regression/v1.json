@@ -1,0 +1,151 @@
+{
+  "corpusVersion": "1.0",
+  "changePolicy": "Regression expectations are intentional contracts. Change an expected value only when the behavior change is deliberate, reviewed, and accompanied by an updated rationale and test evidence.",
+  "entries": [
+    {
+      "id": "understanding.find-symbol",
+      "category": "understanding",
+      "input": {
+        "request": "find symbol Calculator"
+      },
+      "expect": {
+        "kind": "Matched",
+        "intent": "FindSymbol",
+        "patternId": "find.symbol-named",
+        "slotName": "symbol",
+        "slotValue": "Calculator"
+      },
+      "rationale": "The more-specific symbol-lookup pattern should win over the broad find pattern and preserve the requested symbol as its slot value."
+    },
+    {
+      "id": "clarification.missing-path",
+      "category": "clarification",
+      "input": {
+        "request": "read"
+      },
+      "expect": {
+        "kind": "MissingValue",
+        "intent": "InspectPath",
+        "missingSlotName": "path",
+        "clarificationKind": "MissingValue",
+        "question": "What path?"
+      },
+      "rationale": "A recognized inspect-path request without its required path should request that value rather than guess a target."
+    },
+    {
+      "id": "tool-selection.calculator",
+      "category": "tool-selection",
+      "input": {
+        "operation": "calculator",
+        "left": 2,
+        "right": 3
+      },
+      "expect": {
+        "outcome": "ToolSucceeded",
+        "toolId": "calculator",
+        "outputType": "Integer",
+        "outputValue": 5,
+        "invocationCount": 1
+      },
+      "rationale": "The registered descriptor should make the calculator discoverable, and the selected capability should execute once with the supplied arguments."
+    },
+    {
+      "id": "state-update.user-fact",
+      "category": "state-update",
+      "input": {
+        "statement": "fact water | boils_at | 100C"
+      },
+      "expect": {
+        "outcome": "FactRecorded",
+        "factCount": 1,
+        "factContent": "water boils_at 100C",
+        "factSource": "controlled",
+        "factStatus": "UserAsserted",
+        "originalSessionFactCount": 0
+      },
+      "rationale": "A parsed user fact should update the returned immutable session with provenance while leaving the original session unchanged."
+    },
+    {
+      "id": "tool-error.failure-recorded",
+      "category": "tool-error",
+      "input": {
+        "statement": "action failing"
+      },
+      "expect": {
+        "outcome": "ToolFailed",
+        "toolId": "failing",
+        "errorCode": "failing.tool",
+        "invocationCount": 1
+      },
+      "rationale": "A tool's typed failure should be classified and recorded in the session instead of crashing or being reported as success."
+    },
+    {
+      "id": "permission.write-denied",
+      "category": "permission",
+      "input": {
+        "statement": "action writer"
+      },
+      "expect": {
+        "outcome": "PermissionDenied",
+        "errorCode": "tool.permission.denied",
+        "toolExecuted": false,
+        "invocationCount": 1
+      },
+      "rationale": "The read-only policy must deny a local-write tool at the executor boundary and must not call its implementation."
+    },
+    {
+      "id": "file-preservation.markdown-section",
+      "category": "file-preservation",
+      "input": {
+        "path": "guide.md",
+        "source": "# Guide\nIntro stays.\n## Target\nold content\n## Tail\nTail stays.\n",
+        "heading": "Target",
+        "replacement": "new content\n"
+      },
+      "expect": {
+        "updatedFile": "# Guide\nIntro stays.\n## Target\nnew content\n## Tail\nTail stays.\n",
+        "backupEqualsOriginal": true
+      },
+      "rationale": "Replacing one section must preserve its heading and all bytes outside the target section; the backup must retain the original document."
+    },
+    {
+      "id": "output-grounding.symbol-found",
+      "category": "output-grounding",
+      "input": {
+        "question": "find symbol Calculator"
+      },
+      "expect": {
+        "status": "Answered",
+        "text": "Found 'Calculator' in 2 files, on 2 lines.",
+        "evidence": [
+          {
+            "relativePath": "README.md",
+            "startLine": 3,
+            "endLine": 3,
+            "snippet": "This project contains a Calculator."
+          },
+          {
+            "relativePath": "src/Calculator.cs",
+            "startLine": 3,
+            "endLine": 3,
+            "snippet": "public sealed class Calculator"
+          }
+        ]
+      },
+      "rationale": "The answer must be derived from the fixture workspace and cite each matching file and line; generated bin content is excluded."
+    },
+    {
+      "id": "output-grounding.symbol-absent",
+      "category": "output-grounding",
+      "input": {
+        "question": "find symbol Missing"
+      },
+      "expect": {
+        "status": "InsufficientEvidence",
+        "text": "No occurrences of 'Missing' were found in the workspace.",
+        "evidence": []
+      },
+      "rationale": "An unsupported search result must not be turned into a factual answer or citation when the workspace provides no evidence."
+    }
+  ]
+}
