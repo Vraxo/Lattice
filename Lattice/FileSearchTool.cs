@@ -39,6 +39,7 @@ public sealed class FileSearchTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!arguments.TryGetValue(QueryParameter, out ArgumentValue? queryValue))
         {
             return ToolResult.Failure(new Error(
@@ -91,13 +92,14 @@ public sealed class FileSearchTool : ITool
         bool truncated = false;
         foreach (string file in EnumerateSearchableFiles(startPath))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (matches.Count >= MaxMatches)
             {
                 truncated = true;
                 break;
             }
 
-            CollectMatches(file, query, matches, ref truncated);
+            CollectMatches(file, query, matches, ref truncated, cancellationToken);
             if (truncated)
             {
                 break;
@@ -143,7 +145,12 @@ public sealed class FileSearchTool : ITool
         return false;
     }
 
-    private void CollectMatches(string file, string query, List<SearchMatch> matches, ref bool truncated)
+    private void CollectMatches(
+        string file,
+        string query,
+        List<SearchMatch> matches,
+        ref bool truncated,
+        CancellationToken cancellationToken)
     {
         string text;
         try
@@ -176,6 +183,7 @@ public sealed class FileSearchTool : ITool
         string[] lines = text.Split('\n');
         for (int i = 0; i < lines.Length; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (matches.Count >= MaxMatches)
             {
                 truncated = true;

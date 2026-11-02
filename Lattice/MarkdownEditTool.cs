@@ -46,6 +46,7 @@ public sealed class MarkdownEditTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         if (!ToolArguments.TryReadString(arguments, PathParameter, out string? requested)
             || !ToolArguments.TryReadString(arguments, HeadingParameter, out string? heading)
             || !ToolArguments.TryReadString(arguments, ReplacementParameter, out string? replacement)
@@ -107,6 +108,7 @@ public sealed class MarkdownEditTool : ITool
             return ToolResult.Failure(edited.Error!);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         string updated = edited.Value.ToText();
         string diff = UnifiedDiff.Create(original, updated);
         Result write = WorkspaceFileAccess.Write(resolved.Value, requested, original, updated);

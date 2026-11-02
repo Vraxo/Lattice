@@ -26,6 +26,7 @@ public sealed class ListDirectoryTool : ITool
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        cancellationToken.ThrowIfCancellationRequested();
         string requested = ".";
         if (arguments.TryGetValue(PathParameter, out ArgumentValue? value))
         {
@@ -52,11 +53,16 @@ public sealed class ListDirectoryTool : ITool
             return ToolResult.Failure(new Error(code, $"Directory '{requested}' was not found."));
         }
 
-        string[] entries = [.. Directory.EnumerateFileSystemEntries(fullPath)
-            .Select(Format)
-            .OrderBy(entry => entry, StringComparer.Ordinal),];
+        List<string> entries = [];
+        foreach (string entryPath in Directory.EnumerateFileSystemEntries(fullPath))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            entries.Add(Format(entryPath));
+        }
+
+        entries.Sort(StringComparer.Ordinal);
         StringBuilder builder = new();
-        int shown = Math.Min(entries.Length, MaxEntries);
+        int shown = Math.Min(entries.Count, MaxEntries);
         for (int i = 0; i < shown; i++)
         {
             if (i > 0)
@@ -67,9 +73,9 @@ public sealed class ListDirectoryTool : ITool
             builder.Append(entries[i]);
         }
 
-        if (entries.Length > MaxEntries)
+        if (entries.Count > MaxEntries)
         {
-            builder.Append('\n').Append($"... {entries.Length - MaxEntries} more entries not shown");
+            builder.Append('\n').Append($"... {entries.Count - MaxEntries} more entries not shown");
         }
 
         return ToolResult.Success(ArgumentValue.FromString(builder.ToString()));

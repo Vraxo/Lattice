@@ -34,16 +34,18 @@ public sealed class GuardedCommandTool : ITool
         _runner = runner;
         _root = root;
         _timeout = timeout ?? ToolExecutionLimits.Default.Timeout;
+        Descriptor = new ToolDescriptor(
+            Id,
+            "Runs a preconfigured command inside the workspace and returns its output.",
+            "A summary line, then the command's standard output and error.",
+            ToolSideEffect.CommandExecution,
+            [new ToolParameter(NameParameter, ToolParameterType.String)],
+            limits: new ToolExecutionLimits(_timeout));
     }
 
     public static ToolId Id { get; } = new("command.run");
 
-    public ToolDescriptor Descriptor { get; } = new(
-        Id,
-        "Runs a preconfigured command inside the workspace and returns its output.",
-        "A summary line, then the command's standard output and error.",
-        ToolSideEffect.CommandExecution,
-        [new ToolParameter(NameParameter, ToolParameterType.String)]);
+    public ToolDescriptor Descriptor { get; }
 
     public ToolResult Execute(ArgumentBag arguments, CancellationToken cancellationToken = default)
     {

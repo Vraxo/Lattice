@@ -147,14 +147,23 @@ arithmetic estimate, not a reported test-run total.
 ### M10.2 — Add loop/resource safeguards
 
 **Gate:** tests prove all limits stop the agent safely.
+**Status (2026-11-02):** implementation and focused tests are present; local build/test gate remains
+unverified because the .NET SDK is unavailable. The run-step budget uses an explicit per-run
+`AgentRunContext`; tool timeouts are cooperative through the existing `ITool` cancellation token.
+Six new `[Fact]` tests give an estimated suite total of 738 from the historical 714 baseline plus
+nine M9.4 and nine M10.1 cases; this is arithmetic only, not an observed test-run count.
 
-- [ ] Inspect `AgentLoop`, `ToolExecutionLimits`, cancellation plumbing, existing repeated-action
-      handling.
-- [ ] Enforce: maximum steps; repeated-action detection; per-tool timeouts; cancellation; observable
-      budget exhaustion.
-- [ ] Each limit yields a distinct typed terminal outcome — not a crash.
-- [ ] Test each limit stops safely and observably.
-- [ ] Timing-dependent tests: run repeatedly — one green run is not evidence.
+- [x] Inspect `AgentLoop`, `ToolExecutionLimits`, cancellation plumbing, existing repeated-action
+      handling. `AgentLoop` is one turn per call; a shared context now carries step budget across
+      calls in one logical run.
+- [x] Enforce: maximum steps; repeated-action detection; per-tool timeouts; cancellation; observable
+      budget exhaustion. Existing duplicate-action handling remains; step-limit exhaustion is a
+      separate outcome.
+- [x] Each limit yields a distinct typed terminal outcome — not a crash. Step-limit, duplicate,
+      timeout, and cancellation outcomes are distinguishable.
+- [x] Add tests for each limit stopping safely and observably; timeout coverage repeats ten times
+      with a cancellation-aware fake.
+- [ ] Execute the timing-dependent tests repeatedly; one green run is not evidence.
 - [ ] Run build + tests; reconcile count; report; stop.
 
 ---

@@ -104,6 +104,7 @@ public sealed class GuardedCommandToolTests : IDisposable
         GuardedCommandTool tool = Create(tool: runner, timeout: TimeSpan.FromSeconds(5));
         Run(tool, "greet", ToolPermissionPolicy.AllowAll);
         Assert.Equal(TimeSpan.FromSeconds(5), runner.LastTimeout);
+        Assert.Equal(TimeSpan.FromSeconds(5), tool.Descriptor.Limits.Timeout);
     }
 
     [Fact]
