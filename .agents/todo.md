@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** not started. This is the active, sequential implementation checklist.
+> **Status:** in progress — Phase 0 baseline established locally; Phase 1.1 `Lattice.Desktop` host created and queued for Windows CI verification. This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -60,20 +60,24 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 0.1 Inspect the current repository and environment
 
-- [ ] Inspect the root, solution, project references, build configuration, README, active instructions, and current Git status.
-- [ ] Confirm the existing names and locations of Core workspace components, including WorkspaceRoot, WorkspaceToolset, FileSearchTool, ReadFileTool, WorkspaceQuestionAnswerer, RequestInterpreter, and evidence types. Do not assume the archived capability matrix is perfectly current.
-- [ ] Inspect the Formloom desktop host as a reference for PhotinoX.Blazor composition and project setup. Reuse the proven pattern selectively; do not copy Formloom-specific rendering or scene code.
-- [ ] Check dotnet --info and the installed SDK/runtime. Do not retarget the solution just because a local SDK is missing.
+- [x] Inspect the root, solution, project references, build configuration, README, active instructions, and current Git status.
+- [x] Confirm the existing names and locations of Core workspace components, including WorkspaceRoot, WorkspaceToolset, FileSearchTool, ReadFileTool, WorkspaceQuestionAnswerer, RequestInterpreter, and evidence types. Do not assume the archived capability matrix is perfectly current.
+- [x] Inspect the Formloom desktop host as a reference for PhotinoX.Blazor composition and project setup. Reuse the proven pattern selectively; do not copy Formloom-specific rendering or scene code.
+- [x] Check dotnet --info and the installed SDK/runtime. Do not retarget the solution just because a local SDK is missing.
 
 **Done when:** The agent reports the actual solution shape, reusable components, current Git status, and available build environment before making code changes.
+
+> **Phase 0.1 note:** Inspected `Lattice.slnx` (`Lattice.Core`, `Lattice.CSharp`, `Lattice.Python`, `Lattice.Cli`, `Lattice.Core.Tests`), `Directory.Build.props` (`net10.0`, `UseArtifactsOutput=true`, `NewStyleCop.Analyzers` `1.2.1`), `.editorconfig`, `Vraxo/Formloom` (`src/Formloom.Desktop` with `PhotinoX.Blazor` `5.3.5` and `tests/Formloom.Desktop.Tests` with `bunit` `2.13.3`), and Core workspace types (`WorkspaceRoot`, `WorkspaceFileAccess`, `WorkspaceToolset`, `ReadFileTool`, `FileSearchTool`, `ListDirectoryTool`, `WorkspaceQuestionAnswerer`, `RequestInterpreter`, `IntentPatternCatalog`, `EvidenceAnswer`, `EvidenceReference`). Local `dotnet --info` fails with `dotnet: command not found` (exit code 127); `net10.0` target preserved.
 
 ### 0.2 Run and record the existing baseline
 
 - [ ] Run restore, Release build, and the existing test suite using the repository's actual solution and commands.
 - [ ] Record exact command results, warnings/errors, and the observed test counts. Do not reuse old counts from the archived work queue.
-- [ ] If the local environment lacks the .NET SDK, record the exact failure and use GitHub Actions CI for verification where practical. Do not install or change SDK infrastructure without a concrete need.
+- [x] If the local environment lacks the .NET SDK, record the exact failure and use GitHub Actions CI for verification where practical. Do not install or change SDK infrastructure without a concrete need.
 
 **Done when:** The existing baseline is honestly recorded, and any pre-existing failures are distinguished from changes introduced by this plan.
+
+> **Phase 0.2 note:** Local sandbox lacks the .NET SDK (`dotnet: command not found`, exit 127). Pre-existing `main` CI run `42388275041` (`windows-latest`, .NET `10.0.x`) passed `dotnet restore Lattice.slnx`, `dotnet build Lattice.slnx --configuration Release --no-restore` (0 errors, 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in `Lattice/*.cs`), and `dotnet test Lattice.slnx --configuration Release --no-build`. Exact TRX test count for `Lattice.Core.Tests` is being captured on the initial draft PR CI run.
 
 ---
 
@@ -81,10 +85,10 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 1.1 Add the Desktop project
 
-- [ ] Create Lattice.Desktop as a .NET 10 executable using PhotinoX.Blazor 5.3.5.
-- [ ] Add it to Lattice.slnx.
-- [ ] Reference Core only where the host needs it. Keep Photino, Blazor, and desktop-specific packages out of Lattice.Core.
-- [ ] Follow the working Formloom host pattern for startup, root component registration, static assets, and window lifecycle. Keep the initial structure small.
+- [x] Create Lattice.Desktop as a .NET 10 executable using PhotinoX.Blazor 5.3.5.
+- [x] Add it to Lattice.slnx.
+- [x] Reference Core only where the host needs it. Keep Photino, Blazor, and desktop-specific packages out of Lattice.Core.
+- [x] Follow the working Formloom host pattern for startup, root component registration, static assets, and window lifecycle. Keep the initial structure small.
 - [ ] Verify the project restores and the full solution builds.
 
 **Done when:** The repository contains a real desktop executable project and the solution builds; Core remains independent of UI/desktop dependencies.

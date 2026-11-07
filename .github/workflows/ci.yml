@@ -41,4 +41,34 @@ jobs:
         # Lattice.Core.Tests references Microsoft.NET.Test.Sdk and
         # xunit.runner.visualstudio, so VSTest can run the suite through
         # `dotnet test` rather than invoking the test assembly directly.
-        run: dotnet test Lattice.slnx --configuration Release --no-build
+        shell: pwsh
+        run: |
+          $resultsDir = Join-Path $env:RUNNER_TEMP "test-results"
+          if (Test-Path $resultsDir) { Remove-Item $resultsDir -Recurse -Force }
+          dotnet test Lattice.slnx --configuration Release --no-build --logger "trx" --results-directory $resultsDir
+          $testExit = $LASTEXITCODE
+          if (Test-Path $resultsDir) {
+            Get-ChildItem -Path $resultsDir -Filter "*.trx" | Sort-Object Name | ForEach-Object {
+              [xml]$trx = Get-Content $_.FullName
+              $counters = $trx.TestRun.ResultSummary.Counters
+              $unitTest = @($trx.TestRun.TestDefinitions.UnitTest) | Select-Object -First 1
+              $suite = if ($unitTest -and $unitTest.TestMethod.codeBase) {
+                [System.IO.Path]::GetFileNameWithoutExtension($unitTest.TestMethod.codeBase)
+              } else {
+                $_.BaseName
+              }
+              $total = [int]$counters.total
+              $executed = [int]$counters.executed
+              $passed = [int]$counters.passed
+              $failed = [int]$counters.failed
+              $skipped = $total - $executed
+              Write-Output "::notice title=Test Results ($suite)::Total: $total, Passed: $passed, Failed: $failed, Skipped: $skipped"
+              foreach ($failure in @($trx.TestRun.Results.UnitTestResult) | Where-Object { $_ -ne $null -and $_.outcome -eq "Failed" }) {
+                $errMsg = [string]$failure.Output.ErrorInfo.Message
+                $stack = [string]$failure.Output.ErrorInfo.StackTrace
+                $combined = ("$errMsg | $stack") -replace "\r?\n", " "
+                Write-Output "::error title=Failed Test ($($failure.testName))::$combined"
+              }
+            }
+          }
+          exit $testExit
