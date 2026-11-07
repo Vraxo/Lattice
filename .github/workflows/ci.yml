@@ -44,7 +44,9 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem -Path . -Recurse -Filter "*.trx" -ErrorAction SilentlyContinue | Remove-Item -Force
-          $testOutput = dotnet test Lattice.slnx --configuration Release --no-build --logger "trx" 2>&1
+          # Run test projects sequentially (-m:1) on 2-vCPU runners so concurrent testhost
+          # startup/JIT does not starve timing-sensitive thread-pool cancellation tests in Core.
+          $testOutput = dotnet test Lattice.slnx --configuration Release --no-build -m:1 --logger "trx" 2>&1
           $testOutput | ForEach-Object { Write-Host $_ }
           $testExit = $LASTEXITCODE
           $trxFiles = @(Get-ChildItem -Path . -Recurse -Filter "*.trx" -ErrorAction SilentlyContinue | Sort-Object FullName)
