@@ -3,8 +3,9 @@
 ## Active
 
 - [Sequential Desktop 0.1 build plan](../.agents/todo.md) — ordered phases, checkboxes, and acceptance gates.
+- [Windows desktop smoke test](windows-smoke-test.md) — manual Photino window launch and Connect → Inspect → Find verification steps.
 - [Desktop direction](DESKTOP_DIRECTION.md) — current product scope, first workflows, safety boundary, and acceptance target.
-- [Repository README](../README.md) — project status and build/test entry points.
+- [Repository README](../README.md) — project status, prerequisites, launch commands, supported requests, and limitations.
 - [Coding-agent instructions](../AGENTS.md) — current instructions for implementation work.
 
 ## Historical research-first material

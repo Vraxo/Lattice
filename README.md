@@ -2,54 +2,69 @@
 
 Lattice is a **symbolic, tool-using coding assistant** built around explicit state, bounded actions, and evidence from the user's workspace. It does not use an LLM or a trained generative model.
 
-## Project direction
+## Desktop 0.1 (`Lattice.Desktop`)
 
-Lattice is moving from a research-first codebase to a **usable desktop application, built in small vertical increments**. The existing Core, tools, adapters, and tests are being retained; the immediate task is to connect the useful pieces to a real interface rather than expand the architecture in isolation.
+Lattice Desktop 0.1 provides a read-only PhotinoX.Blazor desktop window for connecting a local code workspace, inspecting UTF-8 files, and running grounded source-text symbol searches with visible file-and-line citations.
 
-> **Current status:** the desktop application is the active product target, but `Lattice.Desktop` has not been implemented yet. The existing console project is a limited development harness, not the intended user experience.
+> **Verification status:** Restore, Release build, workspace symlink/reparse-point safety tests, and headless xUnit/bUnit UI tests pass in Windows CI (.NET 10). Final interactive Photino window verification on a desktop display is tracked in [docs/windows-smoke-test.md](docs/windows-smoke-test.md) and [.agents/todo.md](.agents/todo.md).
 
-The first desktop release is intentionally narrow: open a local workspace, inspect a file, and find source-text occurrences with file-and-line evidence. It is read-only. It will not pretend that literal text search is compiler-grade symbol resolution.
+### Prerequisites
 
-Start implementation from the **[active TODO queue](.agents/todo.md)**. It contains the ordered, checkable tasks. The [desktop direction](docs/DESKTOP_DIRECTION.md) explains the product target; coding agents must follow the repository-root [AGENTS.md](AGENTS.md).
+- **.NET 10 SDK** (`10.0.x`).
+- **Windows 10/11** with the Microsoft Edge WebView2 Runtime (preinstalled on current Windows 10/11 releases) to launch the native Photino desktop window, or another desktop OS with Photino's native WebView prerequisites installed.
 
-## Existing code
+### Build, test, and launch
 
-The repository already contains reusable pieces:
-
-| Project | Purpose |
-|---|---|
-| `Lattice/` | `Lattice.Core` — domain types, agent loop, workspace tools, knowledge and retrieval |
-| `Lattice.CSharp/` | Optional Roslyn syntax/semantic inspection and a narrow syntax-edit API |
-| `Lattice.Python/` | Optional Python AST syntax adapter |
-| `Lattice.Cli/` | Limited controlled-statement console harness |
-| `Lattice.Core.Tests/` | Core tests, fixtures, and evaluation corpora |
-| `knowledge/`, `config/`, `tests/` | Example knowledge package, intent patterns, and test data |
-
-The desktop host will be added as `Lattice.Desktop/`. UI and desktop-specific dependencies must stay out of `Lattice.Core`.
-
-## Build and test
-
-Requires the .NET 10 SDK.
-
-```sh
-dotnet restore
-dotnet build --no-restore
-dotnet test --no-build
+```powershell
+dotnet restore Lattice.slnx
+dotnet build Lattice.slnx --configuration Release --no-restore
+dotnet test Lattice.slnx --configuration Release --no-build
+dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Release
 ```
 
-The current console harness can still be run with:
+The legacy controlled-statement console harness remains available separately:
 
-```sh
+```powershell
 dotnet run --project Lattice.Cli
 ```
 
-It accepts controlled statements and registers only the calculator. It is not the desktop app and does not yet provide the intended workspace-chat workflow.
+### Supported requests
+
+After entering an existing local folder path and selecting **Connect**, Desktop 0.1 accepts two read-only request forms:
+
+| Request form | Behavior | Example |
+|---|---|---|
+| `inspect <relative-path>` | Reads a UTF-8 text file inside the connected workspace root and renders its contents in a scrollable pane. | `inspect Lattice/WorkspaceRoot.cs` |
+| `find symbol <name>` | Runs bounded, case-insensitive **literal source-text search** across workspace files and displays matching `path:line` citations and snippets. | `find symbol WorkspaceQuestionAnswerer` |
+
+Prior requests, summaries, inspected file contents, and search citations stay visible in chronological order during the session. Distinct UI states are shown for unsupported input, ambiguous input (such as `show README.md`), no matches, invalid/unconnected workspaces, missing files, access rejections, and unexpected errors.
+
+### Current limitations and safety boundaries
+
+- **Read-only workspace access:** `Lattice.Desktop` registers only `FileSearchTool`, `ReadFileTool`, and `ListDirectoryTool` under `ToolPermissionPolicy.ReadOnlyOnly`. No file writes, patch application, or shell/command execution capabilities are registered.
+- **Literal source-text search (not semantic resolution):** `find symbol <name>` performs case-insensitive substring matching over UTF-8 workspace files (scanning up to 100 matches and displaying up to 20 citations; skipping `.git`, `.vs`, `artifacts`, `bin`, and `obj`). It does **not** perform Roslyn or AST declaration/reference resolution.
+- **File size and encoding bounds:** `inspect` and search skip or reject files larger than 262,144 bytes and reject invalid UTF-8 binary data rather than substituting replacement characters.
+- **Narrow symbolic grammar:** Free-form natural language, multi-word symbol queries, and unsupported commands are rejected explicitly rather than guessed or silently converted into another operation.
+- **Static symlink and reparse-point guard:** Workspace operations are confined to the explicitly connected root. Direct reads/directory resolution reject root-to-target paths containing symbolic links or reparse points, and directory/search traversal skips linked files and linked directories. This is a conservative **static** check at resolution/enumeration time and is **not** race-resistant (TOCTOU-resistant) against concurrent filesystem link replacement.
+- **Untrusted workspace text:** Inspected file text and search snippets are treated purely as passive data and are never reparsed or executed as instructions.
+
+## Solution layout
+
+| Project | Purpose |
+|---|---|
+| `Lattice/` | `Lattice.Core` — UI-independent domain types, agent loop, workspace tools, safety boundary, and retrieval |
+| `Lattice.Desktop/` | Desktop 0.1 executable host (`PhotinoX.Blazor` 5.3.5) and read-only workspace session UI |
+| `Lattice.Desktop.Tests/` | Desktop session, composition, and rendered bUnit Blazor component tests |
+| `Lattice.CSharp/` | Optional Roslyn syntax/semantic inspection and narrow syntax-edit library |
+| `Lattice.Python/` | Optional Python AST syntax adapter |
+| `Lattice.Cli/` | Limited controlled-statement console harness |
+| `Lattice.Core.Tests/` | Core unit, safety-boundary, and regression corpus tests |
+| `knowledge/`, `config/`, `tests/` | Example knowledge package, intent patterns, and test corpora |
 
 ## Documentation
 
-- [Sequential Desktop 0.1 build plan](.agents/todo.md) — ordered tasks and acceptance checkboxes.
-- [Desktop product direction and first acceptance target](docs/DESKTOP_DIRECTION.md)
+- [Sequential Desktop 0.1 build plan](.agents/todo.md) — ordered phases, verification notes, and remaining manual GUI checks.
+- [Windows desktop smoke test](docs/windows-smoke-test.md) — step-by-step manual Photino launch walkthrough.
+- [Desktop product direction](docs/DESKTOP_DIRECTION.md) — product scope and first acceptance target.
 - [Documentation index](docs/README.md)
-- [Historical research-first specifications and milestone records](docs/archive/research-first/)
-
-The archived documents are retained for context. They are **not** the active roadmap or instructions for new work.
+- [Historical research-first specifications and milestone records](docs/archive/research-first/) — retained for provenance, not active instructions.

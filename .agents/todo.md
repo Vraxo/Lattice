@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** in progress — Phase 3 verified in Windows CI (run `42393793463`); Phase 4 source-text symbol search and grounded evidence queued for CI verification. This is the active, sequential implementation checklist.
+> **Status:** implementation and automated CI verification complete (Phases 0–5); awaiting manual interactive Windows Photino GUI smoke check (`docs/windows-smoke-test.md`). This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -180,22 +180,24 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 5.1 Make the conversation usable
 
-- [ ] Keep prior user requests and Lattice responses visible during the current session.
-- [ ] Present file content and search evidence clearly, without hiding the source path/line information.
-- [ ] Show distinct states for unsupported input, ambiguous input, no results, invalid workspace, missing file, and unexpected errors.
-- [ ] Prevent overlapping submissions from corrupting the visible session state.
-- [ ] Keep the interface focused on workspace inspection; do not add editing, autonomous planning, or arbitrary command execution.
+- [x] Keep prior user requests and Lattice responses visible during the current session.
+- [x] Present file content and search evidence clearly, without hiding the source path/line information.
+- [x] Show distinct states for unsupported input, ambiguous input, no results, invalid workspace, missing file, and unexpected errors.
+- [x] Prevent overlapping submissions from corrupting the visible session state.
+- [x] Keep the interface focused on workspace inspection; do not add editing, autonomous planning, or arbitrary command execution.
 
 ### 5.2 Complete automated verification and documentation
 
-- [ ] Add/complete focused UI component tests for Connect, Inspect, Find, visible evidence, empty results, and error states.
-- [ ] Run dotnet restore, Release build, and the full test suite; report exact observed results.
-- [ ] Review the final diff for unrelated refactors, accidental dependencies, unsafe path handling, and inflated capability claims.
-- [ ] Update the README with the desktop prerequisites, exact launch command, supported request forms, and honest source-text-search/read-only limitations.
-- [ ] Ensure the solution/CI workflow builds and tests the Desktop project.
+- [x] Add/complete focused UI component tests for Connect, Inspect, Find, visible evidence, empty results, and error states.
+- [x] Run dotnet restore, Release build, and the full test suite; report exact observed results.
+- [x] Review the final diff for unrelated refactors, accidental dependencies, unsafe path handling, and inflated capability claims.
+- [x] Update the README with the desktop prerequisites, exact launch command, supported request forms, and honest source-text-search/read-only limitations.
+- [x] Ensure the solution/CI workflow builds and tests the Desktop project.
 - [ ] Confirm the desktop application launches and manually demonstrate Connect → Inspect → Find against a real repository.
 
 **Done when:** Desktop 0.1 satisfies every item in the Definition of done above.
+
+> **Phase 5 note:** Windows CI run `42394534767` passed `dotnet restore Lattice.slnx`, `dotnet build Lattice.slnx --configuration Release --no-restore` (0 errors; 0 warnings in `Lattice.Desktop` and `Lattice.Desktop.Tests`), and `dotnet test Lattice.slnx --configuration Release --no-build` (`Lattice.Core.Tests`: 749/749 passed; `Lattice.Desktop.Tests`: 38/38 passed; 787 total tests passed, 0 failed, 0 skipped), including an automated bUnit walkthrough against the real `Lattice` repository checkout. Only the manual interactive Photino desktop window launch check remains pending because the agent environment has no GUI display; follow `docs/windows-smoke-test.md` to complete it on Windows.
 
 ---
 
