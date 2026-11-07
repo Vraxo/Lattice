@@ -46,19 +46,93 @@
         <p id="session-status" class="status-line" role="status" aria-live="polite">@Session.StatusMessage</p>
     </section>
 
-    <section class="panel results-panel" id="workspace-results" aria-labelledby="results-heading">
-        <h2 id="results-heading" class="section-title">Requests &amp; Evidence</h2>
-        @if (Session.IsConnected)
+    <section class="panel request-panel" aria-labelledby="request-heading">
+        <h2 id="request-heading" class="section-title">Workspace Request</h2>
+        <form id="request-form" @onsubmit="() => Session.SubmitRequestAsync()" @onsubmit:preventDefault>
+            <fieldset disabled="@Session.IsBusy">
+                <label for="request-input">Enter a read-only request</label>
+                <div class="input-action-row">
+                    <input
+                        id="request-input"
+                        type="text"
+                        @bind="Session.RequestInput"
+                        @bind:event="oninput"
+                        placeholder="inspect README.md"
+                        aria-describedby="request-help"
+                        autocomplete="off" />
+                    <button id="submit-request" type="submit" class="primary">
+                        @(Session.IsSubmitting ? "Running…" : "Run")
+                    </button>
+                </div>
+                <p id="request-help" class="help-text">
+                    Supported request: <code>inspect &lt;relative-path&gt;</code> — confined to the connected workspace root and strictly read-only.
+                </p>
+            </fieldset>
+        </form>
+        @if (Session.RequestError is not null)
         {
-            <p class="empty-note">
-                Connected to <code>@Session.ConnectedWorkspacePath</code> in read-only mode.
-            </p>
+            <p id="request-error" class="alert error" role="alert">@Session.RequestError</p>
+        }
+    </section>
+
+    <section class="panel results-panel" id="workspace-results" aria-labelledby="results-heading">
+        <h2 id="results-heading" class="section-title">Session History &amp; Evidence</h2>
+        @if (Session.Entries.Count == 0)
+        {
+            @if (Session.IsConnected)
+            {
+                <p class="empty-note">
+                    Connected to <code>@Session.ConnectedWorkspacePath</code>. Enter <code>inspect &lt;relative-path&gt;</code> above to view a file.
+                </p>
+            }
+            else
+            {
+                <p class="empty-note">
+                    No workspace is active yet. Enter a local directory path above and select <strong>Connect</strong>.
+                </p>
+            }
         }
         else
         {
-            <p class="empty-note">
-                No workspace is active yet. Enter a local directory path above and select <strong>Connect</strong>.
-            </p>
+            <ol id="turn-history" class="turn-list">
+                @foreach (DesktopTurnEntry entry in Session.Entries)
+                {
+                    <li class="turn-card @(entry.IsError ? "turn-error" : "turn-ok")" data-turn-kind="@entry.Kind">
+                        <div class="turn-header">
+                            <code class="turn-request">@entry.RequestText</code>
+                            <span class="turn-kind-badge">@FormatKind(entry.Kind)</span>
+                        </div>
+                        <p class="turn-summary">@entry.Summary</p>
+                        @if (entry.Kind == DesktopTurnKind.FileInspected && entry.FileContents is not null)
+                        {
+                            <div class="file-viewer">
+                                <div class="file-viewer-header">
+                                    <code class="file-path">@entry.InspectedRelativePath</code>
+                                    <span class="file-meta">Read-only · Untrusted workspace text</span>
+                                </div>
+                                <pre class="file-contents"><code>@entry.FileContents</code></pre>
+                            </div>
+                        }
+                    </li>
+                }
+            </ol>
         }
     </section>
 </main>
+
+@code {
+    private static string FormatKind(DesktopTurnKind kind) => kind switch
+    {
+        DesktopTurnKind.FileInspected => "File Inspected",
+        DesktopTurnKind.SearchResults => "Source-Text Matches",
+        DesktopTurnKind.NoMatches => "No Matches",
+        DesktopTurnKind.MissingFile => "Missing File",
+        DesktopTurnKind.InspectError => "Inspection Error",
+        DesktopTurnKind.AccessRejected => "Access Rejected",
+        DesktopTurnKind.InvalidWorkspace => "Workspace Required",
+        DesktopTurnKind.AmbiguousInput => "Ambiguous Input",
+        DesktopTurnKind.UnsupportedInput => "Unsupported Input",
+        DesktopTurnKind.UnexpectedError => "Unexpected Error",
+        _ => kind.ToString(),
+    };
+}

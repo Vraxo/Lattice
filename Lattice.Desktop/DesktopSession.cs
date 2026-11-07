@@ -3,12 +3,20 @@ using Lattice.Core;
 namespace Lattice.Desktop;
 
 internal sealed class DesktopSession(
-    Func<string?, CancellationToken, Task<WorkspaceConnectionResult>>? connectWorkspace = null)
+    Func<string?, CancellationToken, Task<WorkspaceConnectionResult>>? connectWorkspace = null,
+    Func<ConnectedWorkspace?, string, CancellationToken, Task<DesktopTurnEntry>>? executeRequest = null)
 {
     private readonly Func<string?, CancellationToken, Task<WorkspaceConnectionResult>> _connectWorkspace =
         connectWorkspace ?? ((path, _) => Task.FromResult(WorkspaceConnector.Connect(path)));
 
+    private readonly Func<ConnectedWorkspace?, string, CancellationToken, Task<DesktopTurnEntry>> _executeRequest =
+        executeRequest ?? ((workspace, request, _) => Task.FromResult(DesktopRequestProcessor.Default.Execute(workspace, request)));
+
+    private readonly List<DesktopTurnEntry> _entries = [];
+
     public string WorkspacePathInput { get; set; } = string.Empty;
+
+    public string RequestInput { get; set; } = string.Empty;
 
     public ConnectedWorkspace? ActiveConnection { get; private set; }
 
@@ -20,12 +28,18 @@ internal sealed class DesktopSession(
 
     public bool IsConnecting { get; private set; }
 
-    public bool IsBusy => IsConnecting;
+    public bool IsSubmitting { get; private set; }
+
+    public bool IsBusy => IsConnecting || IsSubmitting;
 
     public string? WorkspaceError { get; private set; }
 
+    public string? RequestError { get; private set; }
+
     public string StatusMessage { get; private set; } =
         "Connect a local workspace folder to begin read-only inspection.";
+
+    public IReadOnlyList<DesktopTurnEntry> Entries => _entries;
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
@@ -35,6 +49,7 @@ internal sealed class DesktopSession(
         }
 
         WorkspaceError = null;
+        RequestError = null;
         IsConnecting = true;
         StatusMessage = "Validating workspace folder…";
         try
@@ -63,6 +78,47 @@ internal sealed class DesktopSession(
         finally
         {
             IsConnecting = false;
+        }
+    }
+
+    public async Task SubmitRequestAsync(CancellationToken cancellationToken = default)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        RequestError = null;
+        string trimmed = RequestInput.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            RequestError = "Enter a workspace request such as 'inspect README.md'.";
+            StatusMessage = "Request was empty.";
+            return;
+        }
+
+        IsSubmitting = true;
+        StatusMessage = "Running read-only workspace request…";
+        try
+        {
+            DesktopTurnEntry entry = await _executeRequest(ActiveConnection, trimmed, cancellationToken);
+            _entries.Add(entry);
+            RequestInput = string.Empty;
+            StatusMessage = entry.Summary;
+        }
+        catch (Exception exception)
+        {
+            DesktopTurnEntry failure = new(
+                trimmed,
+                DesktopTurnKind.UnexpectedError,
+                $"Unexpected error while handling request: {exception.Message}",
+                ConnectedWorkspacePath);
+            _entries.Add(failure);
+            StatusMessage = failure.Summary;
+        }
+        finally
+        {
+            IsSubmitting = false;
         }
     }
 }

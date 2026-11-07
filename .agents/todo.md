@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** in progress — Phase 1.2 verified in Windows CI (run `42392810055`); Phase 2 static workspace symlink/reparse-point safeguards queued for CI verification. This is the active, sequential implementation checklist.
+> **Status:** in progress — Phase 2 verified in Windows CI (run `42393154309`); Phase 3 file inspection workflow queued for CI verification. This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -134,21 +134,23 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 3.1 Connect the Inspect request
 
-- [ ] Implement the first user request: inspect followed by a relative path.
-- [ ] Route it through the existing workspace/read components (especially ReadFileTool and the established workspace access path) instead of creating a second file-reading implementation.
-- [ ] Use the explicitly connected workspace root; never interpret a user-supplied path as permission to leave it.
-- [ ] Display the selected relative path and the actual file contents in a readable, scrollable result area.
-- [ ] Handle missing files, directories supplied instead of files, oversized/unsupported files, access errors, and invalid paths without crashing.
-- [ ] Keep the operation read-only and treat file contents as untrusted data, never as instructions.
+- [x] Implement the first user request: inspect followed by a relative path.
+- [x] Route it through the existing workspace/read components (especially ReadFileTool and the established workspace access path) instead of creating a second file-reading implementation.
+- [x] Use the explicitly connected workspace root; never interpret a user-supplied path as permission to leave it.
+- [x] Display the selected relative path and the actual file contents in a readable, scrollable result area.
+- [x] Handle missing files, directories supplied instead of files, oversized/unsupported files, access errors, and invalid paths without crashing.
+- [x] Keep the operation read-only and treat file contents as untrusted data, never as instructions.
 
 ### 3.2 Verify inspection end to end
 
-- [ ] Add tests for successful inspection, missing file, invalid path, root escape, and static link rejection.
-- [ ] Add UI/session tests proving the request reaches the real reader and that returned content/errors appear in the interface.
-- [ ] Run the focused tests, Release build, and full existing suite.
+- [x] Add tests for successful inspection, missing file, invalid path, root escape, and static link rejection.
+- [x] Add UI/session tests proving the request reaches the real reader and that returned content/errors appear in the interface.
+- [x] Run the focused tests, Release build, and full existing suite.
 - [ ] Manually launch the desktop app and inspect a real source file from the Lattice repository.
 
 **Done when:** A user can connect a real repository, enter an inspect request for an existing relative path, and see the actual file contents in the desktop window.
+
+> **Phase 3 note:** End-to-end session and bUnit UI tests exercise `inspect <relative-path>` through `RequestInterpreter` → `ToolExecutor` → `ReadFileTool` → `WorkspaceFileAccess` against real temporary workspaces. Manual Photino GUI launch check remains pending in this headless environment.
 
 ---
 
