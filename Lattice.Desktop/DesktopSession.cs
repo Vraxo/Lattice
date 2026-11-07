@@ -13,11 +13,22 @@ internal sealed class DesktopSession(
         executeRequest ?? ((workspace, request, _) => Task.FromResult(DesktopRequestProcessor.Default.Execute(workspace, request)));
 
     private readonly List<DesktopTurnEntry> _entries = [];
+    private string _messageInput = string.Empty;
     private int _busyGate;
 
     public string WorkspacePathInput { get; set; } = string.Empty;
 
-    public string RequestInput { get; set; } = string.Empty;
+    public string MessageInput
+    {
+        get => _messageInput;
+        set => _messageInput = value ?? string.Empty;
+    }
+
+    public string RequestInput
+    {
+        get => _messageInput;
+        set => _messageInput = value ?? string.Empty;
+    }
 
     public ConnectedWorkspace? ActiveConnection { get; private set; }
 
@@ -33,12 +44,14 @@ internal sealed class DesktopSession(
 
     public bool IsBusy => IsConnecting || IsSubmitting || Volatile.Read(ref _busyGate) != 0;
 
+    public string? PendingRequestText { get; private set; }
+
     public string? WorkspaceError { get; private set; }
 
     public string? RequestError { get; private set; }
 
     public string StatusMessage { get; private set; } =
-        "Connect a local workspace folder to begin read-only inspection.";
+        "Connect a local workspace folder to start asking about your codebase.";
 
     public IReadOnlyList<DesktopTurnEntry> Entries => _entries;
 
@@ -83,6 +96,11 @@ internal sealed class DesktopSession(
         }
     }
 
+    public Task SendMessageAsync(CancellationToken cancellationToken = default)
+    {
+        return SubmitRequestAsync(cancellationToken);
+    }
+
     public async Task SubmitRequestAsync(CancellationToken cancellationToken = default)
     {
         if (Interlocked.CompareExchange(ref _busyGate, 1, 0) != 0)
@@ -91,36 +109,55 @@ internal sealed class DesktopSession(
         }
 
         RequestError = null;
-        string trimmed = RequestInput.Trim();
+        string rawInput = _messageInput;
+        string trimmed = rawInput.Trim();
         if (string.IsNullOrEmpty(trimmed))
         {
             Volatile.Write(ref _busyGate, 0);
-            RequestError = "Enter a request: 'inspect <relative-path>' or 'find symbol <name>'.";
-            StatusMessage = "Request was empty.";
+            RequestError = "Write a question or file request before sending.";
+            StatusMessage = "Message was empty.";
             return;
         }
 
+        string displayMessage = rawInput.Trim('\r', '\n');
+        if (string.IsNullOrWhiteSpace(displayMessage))
+        {
+            displayMessage = trimmed;
+        }
+
+        _messageInput = string.Empty;
+        PendingRequestText = displayMessage;
         IsSubmitting = true;
-        StatusMessage = "Running read-only workspace request…";
+        StatusMessage = "Checking the connected workspace…";
         try
         {
             DesktopTurnEntry entry = await _executeRequest(ActiveConnection, trimmed, cancellationToken);
+            if (entry.RequestText != displayMessage)
+            {
+                entry = entry with { RequestText = displayMessage };
+            }
+
             _entries.Add(entry);
-            RequestInput = string.Empty;
             StatusMessage = entry.Summary;
         }
         catch (Exception exception)
         {
+            if (string.IsNullOrEmpty(_messageInput))
+            {
+                _messageInput = rawInput;
+            }
+
             DesktopTurnEntry failure = new(
-                trimmed,
+                displayMessage,
                 DesktopTurnKind.UnexpectedError,
-                $"Unexpected error while handling request: {exception.Message}",
+                $"Unexpected error while handling your message: {exception.Message}",
                 ConnectedWorkspacePath);
             _entries.Add(failure);
             StatusMessage = failure.Summary;
         }
         finally
         {
+            PendingRequestText = null;
             IsSubmitting = false;
             Volatile.Write(ref _busyGate, 0);
         }

@@ -162,23 +162,23 @@ public sealed class DesktopFindSymbolTests
         context.Services.AddSingleton<DesktopSession>();
         IRenderedComponent<App> component = context.Render<App>();
 
-        Assert.Contains("source-text", component.Find("#request-help").TextContent, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("not semantic", component.Find("#request-help").TextContent, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("source-text", component.Find("#composer-hint").TextContent, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not semantic", component.Find("#composer-hint").TextContent, StringComparison.OrdinalIgnoreCase);
 
         await component.Find("#workspace-path").InputAsync(workspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        await component.Find("#request-input").InputAsync("find symbol SharedSymbol");
-        await component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync("find symbol SharedSymbol");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         Assert.Contains(
-            "Source-text search",
+            "source-text",
             component.Find(".search-mode-note").TextContent,
-            StringComparison.Ordinal);
+            StringComparison.OrdinalIgnoreCase);
         Assert.Contains(
-            "not semantic symbol resolution",
+            "not semantic",
             component.Find(".search-mode-note").TextContent,
-            StringComparison.Ordinal);
+            StringComparison.OrdinalIgnoreCase);
 
         var locations = component.FindAll(".evidence-location").Select(node => node.TextContent).ToArray();
         Assert.Contains("src/Alpha.cs:2", locations);

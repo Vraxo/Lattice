@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.2: Conversational Workspace Interaction
 
-> **Status:** approved next increment; not started.
+> **Status:** in progress on `arena/9b7807a5-lattice` (starting from `main` at `477e732c7f07155445b4ca22419b3dd92733ac1b`).
 >
 > **Previous checkpoint:** Desktop 0.1 is merged into main at `77a857bde251b21083a02db75501bac1d44fee43`. Its completed checklist is preserved at [archive/desktop-0.1.md](archive/desktop-0.1.md).
 >
@@ -89,21 +89,23 @@ Desktop 0.2 is complete when:
 
 ### 0.1 Inspect the current application
 
-- [ ] Inspect current main, working tree, solution, Desktop project, Desktop tests, and CI workflow.
-- [ ] Read the archived Desktop 0.1 checklist and current Windows smoke test to identify behavior that must remain intact.
-- [ ] Trace the UI flow through `App.razor`, `DesktopSession`, and `DesktopRequestProcessor`.
-- [ ] Trace pattern parsing/matching through `IntentPattern`, `IntentPatternCatalogParser`, `RequestInterpreter`, and `config/nlp/patterns.json`.
-- [ ] Identify existing tests for session history, request matching, search evidence, inspection, ambiguity, and unsupported input.
+- [x] Inspect current main, working tree, solution, Desktop project, Desktop tests, and CI workflow.
+- [x] Read the archived Desktop 0.1 checklist and current Windows smoke test to identify behavior that must remain intact.
+- [x] Trace the UI flow through `App.razor`, `DesktopSession`, and `DesktopRequestProcessor`.
+- [x] Trace pattern parsing/matching through `IntentPattern`, `IntentPatternCatalogParser`, `RequestInterpreter`, and `config/nlp/patterns.json`.
+- [x] Identify existing tests for session history, request matching, search evidence, inspection, ambiguity, and unsupported input.
 
 **Done when:** The agent knows which UI and interpreter components must change and which read-only behavior must remain untouched.
 
 ### 0.2 Record the known baseline
 
 - [x] Preserve the Desktop 0.1 CI baseline: Windows/.NET 10, 749 Core tests + 38 Desktop tests = 787 passed, 0 failed, 0 skipped (PR #11 CI run 42394747121).
-- [ ] Confirm the merged main commit and current PR CI workflow before creating the feature branch.
-- [ ] Do not spend time attempting local dotnet commands if the SDK is unavailable; use PR CI for code checkpoints.
+- [x] Confirm the merged main commit and current PR CI workflow before creating the feature branch.
+- [x] Do not spend time attempting local dotnet commands if the SDK is unavailable; use PR CI for code checkpoints.
 
 **Done when:** The starting commit and known baseline are recorded accurately. Distinguish pre-existing warnings/failures from regressions.
+
+> **Phase 0 note:** Confirmed `main` at `477e732c7f07155445b4ca22419b3dd92733ac1b` (following Desktop 0.1 merge `77a857bde251b21083a02db75501bac1d44fee43`) with green Windows/.NET 10 CI run `42397651659` (`Lattice.Core.Tests`: 749/749, `Lattice.Desktop.Tests`: 38/38, 787 total passed, 0 failed, 0 skipped; 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in untouched `Lattice/*.cs`; 0 warnings in `Lattice.Desktop` / `Lattice.Desktop.Tests`). Local `.NET` SDK is absent in this container, so checkpoints are verified via PR CI on `arena/9b7807a5-lattice`.
 
 ---
 

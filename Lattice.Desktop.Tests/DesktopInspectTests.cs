@@ -153,8 +153,8 @@ public sealed class DesktopInspectTests
         await component.Find("#workspace-path").InputAsync(workspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        await component.Find("#request-input").InputAsync("inspect notes.txt");
-        await component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync("inspect notes.txt");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         Assert.Single(component.FindAll("#turn-history > li"));
         Assert.Equal("notes.txt", component.Find(".file-path").TextContent);
@@ -175,14 +175,14 @@ public sealed class DesktopInspectTests
         await component.Find("#workspace-path").InputAsync(workspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        await component.Find("#request-input").InputAsync("inspect src/Program.cs");
-        await component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync("inspect src/Program.cs");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         Assert.Equal("src/Program.cs", component.Find(".file-path").TextContent);
         Assert.Contains("Console.WriteLine(\"Lattice\");", component.Find(".file-contents").TextContent, StringComparison.Ordinal);
 
-        await component.Find("#request-input").InputAsync("inspect missing.cs");
-        await component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync("inspect missing.cs");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         var items = component.FindAll("#turn-history > li");
         Assert.Equal(2, items.Count);

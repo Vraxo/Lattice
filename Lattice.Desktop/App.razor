@@ -2,177 +2,281 @@
 @using Lattice.Core
 @inject DesktopSession Session
 
-<main class="shell">
+<main class="chat-shell">
     <header class="topbar">
         <div class="identity">
-            <h1 class="brand">Lattice</h1>
-            <span class="badge">SYMBOLIC · READ-ONLY · DESKTOP 0.1</span>
+            <div class="brand-row">
+                <h1 class="brand">Lattice</h1>
+                <span class="badge">SYMBOLIC · READ-ONLY</span>
+            </div>
+            <span class="subtitle">Evidence-grounded workspace conversation</span>
         </div>
-        <div class="workspace-indicator" id="active-workspace" data-connected="@(Session.IsConnected ? "true" : "false")">
-            <span class="indicator-label">Active workspace</span>
-            @if (Session.IsConnected)
-            {
-                <code class="indicator-path">@Session.ConnectedWorkspacePath</code>
-            }
-            else
-            {
-                <span class="indicator-empty">Not connected</span>
-            }
+
+        <div class="workspace-controls">
+            <div class="workspace-indicator" id="active-workspace" data-connected="@(Session.IsConnected ? "true" : "false")">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span class="indicator-label">Workspace</span>
+                @if (Session.IsConnected)
+                {
+                    <code class="indicator-path" title="@Session.ConnectedWorkspacePath">@Session.ConnectedWorkspacePath</code>
+                }
+                else
+                {
+                    <span class="indicator-empty">Not connected</span>
+                }
+            </div>
+
+            <form id="workspace-form" class="workspace-form" @onsubmit="() => Session.ConnectAsync()" @onsubmit:preventDefault>
+                <fieldset disabled="@Session.IsBusy" class="workspace-fieldset">
+                    <label for="workspace-path" class="sr-only">Local workspace folder path</label>
+                    <div class="workspace-input-group">
+                        <input
+                            id="workspace-path"
+                            type="text"
+                            @bind="Session.WorkspacePathInput"
+                            @bind:event="oninput"
+                            placeholder="Local folder path…"
+                            autocomplete="off" />
+                        <button id="connect-workspace" type="submit" class="secondary">
+                            @(Session.IsConnecting ? "Connecting…" : "Connect")
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
         </div>
     </header>
 
-    <section class="panel connection-panel" aria-labelledby="connect-heading">
-        <h2 id="connect-heading" class="section-title">Workspace Connection</h2>
-        <form id="workspace-form" @onsubmit="() => Session.ConnectAsync()" @onsubmit:preventDefault>
-            <fieldset disabled="@Session.IsBusy" class="connection-row">
-                <label for="workspace-path">Local folder path</label>
-                <div class="input-action-row">
-                    <input
-                        id="workspace-path"
-                        type="text"
-                        @bind="Session.WorkspacePathInput"
-                        @bind:event="oninput"
-                        placeholder="Enter an existing local directory path"
-                        autocomplete="off" />
-                    <button id="connect-workspace" type="submit" class="primary">
-                        @(Session.IsConnecting ? "Connecting…" : "Connect")
-                    </button>
-                </div>
-            </fieldset>
-        </form>
-        @if (Session.WorkspaceError is not null)
-        {
+    @if (Session.WorkspaceError is not null)
+    {
+        <div class="workspace-banner">
             <p id="workspace-error" class="alert error" data-error-kind="InvalidWorkspace" role="alert">@Session.WorkspaceError</p>
-        }
-        <p id="session-status" class="status-line" role="status" aria-live="polite">@Session.StatusMessage</p>
-    </section>
+        </div>
+    }
 
-    <section class="panel request-panel" aria-labelledby="request-heading">
-        <h2 id="request-heading" class="section-title">Workspace Request</h2>
-        <form id="request-form" @onsubmit="() => Session.SubmitRequestAsync()" @onsubmit:preventDefault>
-            <fieldset disabled="@Session.IsBusy">
-                <label for="request-input">Enter a read-only request</label>
-                <div class="input-action-row">
-                    <input
-                        id="request-input"
-                        type="text"
-                        @bind="Session.RequestInput"
-                        @bind:event="oninput"
-                        placeholder="inspect README.md  or  find symbol WorkspaceRoot"
-                        aria-describedby="request-help"
-                        autocomplete="off" />
-                    <button id="submit-request" type="submit" class="primary">
-                        @(Session.IsSubmitting ? "Running…" : "Run")
-                    </button>
-                </div>
-                <p id="request-help" class="help-text">
-                    Supported requests: <code>inspect &lt;relative-path&gt;</code> and <code>find symbol &lt;name&gt;</code>.
-                    <strong>Source-text search:</strong> <code>find symbol</code> performs bounded, case-insensitive literal source-text matching — not semantic declaration or reference resolution. All access is read-only.
-                </p>
-            </fieldset>
-        </form>
-        @if (Session.RequestError is not null)
+    <section
+        id="conversation-transcript"
+        class="conversation-stage"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-label="Workspace conversation">
+        @if (Session.Entries.Count == 0 && !Session.IsSubmitting)
         {
-            <p id="request-error" class="alert error" role="alert">@Session.RequestError</p>
-        }
-    </section>
-
-    <section class="panel results-panel" id="workspace-results" aria-labelledby="results-heading">
-        <h2 id="results-heading" class="section-title">Session History &amp; Evidence</h2>
-        @if (Session.Entries.Count == 0)
-        {
-            @if (Session.IsConnected)
-            {
-                <p class="empty-note">
-                    Connected to <code>@Session.ConnectedWorkspacePath</code>. Run <code>inspect &lt;relative-path&gt;</code> or <code>find symbol &lt;name&gt;</code> above.
-                </p>
-            }
-            else
-            {
-                <p class="empty-note">
-                    No workspace is active yet. Enter a local directory path above and select <strong>Connect</strong>.
-                </p>
-            }
+            <div id="chat-empty-state" class="chat-empty-state">
+                @if (Session.IsConnected)
+                {
+                    <h2 class="empty-title">Ask about your codebase</h2>
+                    <p class="empty-description">
+                        Connected to <code>@Session.ConnectedWorkspacePath</code> in read-only mode.
+                        Ask Lattice to open a file or find where an identifier appears across this project.
+                    </p>
+                    <ul class="example-list" aria-label="Example questions">
+                        <li>“Where is WorkspaceRoot used in this project?”</li>
+                        <li>“Show me Lattice/WorkspaceRoot.cs.”</li>
+                        <li>“What's in README.md?”</li>
+                    </ul>
+                    <p class="empty-footnote">
+                        Searches match case-insensitive literal source text rather than compiler-resolved symbol references.
+                    </p>
+                }
+                else
+                {
+                    <h2 class="empty-title">Connect a workspace folder to begin</h2>
+                    <p class="empty-description">
+                        Enter an existing local folder path in the header bar above and select <strong>Connect</strong>.
+                        Once connected, you can ask questions about files and source-text occurrences in that directory.
+                    </p>
+                    <ul class="example-list" aria-label="Example questions">
+                        <li>“Where does WorkspaceRoot appear?”</li>
+                        <li>“Open the file README.md.”</li>
+                        <li>“Search this project for ToolExecutor.”</li>
+                    </ul>
+                    <p class="empty-footnote">
+                        All workspace access stays read-only and confined to the connected folder.
+                    </p>
+                }
+            </div>
         }
         else
         {
-            <ol id="turn-history" class="turn-list">
+            <ol id="turn-history" class="chat-thread">
                 @foreach (DesktopTurnEntry entry in Session.Entries)
                 {
-                    <li class="turn-card @GetCardClass(entry.Kind)" data-turn-kind="@entry.Kind">
-                        <div class="turn-header">
-                            <code class="turn-request">@entry.RequestText</code>
-                            <div class="turn-badges">
+                    <li class="chat-exchange @GetExchangeClass(entry.Kind)" data-turn-kind="@entry.Kind">
+                        <article class="chat-message user-message" data-message-role="user" aria-label="Your message">
+                            <div class="message-header">
+                                <span class="message-author">You</span>
+                            </div>
+                            <p class="message-body user-body">@entry.RequestText</p>
+                        </article>
+
+                        <article
+                            class="chat-message assistant-message @GetAssistantClass(entry.Kind)"
+                            data-message-role="assistant"
+                            aria-label="Lattice response">
+                            <div class="message-header">
+                                <span class="message-author">Lattice</span>
                                 @if (entry.WorkspacePath is not null)
                                 {
                                     <code class="turn-workspace">@entry.WorkspacePath</code>
                                 }
-                                <span class="turn-kind-badge">@FormatKind(entry.Kind)</span>
                             </div>
-                        </div>
-                        <p class="turn-summary">@entry.Summary</p>
-                        @if (entry.Kind == DesktopTurnKind.FileInspected && entry.FileContents is not null)
-                        {
-                            <div class="file-viewer">
-                                <div class="file-viewer-header">
-                                    <code class="file-path">@entry.InspectedRelativePath</code>
-                                    <span class="file-meta">@FormatLines(entry.LineCount) · Read-only · Untrusted workspace text</span>
+
+                            <p class="message-body assistant-body turn-summary">@entry.Summary</p>
+
+                            @if (entry.Kind == DesktopTurnKind.FileInspected && entry.FileContents is not null)
+                            {
+                                <div class="file-viewer">
+                                    <div class="file-viewer-header">
+                                        <code class="file-path">@entry.InspectedRelativePath</code>
+                                        <span class="file-meta">@FormatLines(entry.LineCount) · Read-only</span>
+                                    </div>
+                                    <pre class="file-contents"><code>@entry.FileContents</code></pre>
                                 </div>
-                                <pre class="file-contents"><code>@entry.FileContents</code></pre>
-                            </div>
-                        }
-                        else if (entry.Kind == DesktopTurnKind.SearchResults)
-                        {
-                            <div class="evidence-box">
-                                <div class="search-mode-note">
-                                    Source-text search · Case-insensitive literal occurrences (not semantic symbol resolution)
+                            }
+                            else if (entry.Kind == DesktopTurnKind.SearchResults)
+                            {
+                                <div class="evidence-box">
+                                    <div class="search-mode-note">
+                                        Literal source-text matches · Case-insensitive (not semantic declaration or reference resolution)
+                                    </div>
+                                    <ul class="evidence-list">
+                                        @foreach (EvidenceReference reference in entry.SafeEvidence)
+                                        {
+                                            <li class="evidence-item" data-evidence-path="@reference.RelativePath" data-evidence-line="@reference.StartLine">
+                                                <code class="evidence-location">@reference.RelativePath:@reference.StartLine</code>
+                                                <code class="evidence-snippet">@reference.Snippet</code>
+                                            </li>
+                                        }
+                                    </ul>
                                 </div>
-                                <ul class="evidence-list">
-                                    @foreach (EvidenceReference reference in entry.SafeEvidence)
-                                    {
-                                        <li class="evidence-item" data-evidence-path="@reference.RelativePath" data-evidence-line="@reference.StartLine">
-                                            <code class="evidence-location">@reference.RelativePath:@reference.StartLine</code>
-                                            <code class="evidence-snippet">@reference.Snippet</code>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                        }
-                        else if (entry.Kind == DesktopTurnKind.NoMatches)
+                            }
+                        </article>
+                    </li>
+                }
+
+                @if (Session.IsSubmitting)
+                {
+                    <li id="pending-turn" class="chat-exchange pending-exchange" data-turn-state="processing">
+                        @if (!string.IsNullOrEmpty(Session.PendingRequestText))
                         {
-                            <div class="no-matches-note">
-                                Source-text search completed with zero literal occurrences in searchable UTF-8 workspace files.
-                            </div>
+                            <article class="chat-message user-message" data-message-role="user" aria-label="Your message">
+                                <div class="message-header">
+                                    <span class="message-author">You</span>
+                                </div>
+                                <p class="message-body user-body">@Session.PendingRequestText</p>
+                            </article>
                         }
+
+                        <article
+                            class="chat-message assistant-message assistant-pending"
+                            data-message-role="assistant"
+                            role="status"
+                            aria-label="Lattice is checking the workspace">
+                            <div class="message-header">
+                                <span class="message-author">Lattice</span>
+                            </div>
+                            <p class="message-body pending-text">
+                                <span class="pending-dots" aria-hidden="true">
+                                    <span></span><span></span><span></span>
+                                </span>
+                                Checking the workspace…
+                            </p>
+                        </article>
                     </li>
                 }
             </ol>
         }
     </section>
+
+    <footer class="composer-region">
+        @if (Session.RequestError is not null)
+        {
+            <p id="composer-error" class="alert error composer-alert" role="alert">@Session.RequestError</p>
+        }
+
+        <form id="chat-form" class="composer-form" @onsubmit="SubmitComposerAsync" @onsubmit:preventDefault>
+            <fieldset disabled="@Session.IsBusy" class="composer-fieldset">
+                <label for="message-input" class="sr-only">Message Lattice</label>
+                <div class="composer-surface">
+                    <textarea
+                        id="message-input"
+                        @ref="_composerElement"
+                        rows="2"
+                        @bind="Session.MessageInput"
+                        @bind:event="oninput"
+                        @onkeydown="HandleComposerKeyDownAsync"
+                        placeholder="Ask about a file or where an identifier appears in this project…"
+                        aria-describedby="composer-hint"></textarea>
+                    <button id="send-message" type="submit" class="primary send-button">
+                        @(Session.IsSubmitting ? "Sending…" : "Send")
+                    </button>
+                </div>
+                <p id="composer-hint" class="composer-hint">
+                    <kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line · Read-only workspace · Literal source-text search (not semantic resolution)
+                </p>
+            </fieldset>
+        </form>
+    </footer>
 </main>
 
 @code {
-    private static string GetCardClass(DesktopTurnKind kind) => kind switch
+    private ElementReference _composerElement;
+    private bool _restoreComposerFocus;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults => "turn-ok",
-        DesktopTurnKind.NoMatches => "turn-neutral",
-        DesktopTurnKind.AmbiguousInput or DesktopTurnKind.UnsupportedInput => "turn-warning",
-        _ => "turn-error",
+        if (_restoreComposerFocus && !Session.IsBusy)
+        {
+            _restoreComposerFocus = false;
+            try
+            {
+                await _composerElement.FocusAsync();
+            }
+            catch (Exception)
+            {
+                // Ignore focus failures when running detached or shutting down.
+            }
+        }
+    }
+
+    private async Task HandleComposerKeyDownAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter"
+            && !args.ShiftKey
+            && !args.CtrlKey
+            && !args.AltKey
+            && !args.MetaKey
+            && !Session.IsBusy)
+        {
+            await SubmitComposerAsync();
+        }
+    }
+
+    private async Task SubmitComposerAsync()
+    {
+        int priorCount = Session.Entries.Count;
+        await Session.SendMessageAsync();
+        if (Session.Entries.Count > priorCount)
+        {
+            _restoreComposerFocus = true;
+        }
+    }
+
+    private static string GetExchangeClass(DesktopTurnKind kind) => kind switch
+    {
+        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults => "exchange-ok",
+        DesktopTurnKind.NoMatches => "exchange-neutral",
+        DesktopTurnKind.AmbiguousInput or DesktopTurnKind.UnsupportedInput => "exchange-clarification",
+        _ => "exchange-error",
     };
 
-    private static string FormatKind(DesktopTurnKind kind) => kind switch
+    private static string GetAssistantClass(DesktopTurnKind kind) => kind switch
     {
-        DesktopTurnKind.FileInspected => "File Inspected",
-        DesktopTurnKind.SearchResults => "Source-Text Search",
-        DesktopTurnKind.NoMatches => "No Matches",
-        DesktopTurnKind.MissingFile => "Missing File",
-        DesktopTurnKind.InspectError => "Inspection Error",
-        DesktopTurnKind.AccessRejected => "Access Rejected",
-        DesktopTurnKind.InvalidWorkspace => "Invalid Workspace",
-        DesktopTurnKind.AmbiguousInput => "Ambiguous Input",
-        DesktopTurnKind.UnsupportedInput => "Unsupported Input",
-        DesktopTurnKind.UnexpectedError => "Unexpected Error",
-        _ => kind.ToString(),
+        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults => "assistant-ok",
+        DesktopTurnKind.NoMatches => "assistant-neutral",
+        DesktopTurnKind.AmbiguousInput or DesktopTurnKind.UnsupportedInput => "assistant-clarification",
+        _ => "assistant-error",
     };
 
     private static string FormatLines(int? lineCount) => lineCount switch

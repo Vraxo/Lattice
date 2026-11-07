@@ -9,6 +9,52 @@
 </head>
 <body>
     <div id="app" role="region" aria-label="Lattice application">Loading Lattice…</div>
+    <script>
+        (() => {
+            document.addEventListener("keydown", (event) => {
+                const target = event.target;
+                if (!target || target.id !== "message-input") {
+                    return;
+                }
+
+                if (event.key === "Enter"
+                    && !event.shiftKey
+                    && !event.ctrlKey
+                    && !event.altKey
+                    && !event.metaKey
+                    && !event.isComposing) {
+                    event.preventDefault();
+                }
+            }, true);
+
+            const attachTranscriptObserver = () => {
+                const transcript = document.getElementById("conversation-transcript");
+                if (!transcript || transcript.dataset.scrollObserved === "true") {
+                    return;
+                }
+
+                transcript.dataset.scrollObserved = "true";
+                const scrollToLatest = () => {
+                    transcript.scrollTop = transcript.scrollHeight;
+                };
+
+                const observer = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        if (mutation.addedNodes.length > 0) {
+                            requestAnimationFrame(scrollToLatest);
+                            break;
+                        }
+                    }
+                });
+
+                observer.observe(transcript, { childList: true, subtree: true });
+            };
+
+            const rootObserver = new MutationObserver(attachTranscriptObserver);
+            rootObserver.observe(document.body, { childList: true, subtree: true });
+            attachTranscriptObserver();
+        })();
+    </script>
     <script src="_framework/blazor.webview.js"></script>
 </body>
 </html>

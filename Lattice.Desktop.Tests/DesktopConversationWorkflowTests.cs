@@ -66,7 +66,7 @@ public sealed class DesktopConversationWorkflowTests
             .ToArray();
         Assert.Contains("README.md:2", evidenceLocations);
         Assert.Contains("src/TokenAlpha.cs:2", evidenceLocations);
-        Assert.Contains("zero literal occurrences", cards[3].QuerySelector(".no-matches-note")!.TextContent, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("MissingSymbol", cards[3].QuerySelector("[data-message-role='assistant']")!.TextContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -131,15 +131,16 @@ public sealed class DesktopConversationWorkflowTests
         await component.Find("#workspace-path").InputAsync(firstWorkspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        await component.Find("#request-input").InputAsync("inspect README.md");
-        Task inflight = component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync("inspect README.md");
+        Task inflight = component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
         try
         {
             component.WaitForAssertion(() =>
             {
-                Assert.True(component.Find("#request-form fieldset").HasAttribute("disabled"));
+                Assert.True(component.Find("#chat-form fieldset").HasAttribute("disabled"));
                 Assert.True(component.Find("#workspace-form fieldset").HasAttribute("disabled"));
-                Assert.Contains("Running", component.Find("#submit-request").TextContent, StringComparison.Ordinal);
+                Assert.Single(component.FindAll("#pending-turn"));
+                Assert.Contains("Checking the workspace", component.Find("#pending-turn").TextContent, StringComparison.Ordinal);
             });
 
             // Attempt overlapping request and workspace switch while busy.
@@ -194,8 +195,8 @@ public sealed class DesktopConversationWorkflowTests
 
     private static async Task SubmitRequestAsync(IRenderedComponent<App> component, string request)
     {
-        await component.Find("#request-input").InputAsync(request);
-        await component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync(request);
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
     }
 
     private static string LocateLatticeRepositoryRoot()
