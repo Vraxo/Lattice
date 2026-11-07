@@ -5,6 +5,7 @@ namespace Lattice.Desktop;
 
 internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = null)
 {
+    internal const string ShowThatFilePatternId = "inspect.show-that-file";
     private const string BroadFindPatternId = "find.symbol";
     private const string CapabilitiesHelpText =
         "I can open UTF-8 files in the connected workspace (for example, \"Show me README.md\") or find where an identifier appears in source text (for example, \"Where is WorkspaceRoot used in this project?\").";
@@ -15,7 +16,10 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
 
     public RequestInterpreter Interpreter => _interpreter;
 
-    public DesktopTurnEntry Execute(ConnectedWorkspace? workspace, string rawRequest)
+    public DesktopTurnEntry Execute(
+        ConnectedWorkspace? workspace,
+        string rawRequest,
+        RecentFileContext? recentFileContext = null)
     {
         string requestText = rawRequest?.Trim() ?? string.Empty;
         if (workspace is null)
@@ -27,6 +31,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 WorkspacePath: null);
         }
 
+        RecentFileContext activeContext = recentFileContext ?? RecentFileContext.None;
         RequestInterpretation interpretation = _interpreter.Interpret(requestText);
         return interpretation.Kind switch
         {
@@ -36,7 +41,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 workspace,
                 requestText,
                 $"I'm not able to answer that kind of request yet. {CapabilitiesHelpText}"),
-            IntentMatchKind.Matched => ExecuteMatched(workspace, requestText, interpretation),
+            IntentMatchKind.Matched => ExecuteMatched(workspace, requestText, interpretation, activeContext),
             _ => BuildUnsupportedEntry(
                 workspace,
                 requestText,
@@ -44,16 +49,50 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         };
     }
 
+    internal static bool IsFollowUpReferenceTurn(DesktopTurnEntry entry)
+    {
+        if (entry.MatchedPatternId == ShowThatFilePatternId)
+        {
+            return true;
+        }
+
+        return entry.CapturedValue is not null && IsFollowUpFileReference(entry.CapturedValue);
+    }
+
     private static DesktopTurnEntry ExecuteMatched(
         ConnectedWorkspace workspace,
         string requestText,
-        RequestInterpretation interpretation)
+        RequestInterpretation interpretation,
+        RecentFileContext recentFileContext)
     {
         IntentMatch match = interpretation.Match!;
-        if (interpretation.Intent == RequestIntentKind.InspectPath && match.Slot is not null)
+        if (interpretation.Intent == RequestIntentKind.InspectPath)
         {
-            string relativePath = UnwrapMatchingQuotes(match.Slot.Value.Trim());
-            return ExecuteInspect(workspace, requestText, relativePath, match.PatternId);
+            if (match.PatternId == ShowThatFilePatternId)
+            {
+                return ExecuteFollowUpInspect(
+                    workspace,
+                    requestText,
+                    recentFileContext,
+                    match.PatternId,
+                    capturedReference: "that file");
+            }
+
+            if (match.Slot is not null)
+            {
+                string relativePath = UnwrapMatchingQuotes(match.Slot.Value.Trim());
+                if (IsFollowUpFileReference(relativePath))
+                {
+                    return ExecuteFollowUpInspect(
+                        workspace,
+                        requestText,
+                        recentFileContext,
+                        match.PatternId,
+                        relativePath);
+                }
+
+                return ExecuteInspect(workspace, requestText, relativePath, match.PatternId);
+            }
         }
 
         if (interpretation.Intent == RequestIntentKind.FindSymbol && match.Slot is not null)
@@ -89,6 +128,61 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             $"I'm not able to handle that request yet. {CapabilitiesHelpText}",
             matchedPatternId: match.PatternId,
             capturedValue: match.Slot?.Value);
+    }
+
+    private static DesktopTurnEntry ExecuteFollowUpInspect(
+        ConnectedWorkspace workspace,
+        string requestText,
+        RecentFileContext recentFileContext,
+        string patternId,
+        string capturedReference)
+    {
+        if (recentFileContext.Kind == RecentFileContextKind.SingleFile
+            && !string.IsNullOrWhiteSpace(recentFileContext.SingleRelativePath))
+        {
+            return ExecuteInspect(
+                workspace,
+                requestText,
+                recentFileContext.SingleRelativePath,
+                patternId);
+        }
+
+        if (recentFileContext.Kind == RecentFileContextKind.MultipleFiles
+            && !recentFileContext.CandidateRelativePaths.IsEmpty)
+        {
+            ImmutableArray<string> candidates = recentFileContext.CandidateRelativePaths;
+            const int maxListed = 5;
+            string listed = string.Join(
+                ", ",
+                candidates.Take(maxListed).Select(path => $"'{path}'"));
+            string summary = candidates.Length <= maxListed
+                ? $"The previous search matched {candidates.Length} files ({listed}). Which file would you like me to open?"
+                : $"The previous search matched {candidates.Length} files, including {listed}. Which file would you like me to open?";
+
+            return new DesktopTurnEntry(
+                requestText,
+                DesktopTurnKind.AmbiguousInput,
+                summary,
+                workspace.Root.FullPath,
+                MatchedPatternId: patternId,
+                CapturedValue: capturedReference);
+        }
+
+        return new DesktopTurnEntry(
+            requestText,
+            DesktopTurnKind.AmbiguousInput,
+            "There isn't a single recent file in our conversation yet. Which file in the connected workspace would you like me to open?",
+            workspace.Root.FullPath,
+            MatchedPatternId: patternId,
+            CapturedValue: capturedReference);
+    }
+
+    private static bool IsFollowUpFileReference(string candidate)
+    {
+        return candidate.Equals("it", StringComparison.OrdinalIgnoreCase)
+            || candidate.Equals("that", StringComparison.OrdinalIgnoreCase)
+            || candidate.Equals("that file", StringComparison.OrdinalIgnoreCase)
+            || candidate.Equals("this file", StringComparison.OrdinalIgnoreCase);
     }
 
     private static DesktopTurnEntry ExecuteFindSymbol(

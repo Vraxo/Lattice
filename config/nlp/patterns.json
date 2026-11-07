@@ -41,6 +41,7 @@
     { "id": "inspect.show-me", "intent": "inspect-path", "template": "show me {path}" },
     { "id": "inspect.show-me-the-file", "intent": "inspect-path", "template": "show me the file {path}" },
     { "id": "inspect.can-you-show-me", "intent": "inspect-path", "template": "can you show me {path}" },
+    { "id": "inspect.show-that-file", "intent": "inspect-path", "template": "show that file" },
     { "id": "inspect.whats-in", "intent": "inspect-path", "template": "what's in {path}" },
     { "id": "inspect.whats-in-the-file", "intent": "inspect-path", "template": "what's in the file {path}" },
     { "id": "inspect.what-is-in", "intent": "inspect-path", "template": "what is in {path}" },

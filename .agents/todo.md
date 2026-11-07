@@ -170,27 +170,29 @@ Desktop 0.2 is complete when:
 
 ### 3.1 Search replies
 
-- [ ] Route natural-language search requests through the existing `WorkspaceQuestionAnswerer` and `FileSearchTool`.
-- [ ] Produce concise natural replies based on actual counts/evidence, e.g. "I found 8 matching occurrences across 3 files."
-- [ ] Keep each citation's relative path, 1-based line number, and matching snippet.
-- [ ] Explain that results are literal source-text matches, not semantic declarations/references, without repeating a large warning after every result.
-- [ ] Preserve clear no-match and access-error responses in conversational wording.
+- [x] Route natural-language search requests through the existing `WorkspaceQuestionAnswerer` and `FileSearchTool`.
+- [x] Produce concise natural replies based on actual counts/evidence, e.g. "I found 8 matching occurrences across 3 files."
+- [x] Keep each citation's relative path, 1-based line number, and matching snippet.
+- [x] Explain that results are literal source-text matches, not semantic declarations/references, without repeating a large warning after every result.
+- [x] Preserve clear no-match and access-error responses in conversational wording.
 
 ### 3.2 File replies
 
-- [ ] Route natural-language file requests through the existing safe read path.
-- [ ] Present the file as an assistant response with filename, line count, and readable inline file viewer.
-- [ ] Handle missing paths, directories, invalid paths, oversized files, invalid encoding, and symlink/reparse-point rejection in plain language.
-- [ ] Never show raw internal error codes or require users to memorize command syntax.
+- [x] Route natural-language file requests through the existing safe read path.
+- [x] Present the file as an assistant response with filename, line count, and readable inline file viewer.
+- [x] Handle missing paths, directories, invalid paths, oversized files, invalid encoding, and symlink/reparse-point rejection in plain language.
+- [x] Never show raw internal error codes or require users to memorize command syntax.
 
 ### 3.3 Unknown and ambiguous messages
 
-- [ ] Replace "Unsupported request" and "Supported forms are ..." with brief, useful explanations of what Lattice can currently help with.
-- [ ] For genuinely ambiguous input, ask one specific clarification instead of returning raw pattern IDs or diagnostics.
-- [ ] Do not claim a file was read or searched unless the corresponding tool ran and returned evidence.
-- [ ] Keep the original user message visible in the transcript.
+- [x] Replace "Unsupported request" and "Supported forms are ..." with brief, useful explanations of what Lattice can currently help with.
+- [x] For genuinely ambiguous input, ask one specific clarification instead of returning raw pattern IDs or diagnostics.
+- [x] Do not claim a file was read or searched unless the corresponding tool ran and returned evidence.
+- [x] Keep the original user message visible in the transcript.
 
 **Done when:** Users see ordinary assistant replies grounded in actual results, rather than tool-oriented status strings.
+
+> **Phase 3 note:** Verified in Windows/.NET 10 CI run `42405289974` on PR #12 (`Lattice.Core.Tests`: 789/789, `Lattice.Desktop.Tests`: 61/61, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 

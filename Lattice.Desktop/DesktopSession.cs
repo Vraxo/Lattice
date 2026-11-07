@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Lattice.Core;
 
 namespace Lattice.Desktop;
@@ -9,10 +10,11 @@ internal sealed class DesktopSession(
     private readonly Func<string?, CancellationToken, Task<WorkspaceConnectionResult>> _connectWorkspace =
         connectWorkspace ?? ((path, _) => Task.FromResult(WorkspaceConnector.Connect(path)));
 
-    private readonly Func<ConnectedWorkspace?, string, CancellationToken, Task<DesktopTurnEntry>> _executeRequest =
-        executeRequest ?? ((workspace, request, _) => Task.FromResult(DesktopRequestProcessor.Default.Execute(workspace, request)));
+    private readonly Func<ConnectedWorkspace?, string, CancellationToken, Task<DesktopTurnEntry>>? _customExecuteRequest =
+        executeRequest;
 
     private readonly List<DesktopTurnEntry> _entries = [];
+    private RecentFileContext _recentFileContext = RecentFileContext.None;
     private string _messageInput = string.Empty;
     private int _busyGate;
 
@@ -35,6 +37,8 @@ internal sealed class DesktopSession(
     public WorkspaceRoot? ActiveWorkspace => ActiveConnection?.Root;
 
     public string? ConnectedWorkspacePath => ActiveWorkspace?.FullPath;
+
+    public RecentFileContext RecentFileContext => _recentFileContext;
 
     public bool IsConnected => ActiveConnection is not null;
 
@@ -79,6 +83,7 @@ internal sealed class DesktopSession(
             }
 
             ActiveConnection = result.Workspace;
+            _recentFileContext = RecentFileContext.None;
             WorkspacePathInput = result.Workspace.Root.FullPath;
             StatusMessage = $"Connected to '{result.Workspace.Root.FullPath}' (read-only).";
         }
@@ -131,13 +136,16 @@ internal sealed class DesktopSession(
         StatusMessage = "Checking the connected workspace…";
         try
         {
-            DesktopTurnEntry entry = await _executeRequest(ActiveConnection, trimmed, cancellationToken);
+            DesktopTurnEntry entry = _customExecuteRequest is not null
+                ? await _customExecuteRequest(ActiveConnection, trimmed, cancellationToken)
+                : DesktopRequestProcessor.Default.Execute(ActiveConnection, trimmed, _recentFileContext);
             if (entry.RequestText != displayMessage)
             {
                 entry = entry with { RequestText = displayMessage };
             }
 
             _entries.Add(entry);
+            _recentFileContext = ComputeNextFileContext(entry, _recentFileContext);
             StatusMessage = entry.Summary;
         }
         catch (Exception exception)
@@ -154,6 +162,7 @@ internal sealed class DesktopSession(
                 ConnectedWorkspacePath,
                 ErrorCode: exception.GetType().Name);
             _entries.Add(failure);
+            _recentFileContext = RecentFileContext.None;
             StatusMessage = failure.Summary;
         }
         finally
@@ -162,5 +171,38 @@ internal sealed class DesktopSession(
             IsSubmitting = false;
             Volatile.Write(ref _busyGate, 0);
         }
+    }
+
+    private static RecentFileContext ComputeNextFileContext(
+        DesktopTurnEntry entry,
+        RecentFileContext previousContext)
+    {
+        if (entry.Kind == DesktopTurnKind.FileInspected
+            && !string.IsNullOrWhiteSpace(entry.InspectedRelativePath))
+        {
+            return RecentFileContext.Single(entry.InspectedRelativePath);
+        }
+
+        if (entry.Kind == DesktopTurnKind.SearchResults)
+        {
+            ImmutableArray<string> distinctFiles = [.. entry.SafeEvidence
+                .Select(reference => reference.RelativePath)
+                .Distinct(StringComparer.Ordinal),];
+            return distinctFiles.Length switch
+            {
+                0 => RecentFileContext.None,
+                1 => RecentFileContext.Single(distinctFiles[0]),
+                _ => RecentFileContext.Multiple(distinctFiles),
+            };
+        }
+
+        if (entry.Kind == DesktopTurnKind.AmbiguousInput
+            && previousContext.Kind == RecentFileContextKind.MultipleFiles
+            && DesktopRequestProcessor.IsFollowUpReferenceTurn(entry))
+        {
+            return previousContext;
+        }
+
+        return RecentFileContext.None;
     }
 }
