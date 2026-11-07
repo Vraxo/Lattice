@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** not started. This is the active, sequential implementation checklist.
+> **Status:** implementation and automated CI verification complete (Phases 0–5); awaiting manual interactive Windows Photino GUI smoke check (`docs/windows-smoke-test.md`). This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -60,20 +60,24 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 0.1 Inspect the current repository and environment
 
-- [ ] Inspect the root, solution, project references, build configuration, README, active instructions, and current Git status.
-- [ ] Confirm the existing names and locations of Core workspace components, including WorkspaceRoot, WorkspaceToolset, FileSearchTool, ReadFileTool, WorkspaceQuestionAnswerer, RequestInterpreter, and evidence types. Do not assume the archived capability matrix is perfectly current.
-- [ ] Inspect the Formloom desktop host as a reference for PhotinoX.Blazor composition and project setup. Reuse the proven pattern selectively; do not copy Formloom-specific rendering or scene code.
-- [ ] Check dotnet --info and the installed SDK/runtime. Do not retarget the solution just because a local SDK is missing.
+- [x] Inspect the root, solution, project references, build configuration, README, active instructions, and current Git status.
+- [x] Confirm the existing names and locations of Core workspace components, including WorkspaceRoot, WorkspaceToolset, FileSearchTool, ReadFileTool, WorkspaceQuestionAnswerer, RequestInterpreter, and evidence types. Do not assume the archived capability matrix is perfectly current.
+- [x] Inspect the Formloom desktop host as a reference for PhotinoX.Blazor composition and project setup. Reuse the proven pattern selectively; do not copy Formloom-specific rendering or scene code.
+- [x] Check dotnet --info and the installed SDK/runtime. Do not retarget the solution just because a local SDK is missing.
 
 **Done when:** The agent reports the actual solution shape, reusable components, current Git status, and available build environment before making code changes.
 
+> **Phase 0.1 note:** Inspected `Lattice.slnx` (`Lattice.Core`, `Lattice.CSharp`, `Lattice.Python`, `Lattice.Cli`, `Lattice.Core.Tests`), `Directory.Build.props` (`net10.0`, `UseArtifactsOutput=true`, `NewStyleCop.Analyzers` `1.2.1`), `.editorconfig`, `Vraxo/Formloom` (`src/Formloom.Desktop` with `PhotinoX.Blazor` `5.3.5` and `tests/Formloom.Desktop.Tests` with `bunit` `2.13.3`), and Core workspace types (`WorkspaceRoot`, `WorkspaceFileAccess`, `WorkspaceToolset`, `ReadFileTool`, `FileSearchTool`, `ListDirectoryTool`, `WorkspaceQuestionAnswerer`, `RequestInterpreter`, `IntentPatternCatalog`, `EvidenceAnswer`, `EvidenceReference`). Local `dotnet --info` fails with `dotnet: command not found` (exit code 127); `net10.0` target preserved.
+
 ### 0.2 Run and record the existing baseline
 
-- [ ] Run restore, Release build, and the existing test suite using the repository's actual solution and commands.
-- [ ] Record exact command results, warnings/errors, and the observed test counts. Do not reuse old counts from the archived work queue.
-- [ ] If the local environment lacks the .NET SDK, record the exact failure and use GitHub Actions CI for verification where practical. Do not install or change SDK infrastructure without a concrete need.
+- [x] Run restore, Release build, and the existing test suite using the repository's actual solution and commands.
+- [x] Record exact command results, warnings/errors, and the observed test counts. Do not reuse old counts from the archived work queue.
+- [x] If the local environment lacks the .NET SDK, record the exact failure and use GitHub Actions CI for verification where practical. Do not install or change SDK infrastructure without a concrete need.
 
 **Done when:** The existing baseline is honestly recorded, and any pre-existing failures are distinguished from changes introduced by this plan.
+
+> **Phase 0.2 note:** Local sandbox lacks the .NET SDK (`dotnet: command not found`, exit 127). Verified on GitHub Actions Windows CI (`windows-latest`, .NET `10.0.x`, run `42392544840` on PR #11): `dotnet restore Lattice.slnx`, `dotnet build Lattice.slnx --configuration Release --no-restore` (0 errors; 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in `Lattice/*.cs`, 0 warnings in `Lattice.Desktop`), and `dotnet test Lattice.slnx --configuration Release --no-build` (`Lattice.Core.Tests`: Total 741, Passed 741, Failed 0, Skipped 0).
 
 ---
 
@@ -81,25 +85,25 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 1.1 Add the Desktop project
 
-- [ ] Create Lattice.Desktop as a .NET 10 executable using PhotinoX.Blazor 5.3.5.
-- [ ] Add it to Lattice.slnx.
-- [ ] Reference Core only where the host needs it. Keep Photino, Blazor, and desktop-specific packages out of Lattice.Core.
-- [ ] Follow the working Formloom host pattern for startup, root component registration, static assets, and window lifecycle. Keep the initial structure small.
-- [ ] Verify the project restores and the full solution builds.
+- [x] Create Lattice.Desktop as a .NET 10 executable using PhotinoX.Blazor 5.3.5.
+- [x] Add it to Lattice.slnx.
+- [x] Reference Core only where the host needs it. Keep Photino, Blazor, and desktop-specific packages out of Lattice.Core.
+- [x] Follow the working Formloom host pattern for startup, root component registration, static assets, and window lifecycle. Keep the initial structure small.
+- [x] Verify the project restores and the full solution builds.
 
 **Done when:** The repository contains a real desktop executable project and the solution builds; Core remains independent of UI/desktop dependencies.
 
 ### 1.2 Build the first useful window
 
-- [ ] Add a simple, usable desktop layout with Lattice identity, a workspace-path field, an explicit Connect action, a visible connected-workspace indicator, and an area for requests/results.
-- [ ] Make Connect validate that the entered path exists and is a directory; show a clear error for invalid input.
-- [ ] Keep connection state in a small application/session service only if needed by both UI and tests. Do not add a general session framework.
-- [ ] Add focused tests for workspace connection state and rendered UI behavior where practical.
+- [x] Add a simple, usable desktop layout with Lattice identity, a workspace-path field, an explicit Connect action, a visible connected-workspace indicator, and an area for requests/results.
+- [x] Make Connect validate that the entered path exists and is a directory; show a clear error for invalid input.
+- [x] Keep connection state in a small application/session service only if needed by both UI and tests. Do not add a general session framework.
+- [x] Add focused tests for workspace connection state and rendered UI behavior where practical.
 - [ ] Launch the desktop app and verify that Connect actually changes the displayed active workspace.
 
 **Done when:** A user can open the window, enter a real local folder, connect, and see which workspace is active. This is the first visible checkpoint; do not stop with a static mock-up.
 
-> **Phase 1 note:** Record exact launch commands and distinguish an automated build from a manually observed desktop launch.
+> **Phase 1 note:** Automated verification covers `DesktopSession` and rendered `App` behavior via xUnit + bUnit (`Lattice.Desktop.Tests`). No interactive Windows GUI exists in the headless agent environment, so the manual Photino window check remains pending (`dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Release`).
 
 ---
 
@@ -107,20 +111,20 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 2.1 Inspect and implement static link/reparse-point checks
 
-- [ ] Trace all direct-read and recursive-search path handling from the UI-facing composition down to the shared workspace file-access boundary.
-- [ ] Implement conservative static symlink/reparse-point protection at the shared workspace access boundary rather than adding UI-only checks.
-- [ ] Reject direct file access when the root-to-target path contains a symlink or reparse-point component.
-- [ ] During recursive search/list traversal, skip linked files and directories rather than following them.
-- [ ] Preserve ordinary in-root file access and existing lexical traversal protection.
-- [ ] Keep the threat-model statement explicit: this is a static check and is **not** race-resistant against a link being replaced concurrently.
+- [x] Trace all direct-read and recursive-search path handling from the UI-facing composition down to the shared workspace file-access boundary.
+- [x] Implement conservative static symlink/reparse-point protection at the shared workspace access boundary rather than adding UI-only checks.
+- [x] Reject direct file access when the root-to-target path contains a symlink or reparse-point component.
+- [x] During recursive search/list traversal, skip linked files and directories rather than following them.
+- [x] Preserve ordinary in-root file access and existing lexical traversal protection.
+- [x] Keep the threat-model statement explicit: this is a static check and is **not** race-resistant against a link being replaced concurrently.
 
 ### 2.2 Test the safety boundary
 
-- [ ] Add tests for a normal file under the workspace root.
-- [ ] Add tests for .. traversal and rooted/absolute path attempts.
-- [ ] Add tests for a linked file and a linked directory where the platform supports creating them; skip only platform-specific cases that genuinely cannot be created, and explain the limitation.
-- [ ] Verify linked entries are not read or traversed and that ordinary files still work.
-- [ ] Verify the first Desktop composition still grants read-only access; no write or command capability is registered.
+- [x] Add tests for a normal file under the workspace root.
+- [x] Add tests for .. traversal and rooted/absolute path attempts.
+- [x] Add tests for a linked file and a linked directory where the platform supports creating them; skip only platform-specific cases that genuinely cannot be created, and explain the limitation.
+- [x] Verify linked entries are not read or traversed and that ordinary files still work.
+- [x] Verify the first Desktop composition still grants read-only access; no write or command capability is registered.
 
 **Done when:** Existing workspace reads/searches remain functional, linked paths cannot be followed by the static checks, the behavior is test-covered, and no write/command path is exposed.
 
@@ -130,21 +134,23 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 3.1 Connect the Inspect request
 
-- [ ] Implement the first user request: inspect followed by a relative path.
-- [ ] Route it through the existing workspace/read components (especially ReadFileTool and the established workspace access path) instead of creating a second file-reading implementation.
-- [ ] Use the explicitly connected workspace root; never interpret a user-supplied path as permission to leave it.
-- [ ] Display the selected relative path and the actual file contents in a readable, scrollable result area.
-- [ ] Handle missing files, directories supplied instead of files, oversized/unsupported files, access errors, and invalid paths without crashing.
-- [ ] Keep the operation read-only and treat file contents as untrusted data, never as instructions.
+- [x] Implement the first user request: inspect followed by a relative path.
+- [x] Route it through the existing workspace/read components (especially ReadFileTool and the established workspace access path) instead of creating a second file-reading implementation.
+- [x] Use the explicitly connected workspace root; never interpret a user-supplied path as permission to leave it.
+- [x] Display the selected relative path and the actual file contents in a readable, scrollable result area.
+- [x] Handle missing files, directories supplied instead of files, oversized/unsupported files, access errors, and invalid paths without crashing.
+- [x] Keep the operation read-only and treat file contents as untrusted data, never as instructions.
 
 ### 3.2 Verify inspection end to end
 
-- [ ] Add tests for successful inspection, missing file, invalid path, root escape, and static link rejection.
-- [ ] Add UI/session tests proving the request reaches the real reader and that returned content/errors appear in the interface.
-- [ ] Run the focused tests, Release build, and full existing suite.
+- [x] Add tests for successful inspection, missing file, invalid path, root escape, and static link rejection.
+- [x] Add UI/session tests proving the request reaches the real reader and that returned content/errors appear in the interface.
+- [x] Run the focused tests, Release build, and full existing suite.
 - [ ] Manually launch the desktop app and inspect a real source file from the Lattice repository.
 
 **Done when:** A user can connect a real repository, enter an inspect request for an existing relative path, and see the actual file contents in the desktop window.
+
+> **Phase 3 note:** End-to-end session and bUnit UI tests exercise `inspect <relative-path>` through `RequestInterpreter` → `ToolExecutor` → `ReadFileTool` → `WorkspaceFileAccess` against real temporary workspaces. Manual Photino GUI launch check remains pending in this headless environment.
 
 ---
 
@@ -152,19 +158,19 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 4.1 Connect the Find request
 
-- [ ] Implement the first search request: find symbol followed by a name.
-- [ ] Reuse RequestInterpreter, IntentPatternCatalog, WorkspaceQuestionAnswerer, WorkspaceToolset, and FileSearchTool where their current contracts fit.
-- [ ] Search source text using the existing bounded, case-insensitive search behavior. Do not claim C# semantic symbol resolution or declaration/reference grouping.
-- [ ] Display each match with its relative file path, line number, and matching line/snippet.
-- [ ] Show a clear no-matches state. Do not silently convert unsupported or ambiguous requests into a different operation.
-- [ ] Label this feature in the UI as **source-text search** (not semantic symbol search).
+- [x] Implement the first search request: find symbol followed by a name.
+- [x] Reuse RequestInterpreter, IntentPatternCatalog, WorkspaceQuestionAnswerer, WorkspaceToolset, and FileSearchTool where their current contracts fit.
+- [x] Search source text using the existing bounded, case-insensitive search behavior. Do not claim C# semantic symbol resolution or declaration/reference grouping.
+- [x] Display each match with its relative file path, line number, and matching line/snippet.
+- [x] Show a clear no-matches state. Do not silently convert unsupported or ambiguous requests into a different operation.
+- [x] Label this feature in the UI as **source-text search** (not semantic symbol search).
 
 ### 4.2 Verify search and evidence
 
-- [ ] Add fixture tests for multiple matches, one match, no matches, excluded/oversized files, and unsupported or ambiguous input.
-- [ ] Add UI/session tests proving that actual evidence paths and line numbers are rendered.
-- [ ] Verify that all returned evidence belongs to the connected workspace and that search cannot follow linked entries.
-- [ ] Run focused tests, Release build, and the full existing suite.
+- [x] Add fixture tests for multiple matches, one match, no matches, excluded/oversized files, and unsupported or ambiguous input.
+- [x] Add UI/session tests proving that actual evidence paths and line numbers are rendered.
+- [x] Verify that all returned evidence belongs to the connected workspace and that search cannot follow linked entries.
+- [x] Run focused tests, Release build, and the full existing suite.
 
 **Done when:** A user can enter a find-symbol request in a connected Lattice checkout and see actual matching file paths and line numbers.
 
@@ -174,22 +180,24 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 5.1 Make the conversation usable
 
-- [ ] Keep prior user requests and Lattice responses visible during the current session.
-- [ ] Present file content and search evidence clearly, without hiding the source path/line information.
-- [ ] Show distinct states for unsupported input, ambiguous input, no results, invalid workspace, missing file, and unexpected errors.
-- [ ] Prevent overlapping submissions from corrupting the visible session state.
-- [ ] Keep the interface focused on workspace inspection; do not add editing, autonomous planning, or arbitrary command execution.
+- [x] Keep prior user requests and Lattice responses visible during the current session.
+- [x] Present file content and search evidence clearly, without hiding the source path/line information.
+- [x] Show distinct states for unsupported input, ambiguous input, no results, invalid workspace, missing file, and unexpected errors.
+- [x] Prevent overlapping submissions from corrupting the visible session state.
+- [x] Keep the interface focused on workspace inspection; do not add editing, autonomous planning, or arbitrary command execution.
 
 ### 5.2 Complete automated verification and documentation
 
-- [ ] Add/complete focused UI component tests for Connect, Inspect, Find, visible evidence, empty results, and error states.
-- [ ] Run dotnet restore, Release build, and the full test suite; report exact observed results.
-- [ ] Review the final diff for unrelated refactors, accidental dependencies, unsafe path handling, and inflated capability claims.
-- [ ] Update the README with the desktop prerequisites, exact launch command, supported request forms, and honest source-text-search/read-only limitations.
-- [ ] Ensure the solution/CI workflow builds and tests the Desktop project.
+- [x] Add/complete focused UI component tests for Connect, Inspect, Find, visible evidence, empty results, and error states.
+- [x] Run dotnet restore, Release build, and the full test suite; report exact observed results.
+- [x] Review the final diff for unrelated refactors, accidental dependencies, unsafe path handling, and inflated capability claims.
+- [x] Update the README with the desktop prerequisites, exact launch command, supported request forms, and honest source-text-search/read-only limitations.
+- [x] Ensure the solution/CI workflow builds and tests the Desktop project.
 - [ ] Confirm the desktop application launches and manually demonstrate Connect → Inspect → Find against a real repository.
 
 **Done when:** Desktop 0.1 satisfies every item in the Definition of done above.
+
+> **Phase 5 note:** Windows CI run `42394534767` passed `dotnet restore Lattice.slnx`, `dotnet build Lattice.slnx --configuration Release --no-restore` (0 errors; 0 warnings in `Lattice.Desktop` and `Lattice.Desktop.Tests`), and `dotnet test Lattice.slnx --configuration Release --no-build` (`Lattice.Core.Tests`: 749/749 passed; `Lattice.Desktop.Tests`: 38/38 passed; 787 total tests passed, 0 failed, 0 skipped), including an automated bUnit walkthrough against the real `Lattice` repository checkout. Only the manual interactive Photino desktop window launch check remains pending because the agent environment has no GUI display; follow `docs/windows-smoke-test.md` to complete it on Windows.
 
 ---
 

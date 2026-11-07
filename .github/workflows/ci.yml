@@ -41,4 +41,40 @@ jobs:
         # Lattice.Core.Tests references Microsoft.NET.Test.Sdk and
         # xunit.runner.visualstudio, so VSTest can run the suite through
         # `dotnet test` rather than invoking the test assembly directly.
-        run: dotnet test Lattice.slnx --configuration Release --no-build
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path . -Recurse -Filter "*.trx" -ErrorAction SilentlyContinue | Remove-Item -Force
+          # Run test projects sequentially (-m:1) on 2-vCPU runners so concurrent testhost
+          # startup/JIT does not starve timing-sensitive thread-pool cancellation tests in Core.
+          $testOutput = dotnet test Lattice.slnx --configuration Release --no-build -m:1 --logger "trx" 2>&1
+          $testOutput | ForEach-Object { Write-Host $_ }
+          $testExit = $LASTEXITCODE
+          $trxFiles = @(Get-ChildItem -Path . -Recurse -Filter "*.trx" -ErrorAction SilentlyContinue | Sort-Object FullName)
+          foreach ($file in $trxFiles) {
+            [xml]$trx = Get-Content $file.FullName
+            $counters = $trx.TestRun.ResultSummary.Counters
+            $unitTest = @($trx.TestRun.TestDefinitions.UnitTest) | Select-Object -First 1
+            $suite = if ($unitTest -and $unitTest.TestMethod.codeBase) {
+              [System.IO.Path]::GetFileNameWithoutExtension($unitTest.TestMethod.codeBase)
+            } else {
+              $file.BaseName
+            }
+            $total = [int]$counters.total
+            $executed = [int]$counters.executed
+            $passed = [int]$counters.passed
+            $failed = [int]$counters.failed
+            $skipped = $total - $executed
+            Write-Output "::notice title=Test Results ($suite)::Total: $total, Passed: $passed, Failed: $failed, Skipped: $skipped"
+            foreach ($failure in @($trx.TestRun.Results.UnitTestResult) | Where-Object { $_ -ne $null -and $_.outcome -eq "Failed" }) {
+              $errMsg = [string]$failure.Output.ErrorInfo.Message
+              $stack = [string]$failure.Output.ErrorInfo.StackTrace
+              $combined = ("$errMsg | $stack") -replace "\r?\n", " "
+              Write-Output "::error title=Failed Test ($($failure.testName))::$combined"
+            }
+          }
+          if ($testExit -ne 0) {
+            $tail = ($testOutput | Select-Object -Last 25 | ForEach-Object { $_.ToString() }) -join " | "
+            $tail = $tail -replace "\r?\n", " "
+            Write-Output "::error title=dotnet test failure::$tail"
+          }
+          exit $testExit

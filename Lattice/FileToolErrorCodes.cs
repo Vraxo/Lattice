@@ -3,6 +3,7 @@ namespace Lattice.Core;
 public static class FileToolErrorCodes
 {
     public const string PathOutsideRoot = "files.path.outside-root";
+    public const string ReparsePointNotAllowed = "files.path.reparse-point";
     public const string PathNotFound = "files.path.not-found";
     public const string NotADirectory = "files.path.not-a-directory";
     public const string NotAFile = "files.path.not-a-file";

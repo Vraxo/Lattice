@@ -40,24 +40,18 @@ public sealed class ListDirectoryTool : ITool
             requested = value.AsString();
         }
 
-        if (!_root.TryResolve(requested, out string? fullPath))
+        Result<string> resolved = WorkspaceFileAccess.ResolveReadableDirectory(_root, requested);
+        if (!resolved.IsSuccess)
         {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.PathOutsideRoot,
-                $"Path '{requested}' is not inside the workspace root."));
-        }
-
-        if (!Directory.Exists(fullPath))
-        {
-            string code = File.Exists(fullPath) ? FileToolErrorCodes.NotADirectory : FileToolErrorCodes.PathNotFound;
-            return ToolResult.Failure(new Error(code, $"Directory '{requested}' was not found."));
+            return ToolResult.Failure(resolved.Error!);
         }
 
         List<string> entries = [];
-        foreach (string entryPath in Directory.EnumerateFileSystemEntries(fullPath))
+        foreach ((string entryPath, bool isDirectory) in WorkspaceFileAccess.EnumerateDirectoryEntriesSafely(resolved.Value))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            entries.Add(Format(entryPath));
+            string name = Path.GetFileName(entryPath);
+            entries.Add(isDirectory ? name + "/" : name);
         }
 
         entries.Sort(StringComparer.Ordinal);
@@ -79,11 +73,5 @@ public sealed class ListDirectoryTool : ITool
         }
 
         return ToolResult.Success(ArgumentValue.FromString(builder.ToString()));
-    }
-
-    private static string Format(string entryPath)
-    {
-        string name = Path.GetFileName(entryPath);
-        return Directory.Exists(entryPath) ? name + "/" : name;
     }
 }
