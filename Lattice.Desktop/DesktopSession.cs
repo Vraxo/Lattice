@@ -92,7 +92,7 @@ internal sealed class DesktopSession(
         string trimmed = RequestInput.Trim();
         if (string.IsNullOrEmpty(trimmed))
         {
-            RequestError = "Enter a workspace request such as 'inspect README.md'.";
+            RequestError = "Enter a request: 'inspect <relative-path>' or 'find symbol <name>'.";
             StatusMessage = "Request was empty.";
             return;
         }

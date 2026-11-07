@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** in progress — Phase 2 verified in Windows CI (run `42393154309`); Phase 3 file inspection workflow queued for CI verification. This is the active, sequential implementation checklist.
+> **Status:** in progress — Phase 3 verified in Windows CI (run `42393793463`); Phase 4 source-text symbol search and grounded evidence queued for CI verification. This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -158,19 +158,19 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 4.1 Connect the Find request
 
-- [ ] Implement the first search request: find symbol followed by a name.
-- [ ] Reuse RequestInterpreter, IntentPatternCatalog, WorkspaceQuestionAnswerer, WorkspaceToolset, and FileSearchTool where their current contracts fit.
-- [ ] Search source text using the existing bounded, case-insensitive search behavior. Do not claim C# semantic symbol resolution or declaration/reference grouping.
-- [ ] Display each match with its relative file path, line number, and matching line/snippet.
-- [ ] Show a clear no-matches state. Do not silently convert unsupported or ambiguous requests into a different operation.
-- [ ] Label this feature in the UI as **source-text search** (not semantic symbol search).
+- [x] Implement the first search request: find symbol followed by a name.
+- [x] Reuse RequestInterpreter, IntentPatternCatalog, WorkspaceQuestionAnswerer, WorkspaceToolset, and FileSearchTool where their current contracts fit.
+- [x] Search source text using the existing bounded, case-insensitive search behavior. Do not claim C# semantic symbol resolution or declaration/reference grouping.
+- [x] Display each match with its relative file path, line number, and matching line/snippet.
+- [x] Show a clear no-matches state. Do not silently convert unsupported or ambiguous requests into a different operation.
+- [x] Label this feature in the UI as **source-text search** (not semantic symbol search).
 
 ### 4.2 Verify search and evidence
 
-- [ ] Add fixture tests for multiple matches, one match, no matches, excluded/oversized files, and unsupported or ambiguous input.
-- [ ] Add UI/session tests proving that actual evidence paths and line numbers are rendered.
-- [ ] Verify that all returned evidence belongs to the connected workspace and that search cannot follow linked entries.
-- [ ] Run focused tests, Release build, and the full existing suite.
+- [x] Add fixture tests for multiple matches, one match, no matches, excluded/oversized files, and unsupported or ambiguous input.
+- [x] Add UI/session tests proving that actual evidence paths and line numbers are rendered.
+- [x] Verify that all returned evidence belongs to the connected workspace and that search cannot follow linked entries.
+- [x] Run focused tests, Release build, and the full existing suite.
 
 **Done when:** A user can enter a find-symbol request in a connected Lattice checkout and see actual matching file paths and line numbers.
 

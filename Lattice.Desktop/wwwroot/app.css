@@ -220,6 +220,16 @@ input:focus-visible {
     padding: 14px 16px;
 }
 
+.turn-card.turn-neutral {
+    border-color: #3d4f63;
+    background: #131a22;
+}
+
+.turn-card.turn-warning {
+    border-color: #7c5f28;
+    background: #1c1811;
+}
+
 .turn-card.turn-error {
     border-color: #7c353d;
     background: #1c1317;
@@ -246,6 +256,11 @@ input:focus-visible {
     border-radius: 999px;
     background: #1f2b38;
     color: #c9d5e0;
+}
+
+.turn-card.turn-warning .turn-kind-badge {
+    background: #423315;
+    color: #f8e3a1;
 }
 
 .turn-card.turn-error .turn-kind-badge {
@@ -298,4 +313,65 @@ input:focus-visible {
     line-height: 1.5;
     color: #e6edf3;
     white-space: pre;
+}
+
+.evidence-box {
+    margin-top: 12px;
+    border: 1px solid #293847;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0b0f14;
+}
+
+.search-mode-note {
+    padding: 8px 12px;
+    background: #151e28;
+    border-bottom: 1px solid #293847;
+    font-size: 12px;
+    color: #8fa3b8;
+}
+
+.evidence-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 360px;
+    overflow: auto;
+}
+
+.evidence-item {
+    display: grid;
+    grid-template-columns: minmax(180px, auto) minmax(0, 1fr);
+    gap: 14px;
+    padding: 9px 12px;
+    border-bottom: 1px solid #1b2632;
+    align-items: baseline;
+}
+
+.evidence-item:last-child {
+    border-bottom: 0;
+}
+
+.evidence-location {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 12px;
+    color: #9be9a8;
+    white-space: nowrap;
+}
+
+.evidence-snippet {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 12px;
+    color: #dce5ee;
+    overflow-wrap: anywhere;
+}
+
+.no-matches-note {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #141c24;
+    border: 1px solid #2b3a4a;
+    font-size: 12px;
+    color: #9fb1c4;
 }
