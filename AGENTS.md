@@ -6,8 +6,9 @@ Read these files first, in this order:
 
 1. `README.md`
 2. `docs/DESKTOP_DIRECTION.md`
+3. `.agents/todo.md`
 
-The code and tests define what currently exists. The desktop direction defines what to build next.
+**The active execution queue is `.agents/todo.md`.** Start at its first unchecked task, follow the tasks in order, and check items off only after their acceptance criteria and verification pass. Do not revive the archived M0–M10 roadmap.
 
 Everything under `docs/archive/research-first/` is historical project material. Do not treat its PRD, architecture document, M0–M10 roadmap, decision log, work queue, capability snapshot, or old AI work protocol as current marching orders. Do not continue the old research-first milestones unless the user explicitly reopens one.
 
@@ -35,6 +36,7 @@ Workspace access must remain read-only and confined to the selected root. Add th
 
 - Inspect the current code and Git status before changing files. Do not overwrite user changes.
 - Keep each increment buildable and runnable; do not stop at an empty scaffold when a real interaction can be connected.
+- The first unchecked task in `.agents/todo.md` is the only active task. Complete it, update its checkboxes/status, report the result, and stop; do not skip ahead or implement later tasks in the same pass.
 - Make the smallest change that produces observable user value. Avoid unrelated cleanup and new abstractions without a concrete need.
 - Add focused tests for new behavior and UI interactions; preserve the existing Core test suite.
 - Run the real restore/build/test commands and report their actual outcomes. Never invent test counts or claim that a GUI was manually launched when it was not.

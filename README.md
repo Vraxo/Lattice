@@ -10,7 +10,7 @@ Lattice is moving from a research-first codebase to a **usable desktop applicati
 
 The first desktop release is intentionally narrow: open a local workspace, inspect a file, and find source-text occurrences with file-and-line evidence. It is read-only. It will not pretend that literal text search is compiler-grade symbol resolution.
 
-See **[the active desktop direction](docs/DESKTOP_DIRECTION.md)** before making product or implementation decisions. Coding agents must follow the repository-root [AGENTS.md](AGENTS.md).
+Start implementation from the **[active TODO queue](.agents/todo.md)**. It contains the ordered, checkable tasks. The [desktop direction](docs/DESKTOP_DIRECTION.md) explains the product target; coding agents must follow the repository-root [AGENTS.md](AGENTS.md).
 
 ## Existing code
 
@@ -47,6 +47,7 @@ It accepts controlled statements and registers only the calculator. It is not th
 
 ## Documentation
 
+- [Active implementation TODO](.agents/todo.md) — ordered tasks and acceptance checkboxes.
 - [Desktop product direction and first acceptance target](docs/DESKTOP_DIRECTION.md)
 - [Documentation index](docs/README.md)
 - [Historical research-first specifications and milestone records](docs/archive/research-first/)
