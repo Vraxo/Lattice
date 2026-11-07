@@ -27,18 +27,21 @@ public sealed class RequestInterpreter
         }
 
         List<(int Score, IntentMatch Match)> matches = [];
+        List<IntentPattern> missing = [];
         foreach (IntentPattern pattern in _catalog.Patterns)
         {
             if (TryMatch(pattern, tokens, cleaned, out IntentMatch? match))
             {
                 matches.Add((pattern.LiteralCount, match));
             }
+            else if (HasMissingValue(pattern, tokens, cleaned))
+            {
+                missing.Add(pattern);
+            }
         }
 
         int bestMatchScore = matches.Count > 0 ? matches.Max(entry => entry.Score) : -1;
-        ImmutableArray<IntentPattern> missing =
-            [.. _catalog.Patterns.Where(pattern => HasMissingValue(pattern, tokens, cleaned))];
-        int bestMissingScore = missing.Length > 0 ? missing.Max(pattern => pattern.LiteralCount) : -1;
+        int bestMissingScore = missing.Count > 0 ? missing.Max(pattern => pattern.LiteralCount) : -1;
 
         if (bestMissingScore > bestMatchScore && bestMissingScore >= 0)
         {
