@@ -13,6 +13,7 @@ internal sealed class DesktopSession(
         executeRequest ?? ((workspace, request, _) => Task.FromResult(DesktopRequestProcessor.Default.Execute(workspace, request)));
 
     private readonly List<DesktopTurnEntry> _entries = [];
+    private int _busyGate;
 
     public string WorkspacePathInput { get; set; } = string.Empty;
 
@@ -30,7 +31,7 @@ internal sealed class DesktopSession(
 
     public bool IsSubmitting { get; private set; }
 
-    public bool IsBusy => IsConnecting || IsSubmitting;
+    public bool IsBusy => IsConnecting || IsSubmitting || Volatile.Read(ref _busyGate) != 0;
 
     public string? WorkspaceError { get; private set; }
 
@@ -43,7 +44,7 @@ internal sealed class DesktopSession(
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        if (IsBusy)
+        if (Interlocked.CompareExchange(ref _busyGate, 1, 0) != 0)
         {
             return;
         }
@@ -78,12 +79,13 @@ internal sealed class DesktopSession(
         finally
         {
             IsConnecting = false;
+            Volatile.Write(ref _busyGate, 0);
         }
     }
 
     public async Task SubmitRequestAsync(CancellationToken cancellationToken = default)
     {
-        if (IsBusy)
+        if (Interlocked.CompareExchange(ref _busyGate, 1, 0) != 0)
         {
             return;
         }
@@ -92,6 +94,7 @@ internal sealed class DesktopSession(
         string trimmed = RequestInput.Trim();
         if (string.IsNullOrEmpty(trimmed))
         {
+            Volatile.Write(ref _busyGate, 0);
             RequestError = "Enter a request: 'inspect <relative-path>' or 'find symbol <name>'.";
             StatusMessage = "Request was empty.";
             return;
@@ -119,6 +122,7 @@ internal sealed class DesktopSession(
         finally
         {
             IsSubmitting = false;
+            Volatile.Write(ref _busyGate, 0);
         }
     }
 }

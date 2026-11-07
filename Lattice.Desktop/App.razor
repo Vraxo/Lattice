@@ -42,7 +42,7 @@
         </form>
         @if (Session.WorkspaceError is not null)
         {
-            <p id="workspace-error" class="alert error" role="alert">@Session.WorkspaceError</p>
+            <p id="workspace-error" class="alert error" data-error-kind="InvalidWorkspace" role="alert">@Session.WorkspaceError</p>
         }
         <p id="session-status" class="status-line" role="status" aria-live="polite">@Session.StatusMessage</p>
     </section>
@@ -102,7 +102,13 @@
                     <li class="turn-card @GetCardClass(entry.Kind)" data-turn-kind="@entry.Kind">
                         <div class="turn-header">
                             <code class="turn-request">@entry.RequestText</code>
-                            <span class="turn-kind-badge">@FormatKind(entry.Kind)</span>
+                            <div class="turn-badges">
+                                @if (entry.WorkspacePath is not null)
+                                {
+                                    <code class="turn-workspace">@entry.WorkspacePath</code>
+                                }
+                                <span class="turn-kind-badge">@FormatKind(entry.Kind)</span>
+                            </div>
                         </div>
                         <p class="turn-summary">@entry.Summary</p>
                         @if (entry.Kind == DesktopTurnKind.FileInspected && entry.FileContents is not null)
@@ -110,7 +116,7 @@
                             <div class="file-viewer">
                                 <div class="file-viewer-header">
                                     <code class="file-path">@entry.InspectedRelativePath</code>
-                                    <span class="file-meta">Read-only · Untrusted workspace text</span>
+                                    <span class="file-meta">@FormatLines(entry.LineCount) · Read-only · Untrusted workspace text</span>
                                 </div>
                                 <pre class="file-contents"><code>@entry.FileContents</code></pre>
                             </div>
@@ -162,10 +168,17 @@
         DesktopTurnKind.MissingFile => "Missing File",
         DesktopTurnKind.InspectError => "Inspection Error",
         DesktopTurnKind.AccessRejected => "Access Rejected",
-        DesktopTurnKind.InvalidWorkspace => "Workspace Required",
+        DesktopTurnKind.InvalidWorkspace => "Invalid Workspace",
         DesktopTurnKind.AmbiguousInput => "Ambiguous Input",
         DesktopTurnKind.UnsupportedInput => "Unsupported Input",
         DesktopTurnKind.UnexpectedError => "Unexpected Error",
         _ => kind.ToString(),
+    };
+
+    private static string FormatLines(int? lineCount) => lineCount switch
+    {
+        null => string.Empty,
+        1 => "1 line",
+        int count => $"{count} lines",
     };
 }
