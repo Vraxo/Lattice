@@ -87,9 +87,9 @@ internal sealed class DesktopSession(
             WorkspacePathInput = result.Workspace.Root.FullPath;
             StatusMessage = $"Connected to '{result.Workspace.Root.FullPath}' (read-only).";
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            WorkspaceError = $"Unexpected error while connecting workspace: {exception.Message}";
+            WorkspaceError = "Could not connect to the requested workspace folder due to an unexpected error.";
             StatusMessage = ActiveWorkspace is null
                 ? "No workspace connected."
                 : $"Workspace '{ActiveWorkspace.FullPath}' remains active.";

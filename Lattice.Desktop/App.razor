@@ -131,7 +131,7 @@
                                         <code class="file-path">@entry.InspectedRelativePath</code>
                                         <span class="file-meta">@FormatLines(entry.LineCount) · Read-only</span>
                                     </div>
-                                    <pre class="file-contents"><code>@entry.FileContents</code></pre>
+                                    <pre class="file-contents" tabindex="0" aria-label="Contents of @entry.InspectedRelativePath"><code>@entry.FileContents</code></pre>
                                 </div>
                             }
                             else if (entry.Kind == DesktopTurnKind.SearchResults)
@@ -140,7 +140,7 @@
                                     <div class="search-mode-note">
                                         Literal source-text matches (case-insensitive; not semantic declarations or references)
                                     </div>
-                                    <ul class="evidence-list">
+                                    <ul class="evidence-list" tabindex="0" aria-label="Matching workspace locations">
                                         @foreach (EvidenceReference reference in entry.SafeEvidence)
                                         {
                                             <li class="evidence-item" data-evidence-path="@reference.RelativePath" data-evidence-line="@reference.StartLine">

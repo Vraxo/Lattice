@@ -200,18 +200,20 @@ Desktop 0.2 is complete when:
 
 ### 4.1 Resolve unambiguous recent file references
 
-- [ ] Track only the minimal context needed to resolve a recent file reference; do not add a general memory/knowledge system.
-- [ ] Support "Show me that file" or "Open it" only when the preceding result identifies exactly one unambiguous file.
-- [ ] If the preceding search result contains several files, ask which file the user means. Do not silently choose the first result.
-- [ ] Keep resolved paths relative to the active workspace and route them through the same safe file-read path.
-- [ ] Clear/invalidate stale references when the workspace changes.
+- [x] Track only the minimal context needed to resolve a recent file reference; do not add a general memory/knowledge system.
+- [x] Support "Show me that file" or "Open it" only when the preceding result identifies exactly one unambiguous file.
+- [x] If the preceding search result contains several files, ask which file the user means. Do not silently choose the first result.
+- [x] Keep resolved paths relative to the active workspace and route them through the same safe file-read path.
+- [x] Clear/invalidate stale references when the workspace changes.
 
 ### 4.2 Test context and ambiguity
 
-- [ ] Add tests for one-file follow-up, multiple-file ambiguity, no preceding reference, workspace switching, and stale/missing targets.
-- [ ] Add rendered tests proving clarification appears as an assistant response and no unintended read occurs.
+- [x] Add tests for one-file follow-up, multiple-file ambiguity, no preceding reference, workspace switching, and stale/missing targets.
+- [x] Add rendered tests proving clarification appears as an assistant response and no unintended read occurs.
 
 **Done when:** A small, test-covered follow-up works without guessing or weakening workspace confinement.
+
+> **Phase 4 note:** Verified in Windows/.NET 10 CI run `42405676321` on PR #12 (`Lattice.Core.Tests`: 789/789, `Lattice.Desktop.Tests`: 70/70, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 
@@ -219,19 +221,20 @@ Desktop 0.2 is complete when:
 
 ### 5.1 Polish and regression-test
 
-- [ ] Ensure message hierarchy, spacing, long code blocks, evidence lists, and scrolling work at normal/narrow window sizes.
-- [ ] Preserve responsive layout, keyboard access, focus indicators, and accessible labels/roles.
-- [ ] Verify the UI does not expose internal pattern/tool IDs, command syntax, or raw exceptions as normal assistant language.
-- [ ] Add/complete session and bUnit tests for all Definition of done examples, follow-up context, unknown input, ambiguity, errors, and retained history.
-- [ ] Preserve all Desktop 0.1 workspace safety and read-only tests.
+- [x] Ensure message hierarchy, spacing, long code blocks, evidence lists, and scrolling work at normal/narrow window sizes.
+- [x] Preserve responsive layout, keyboard access, focus indicators, and accessible labels/roles.
+- [x] Verify the UI does not expose internal pattern/tool IDs, command syntax, or raw exceptions as normal assistant language.
+- [x] Add/complete session and bUnit tests for all Definition of done examples, follow-up context, unknown input, ambiguity, errors, and retained history.
+- [x] Preserve all Desktop 0.1 workspace safety and read-only tests.
 
 ### 5.2 CI and documentation
 
 - [ ] Run full Release restore/build/test on Windows/.NET 10 through the draft PR.
 - [ ] Verify final CI with exact per-project test counts and zero failures/skips.
-- [ ] Update README with conversational interaction and natural-language examples; remove command-console framing.
-- [ ] Update `docs/windows-smoke-test.md` to test conversational phrases and follow-up references.
+- [x] Update README with conversational interaction and natural-language examples; remove command-console framing.
+- [x] Update `docs/windows-smoke-test.md` to test conversational phrases and follow-up references.
 - [ ] Record exact verification evidence and leave manual Windows launch unchecked.
+- [ ] Manual Windows Photino GUI launch verification (`docs/windows-smoke-test.md`) — requires interactive Windows desktop session.
 
 **Done when:** Desktop 0.2 is implemented and CI-verified, with only the genuinely manual GUI smoke test remaining for the user.
 
