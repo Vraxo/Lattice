@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Photino.Blazor;
 using PhotinoX.App;
 
@@ -14,6 +15,7 @@ internal static class Program
             ContentRootPath = AppContext.BaseDirectory,
             WebRootPath = "wwwroot",
         });
+        builder.Services.AddSingleton<DesktopSession>();
         builder.RootComponents.Add<App>("#app");
         builder.ConfigureMainWindow(window =>
         {

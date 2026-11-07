@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** in progress — Phase 0 baseline established locally; Phase 1.1 `Lattice.Desktop` host created and queued for Windows CI verification. This is the active, sequential implementation checklist.
+> **Status:** in progress — Phases 0 and 1.1 verified in Windows CI; Phase 1.2 window and workspace connection tests queued for CI verification. This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -71,13 +71,13 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 0.2 Run and record the existing baseline
 
-- [ ] Run restore, Release build, and the existing test suite using the repository's actual solution and commands.
-- [ ] Record exact command results, warnings/errors, and the observed test counts. Do not reuse old counts from the archived work queue.
+- [x] Run restore, Release build, and the existing test suite using the repository's actual solution and commands.
+- [x] Record exact command results, warnings/errors, and the observed test counts. Do not reuse old counts from the archived work queue.
 - [x] If the local environment lacks the .NET SDK, record the exact failure and use GitHub Actions CI for verification where practical. Do not install or change SDK infrastructure without a concrete need.
 
 **Done when:** The existing baseline is honestly recorded, and any pre-existing failures are distinguished from changes introduced by this plan.
 
-> **Phase 0.2 note:** Local sandbox lacks the .NET SDK (`dotnet: command not found`, exit 127). Pre-existing `main` CI run `42388275041` (`windows-latest`, .NET `10.0.x`) passed `dotnet restore Lattice.slnx`, `dotnet build Lattice.slnx --configuration Release --no-restore` (0 errors, 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in `Lattice/*.cs`), and `dotnet test Lattice.slnx --configuration Release --no-build`. Exact TRX test count for `Lattice.Core.Tests` is being captured on the initial draft PR CI run.
+> **Phase 0.2 note:** Local sandbox lacks the .NET SDK (`dotnet: command not found`, exit 127). Verified on GitHub Actions Windows CI (`windows-latest`, .NET `10.0.x`, run `42392544840` on PR #11): `dotnet restore Lattice.slnx`, `dotnet build Lattice.slnx --configuration Release --no-restore` (0 errors; 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in `Lattice/*.cs`, 0 warnings in `Lattice.Desktop`), and `dotnet test Lattice.slnx --configuration Release --no-build` (`Lattice.Core.Tests`: Total 741, Passed 741, Failed 0, Skipped 0).
 
 ---
 
@@ -89,21 +89,21 @@ Use the following unless an actual compatibility/build issue requires a document
 - [x] Add it to Lattice.slnx.
 - [x] Reference Core only where the host needs it. Keep Photino, Blazor, and desktop-specific packages out of Lattice.Core.
 - [x] Follow the working Formloom host pattern for startup, root component registration, static assets, and window lifecycle. Keep the initial structure small.
-- [ ] Verify the project restores and the full solution builds.
+- [x] Verify the project restores and the full solution builds.
 
 **Done when:** The repository contains a real desktop executable project and the solution builds; Core remains independent of UI/desktop dependencies.
 
 ### 1.2 Build the first useful window
 
-- [ ] Add a simple, usable desktop layout with Lattice identity, a workspace-path field, an explicit Connect action, a visible connected-workspace indicator, and an area for requests/results.
-- [ ] Make Connect validate that the entered path exists and is a directory; show a clear error for invalid input.
-- [ ] Keep connection state in a small application/session service only if needed by both UI and tests. Do not add a general session framework.
-- [ ] Add focused tests for workspace connection state and rendered UI behavior where practical.
+- [x] Add a simple, usable desktop layout with Lattice identity, a workspace-path field, an explicit Connect action, a visible connected-workspace indicator, and an area for requests/results.
+- [x] Make Connect validate that the entered path exists and is a directory; show a clear error for invalid input.
+- [x] Keep connection state in a small application/session service only if needed by both UI and tests. Do not add a general session framework.
+- [x] Add focused tests for workspace connection state and rendered UI behavior where practical.
 - [ ] Launch the desktop app and verify that Connect actually changes the displayed active workspace.
 
 **Done when:** A user can open the window, enter a real local folder, connect, and see which workspace is active. This is the first visible checkpoint; do not stop with a static mock-up.
 
-> **Phase 1 note:** Record exact launch commands and distinguish an automated build from a manually observed desktop launch.
+> **Phase 1 note:** Automated verification covers `DesktopSession` and rendered `App` behavior via xUnit + bUnit (`Lattice.Desktop.Tests`). No interactive Windows GUI exists in the headless agent environment, so the manual Photino window check remains pending (`dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Release`).
 
 ---
 

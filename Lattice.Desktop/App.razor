@@ -1,6 +1,64 @@
-<main>
-    <header>
-        <h1>Lattice</h1>
-        <p>Symbolic, read-only workspace inspector</p>
+@namespace Lattice.Desktop
+@inject DesktopSession Session
+
+<main class="shell">
+    <header class="topbar">
+        <div class="identity">
+            <h1 class="brand">Lattice</h1>
+            <span class="badge">SYMBOLIC · READ-ONLY · DESKTOP 0.1</span>
+        </div>
+        <div class="workspace-indicator" id="active-workspace" data-connected="@(Session.IsConnected ? "true" : "false")">
+            <span class="indicator-label">Active workspace</span>
+            @if (Session.IsConnected)
+            {
+                <code class="indicator-path">@Session.ConnectedWorkspacePath</code>
+            }
+            else
+            {
+                <span class="indicator-empty">Not connected</span>
+            }
+        </div>
     </header>
+
+    <section class="panel connection-panel" aria-labelledby="connect-heading">
+        <h2 id="connect-heading" class="section-title">Workspace Connection</h2>
+        <form id="workspace-form" @onsubmit="() => Session.ConnectAsync()" @onsubmit:preventDefault>
+            <fieldset disabled="@Session.IsBusy" class="connection-row">
+                <label for="workspace-path">Local folder path</label>
+                <div class="input-action-row">
+                    <input
+                        id="workspace-path"
+                        type="text"
+                        @bind="Session.WorkspacePathInput"
+                        @bind:event="oninput"
+                        placeholder="Enter an existing local directory path"
+                        autocomplete="off" />
+                    <button id="connect-workspace" type="submit" class="primary">
+                        @(Session.IsConnecting ? "Connecting…" : "Connect")
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+        @if (Session.WorkspaceError is not null)
+        {
+            <p id="workspace-error" class="alert error" role="alert">@Session.WorkspaceError</p>
+        }
+        <p id="session-status" class="status-line" role="status" aria-live="polite">@Session.StatusMessage</p>
+    </section>
+
+    <section class="panel results-panel" id="workspace-results" aria-labelledby="results-heading">
+        <h2 id="results-heading" class="section-title">Requests &amp; Evidence</h2>
+        @if (Session.IsConnected)
+        {
+            <p class="empty-note">
+                Connected to <code>@Session.ConnectedWorkspacePath</code> in read-only mode.
+            </p>
+        }
+        else
+        {
+            <p class="empty-note">
+                No workspace is active yet. Enter a local directory path above and select <strong>Connect</strong>.
+            </p>
+        }
+    </section>
 </main>
