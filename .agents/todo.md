@@ -139,28 +139,30 @@ Desktop 0.2 is complete when:
 
 ### 2.1 Natural phrasings for source search
 
-- [ ] Add deterministic patterns for all search phrasings in the Definition of done.
-- [ ] Support a single captured identifier surrounded by known literal words where needed, including fixed trailing words such as "appear", "used in this project", and "used throughout this project".
-- [ ] Prefer the smallest compatible extension to the existing pattern representation/interpreter; no fuzzy matcher, embeddings, ML, or unrestricted regex routing.
-- [ ] Match case-insensitively and tolerate ordinary terminal punctuation while preserving the captured identifier.
-- [ ] Keep competing interpretations explicit and deterministic; never silently choose an arbitrary action.
-- [ ] Preserve explicit forms like `find symbol WorkspaceRoot` as optional compatibility aliases, but do not present them as the primary interaction.
+- [x] Add deterministic patterns for all search phrasings in the Definition of done.
+- [x] Support a single captured identifier surrounded by known literal words where needed, including fixed trailing words such as "appear", "used in this project", and "used throughout this project".
+- [x] Prefer the smallest compatible extension to the existing pattern representation/interpreter; no fuzzy matcher, embeddings, ML, or unrestricted regex routing.
+- [x] Match case-insensitively and tolerate ordinary terminal punctuation while preserving the captured identifier.
+- [x] Keep competing interpretations explicit and deterministic; never silently choose an arbitrary action.
+- [x] Preserve explicit forms like `find symbol WorkspaceRoot` as optional compatibility aliases, but do not present them as the primary interaction.
 
 ### 2.2 Natural phrasings for file inspection
 
-- [ ] Add deterministic patterns for "show me", "open the file", "read", and "what's in" phrasings.
-- [ ] Preserve path characters, extensions, separators, and valid spaces; reject ambiguity rather than guessing.
-- [ ] Keep reads routed through the existing `ReadFileTool` and workspace access boundary.
-- [ ] Preserve `inspect <relative-path>` as an optional compatibility alias.
+- [x] Add deterministic patterns for "show me", "open the file", "read", and "what's in" phrasings.
+- [x] Preserve path characters, extensions, separators, and valid spaces; reject ambiguity rather than guessing.
+- [x] Keep reads routed through the existing `ReadFileTool` and workspace access boundary.
+- [x] Preserve `inspect <relative-path>` as an optional compatibility alias.
 
 ### 2.3 Verify the phrase grammar
 
-- [ ] Add unit tests for every required phrase, casing, sentence punctuation, identifiers with underscores/dots, and file paths with extensions.
-- [ ] Add negative tests for unsupported phrasing, empty/missing captures, ambiguous matches, and malformed templates.
-- [ ] Verify existing pattern catalogs remain compatible, or document/test a deliberate schema-version change.
-- [ ] Preserve original user text and expose the matched pattern/capture for diagnostics.
+- [x] Add unit tests for every required phrase, casing, sentence punctuation, identifiers with underscores/dots, and file paths with extensions.
+- [x] Add negative tests for unsupported phrasing, empty/missing captures, ambiguous matches, and malformed templates.
+- [x] Verify existing pattern catalogs remain compatible, or document/test a deliberate schema-version change.
+- [x] Preserve original user text and expose the matched pattern/capture for diagnostics.
 
 **Done when:** All required phrases map deterministically to existing bounded intents, while ambiguity and unsupported input remain explicit.
+
+> **Phase 2 note:** Verified in Windows/.NET 10 CI run `42404988743` on PR #12 (`Lattice.Core.Tests`: 789/789, `Lattice.Desktop.Tests`: 58/58, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 

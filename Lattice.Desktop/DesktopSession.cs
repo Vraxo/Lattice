@@ -150,8 +150,9 @@ internal sealed class DesktopSession(
             DesktopTurnEntry failure = new(
                 displayMessage,
                 DesktopTurnKind.UnexpectedError,
-                $"Unexpected error while handling your message: {exception.Message}",
-                ConnectedWorkspacePath);
+                "I ran into an unexpected error while handling your message and couldn't complete it. Your message is still in the composer if you'd like to try again.",
+                ConnectedWorkspacePath,
+                ErrorCode: exception.GetType().Name);
             _entries.Add(failure);
             StatusMessage = failure.Summary;
         }

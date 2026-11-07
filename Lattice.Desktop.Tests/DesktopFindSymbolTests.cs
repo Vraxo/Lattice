@@ -20,7 +20,7 @@ public sealed class DesktopFindSymbolTests
 
         DesktopTurnEntry entry = Assert.Single(session.Entries);
         Assert.Equal(DesktopTurnKind.SearchResults, entry.Kind);
-        Assert.Equal("Found 'WidgetEngine' in 2 files, on 2 lines.", entry.Summary);
+        Assert.Equal("I found 2 matching occurrences of 'WidgetEngine' across 2 files.", entry.Summary);
         Assert.Equal(2, entry.SafeEvidence.Length);
         Assert.Contains(
             entry.SafeEvidence,
@@ -49,7 +49,7 @@ public sealed class DesktopFindSymbolTests
 
         DesktopTurnEntry entry = Assert.Single(session.Entries);
         Assert.Equal(DesktopTurnKind.SearchResults, entry.Kind);
-        Assert.Equal("Found 'uniquetoken' in 1 file, on 1 line.", entry.Summary);
+        Assert.Equal("I found 1 matching occurrence of 'uniquetoken' in 1 file.", entry.Summary);
         EvidenceReference single = Assert.Single(entry.SafeEvidence);
         Assert.Equal("src/UniqueToken.cs", single.RelativePath);
         Assert.Equal(1, single.StartLine);
@@ -68,7 +68,7 @@ public sealed class DesktopFindSymbolTests
         DesktopTurnEntry entry = Assert.Single(session.Entries);
         Assert.Equal(DesktopTurnKind.NoMatches, entry.Kind);
         Assert.Empty(entry.SafeEvidence);
-        Assert.Contains("No occurrences of 'AbsentSymbol'", entry.Summary, StringComparison.Ordinal);
+        Assert.Contains("no literal source-text occurrences of 'AbsentSymbol'", entry.Summary, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -146,7 +146,8 @@ public sealed class DesktopFindSymbolTests
 
         DesktopTurnEntry entry = Assert.Single(session.Entries);
         Assert.Equal(DesktopTurnKind.AmbiguousInput, entry.Kind);
-        Assert.Contains("Ambiguous request", entry.Summary, StringComparison.Ordinal);
+        Assert.Contains("Did you want me to open the file 'README.md'?", entry.Summary, StringComparison.Ordinal);
+        Assert.DoesNotContain("show.inspect", entry.Summary, StringComparison.Ordinal);
         Assert.Empty(entry.SafeEvidence);
         Assert.Null(entry.FileContents);
     }

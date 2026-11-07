@@ -102,7 +102,8 @@ public sealed class DesktopConversationWorkflowTests
         Assert.Equal(3, cards.Count);
         Assert.Equal("FileInspected", cards[0].GetAttribute("data-turn-kind"));
         Assert.Equal("UnexpectedError", cards[1].GetAttribute("data-turn-kind"));
-        Assert.Contains("Simulated storage failure", cards[1].TextContent, StringComparison.Ordinal);
+        Assert.Contains("unexpected error", cards[1].TextContent, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("InvalidOperationException", cards[1].TextContent, StringComparison.Ordinal);
         Assert.Equal("SearchResults", cards[2].GetAttribute("data-turn-kind"));
         Assert.False(session.IsBusy);
     }
