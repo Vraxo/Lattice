@@ -60,9 +60,9 @@ public sealed class IntentPatternTests
             out ImmutableArray<string> suffixLiterals,
             out _));
 
-        Assert.Equal(["can", "you", "find", "where"], prefixLiterals);
+        Assert.Equal<IEnumerable<string>>(["can", "you", "find", "where"], prefixLiterals);
         Assert.Equal("symbol", slotName);
-        Assert.Equal(["is", "used", "throughout", "this", "project"], suffixLiterals);
+        Assert.Equal<IEnumerable<string>>(["is", "used", "throughout", "this", "project"], suffixLiterals);
     }
 
     [Theory]

@@ -81,9 +81,9 @@ public sealed class IntentPatternCatalogTests
         Assert.True(v10.IsSuccess, v10.Error?.Message);
         Assert.True(v11.IsSuccess, v11.Error?.Message);
         IntentPattern pattern = Assert.Single(v11.Value.Patterns);
-        Assert.Equal(["where", "does"], pattern.Literals);
+        Assert.Equal<IEnumerable<string>>(["where", "does"], pattern.Literals);
         Assert.Equal("symbol", pattern.SlotName);
-        Assert.Equal(["appear"], pattern.SuffixLiterals);
+        Assert.Equal<IEnumerable<string>>(["appear"], pattern.SuffixLiterals);
     }
 
     [Theory]
