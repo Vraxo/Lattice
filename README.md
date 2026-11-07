@@ -48,6 +48,7 @@ It accepts controlled statements and registers only the calculator. It is not th
 ## Documentation
 
 - [Active implementation TODO](.agents/todo.md) — ordered tasks and acceptance checkboxes.
+- [Sequential Desktop 0.1 build plan](.agents/todo.md)
 - [Desktop product direction and first acceptance target](docs/DESKTOP_DIRECTION.md)
 - [Documentation index](docs/README.md)
 - [Historical research-first specifications and milestone records](docs/archive/research-first/)

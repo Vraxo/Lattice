@@ -6,11 +6,16 @@ Read these files first, in this order:
 
 1. `README.md`
 2. `docs/DESKTOP_DIRECTION.md`
+3. `.agents/todo.md` — the active sequential implementation checklist
 3. `.agents/todo.md`
 
 **The active execution queue is `.agents/todo.md`.** Start at its first unchecked task, follow the tasks in order, and check items off only after their acceptance criteria and verification pass. Do not revive the archived M0–M10 roadmap.
 
 Everything under `docs/archive/research-first/` is historical project material. Do not treat its PRD, architecture document, M0–M10 roadmap, decision log, work queue, capability snapshot, or old AI work protocol as current marching orders. Do not continue the old research-first milestones unless the user explicitly reopens one.
+
+## Execution order
+
+Read `.agents/todo.md` fully, then begin at the first unchecked item. Work through its phases in order, update the checkboxes only when each task's acceptance criteria are genuinely met, and stop at the final checkpoint. Do not invent or begin a follow-on roadmap.
 
 ## Current objective
 

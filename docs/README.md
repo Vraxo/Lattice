@@ -2,6 +2,8 @@
 
 ## Active
 
+- [Sequential Desktop 0.1 build plan](../.agents/todo.md) — ordered phases, checkboxes, and acceptance gates.
+
 - [Implementation TODO](../.agents/todo.md) — ordered, checkable implementation tasks; start with the first unchecked task.
 - [Desktop direction](DESKTOP_DIRECTION.md) — current product scope, first workflows, safety boundary, and acceptance target.
 - [Repository README](../README.md) — project status and build/test entry points.
