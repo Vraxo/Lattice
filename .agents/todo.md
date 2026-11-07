@@ -229,14 +229,22 @@ Desktop 0.2 is complete when:
 
 ### 5.2 CI and documentation
 
-- [ ] Run full Release restore/build/test on Windows/.NET 10 through the draft PR.
-- [ ] Verify final CI with exact per-project test counts and zero failures/skips.
+- [x] Run full Release restore/build/test on Windows/.NET 10 through the draft PR.
+- [x] Verify final CI with exact per-project test counts and zero failures/skips.
 - [x] Update README with conversational interaction and natural-language examples; remove command-console framing.
 - [x] Update `docs/windows-smoke-test.md` to test conversational phrases and follow-up references.
-- [ ] Record exact verification evidence and leave manual Windows launch unchecked.
+- [x] Record exact verification evidence and leave manual Windows launch unchecked.
 - [ ] Manual Windows Photino GUI launch verification (`docs/windows-smoke-test.md`) — requires interactive Windows desktop session.
 
 **Done when:** Desktop 0.2 is implemented and CI-verified, with only the genuinely manual GUI smoke test remaining for the user.
+
+> **Phase 5 verification log:**
+> - Pull Request: `https://github.com/Vraxo/Lattice/pull/12` (`arena/9b7807a5-lattice` -> `main`)
+> - Windows `.NET 10` Release CI run `42406051699` (commit `11f0322`):
+>   - `Lattice.Core.Tests`: **789 passed**, 0 failed, 0 skipped
+>   - `Lattice.Desktop.Tests`: **71 passed**, 0 failed, 0 skipped
+>   - Total: **860 passed**, 0 failed, 0 skipped, 0 new warnings
+> - Manual Windows Photino GUI launch (`docs/windows-smoke-test.md`) remains unchecked for interactive Windows verification.
 
 ---
 
