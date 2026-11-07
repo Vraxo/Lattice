@@ -203,27 +203,33 @@ public sealed class DesktopInspectTests
 
     private static void CreateDirectoryLinkOrJunction(string linkPath, string targetPath)
     {
-        if (OperatingSystem.IsWindows())
+        try
         {
-            ProcessStartInfo startInfo = new("cmd.exe")
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-            };
-            startInfo.ArgumentList.Add("/c");
-            startInfo.ArgumentList.Add("mklink");
-            startInfo.ArgumentList.Add("/J");
-            startInfo.ArgumentList.Add(linkPath);
-            startInfo.ArgumentList.Add(targetPath);
-
-            using Process process = Process.Start(startInfo)!;
-            process.WaitForExit();
-            Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+            Directory.CreateSymbolicLink(linkPath, targetPath);
             return;
         }
+        catch (Exception exception) when (
+            OperatingSystem.IsWindows()
+            && exception is IOException or UnauthorizedAccessException)
+        {
+            // Fall back to an unprivileged NTFS junction when SeCreateSymbolicLinkPrivilege is absent.
+        }
 
-        Directory.CreateSymbolicLink(linkPath, targetPath);
+        ProcessStartInfo startInfo = new("cmd.exe")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+        };
+        startInfo.ArgumentList.Add("/c");
+        startInfo.ArgumentList.Add("mklink");
+        startInfo.ArgumentList.Add("/J");
+        startInfo.ArgumentList.Add(linkPath);
+        startInfo.ArgumentList.Add(targetPath);
+
+        using Process process = Process.Start(startInfo)!;
+        process.WaitForExit();
+        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
     }
 }
