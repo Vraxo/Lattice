@@ -10,11 +10,13 @@ internal sealed class DesktopSession(
 
     public string WorkspacePathInput { get; set; } = string.Empty;
 
-    public WorkspaceRoot? ActiveWorkspace { get; private set; }
+    public ConnectedWorkspace? ActiveConnection { get; private set; }
+
+    public WorkspaceRoot? ActiveWorkspace => ActiveConnection?.Root;
 
     public string? ConnectedWorkspacePath => ActiveWorkspace?.FullPath;
 
-    public bool IsConnected => ActiveWorkspace is not null;
+    public bool IsConnected => ActiveConnection is not null;
 
     public bool IsConnecting { get; private set; }
 
@@ -47,9 +49,9 @@ internal sealed class DesktopSession(
                 return;
             }
 
-            ActiveWorkspace = result.Workspace;
-            WorkspacePathInput = result.Workspace.FullPath;
-            StatusMessage = $"Connected to '{result.Workspace.FullPath}' (read-only).";
+            ActiveConnection = result.Workspace;
+            WorkspacePathInput = result.Workspace.Root.FullPath;
+            StatusMessage = $"Connected to '{result.Workspace.Root.FullPath}' (read-only).";
         }
         catch (Exception exception)
         {

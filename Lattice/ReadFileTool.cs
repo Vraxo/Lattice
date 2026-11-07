@@ -1,10 +1,8 @@
-using System.Text;
-
 namespace Lattice.Core;
 
 public sealed class ReadFileTool : ITool
 {
-    public const int MaxBytes = 262_144;
+    public const int MaxBytes = WorkspaceFileAccess.MaxBytes;
     private const string PathParameter = "path";
     private readonly WorkspaceRoot _root;
 
@@ -35,58 +33,15 @@ public sealed class ReadFileTool : ITool
         }
 
         string requested = value.AsString();
-        if (!_root.TryResolve(requested, out string? fullPath))
+        Result<string> resolved = WorkspaceFileAccess.ResolveReadableFile(_root, requested);
+        if (!resolved.IsSuccess)
         {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.PathOutsideRoot,
-                $"Path '{requested}' is not inside the workspace root."));
+            return ToolResult.Failure(resolved.Error!);
         }
 
-        if (Directory.Exists(fullPath))
-        {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.NotAFile,
-                $"Path '{requested}' is a directory."));
-        }
-
-        if (!File.Exists(fullPath))
-        {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.PathNotFound,
-                $"File '{requested}' was not found."));
-        }
-
-        FileInfo info = new(fullPath);
-        if (info.Length > MaxBytes)
-        {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.FileTooLarge,
-                $"File '{requested}' is {info.Length} bytes; the limit is {MaxBytes}."));
-        }
-
-        try
-        {
-            // Reject invalid UTF-8 instead of silently substituting replacement characters.
-            string text = File.ReadAllText(fullPath, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true));
-            return ToolResult.Success(ArgumentValue.FromString(text));
-        }
-        catch (DecoderFallbackException)
-        {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.EncodingInvalid,
-                $"File '{requested}' is not valid UTF-8."));
-        }
-        catch (IOException exception)
-        {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.ReadFailed,
-                $"File '{requested}' could not be read: {exception.Message}"));
-        }
-        catch (UnauthorizedAccessException exception)
-        {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.ReadFailed,
-                $"File '{requested}' could not be read: {exception.Message}"));
-        }
+        Result<string> read = WorkspaceFileAccess.Read(resolved.Value, requested);
+        return read.IsSuccess
+            ? ToolResult.Success(ArgumentValue.FromString(read.Value))
+            : ToolResult.Failure(read.Error!);
     }
 }

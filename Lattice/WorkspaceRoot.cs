@@ -5,8 +5,11 @@ namespace Lattice.Core;
 /// path that would escape the root.
 /// </summary>
 /// <remarks>
-/// The containment check is lexical. A symbolic link inside the root that points outside it
-/// is not detected; resolving links is deferred until there is a demonstrated need.
+/// <see cref="TryResolve"/> enforces lexical containment within <see cref="FullPath"/>.
+/// Shared workspace operations in <see cref="WorkspaceFileAccess"/> layer conservative static
+/// symlink and reparse-point checks on top of lexical resolution. Those checks inspect
+/// filesystem metadata at access/enumeration time and are not race-resistant against a path
+/// component being replaced concurrently with a link (TOCTOU).
 /// </remarks>
 public sealed class WorkspaceRoot
 {
@@ -24,10 +27,12 @@ public sealed class WorkspaceRoot
 
     public string FullPath { get; }
 
+    public bool IsLinkOrReparsePoint => WorkspaceFileAccess.IsLinkOrReparsePoint(FullPath);
+
     public bool TryResolve(string relativePath, out string fullPath)
     {
         fullPath = string.Empty;
-        if (string.IsNullOrWhiteSpace(relativePath))
+        if (string.IsNullOrWhiteSpace(relativePath) || relativePath.Contains('\0', StringComparison.Ordinal))
         {
             return false;
         }
@@ -37,8 +42,20 @@ public sealed class WorkspaceRoot
             return false;
         }
 
-        string candidate = Path.GetFullPath(Path.Combine(FullPath, relativePath));
-        string relative = Path.GetRelativePath(FullPath, candidate);
+        string candidate;
+        string relative;
+        try
+        {
+            candidate = Path.GetFullPath(Path.Combine(FullPath, relativePath));
+            relative = Path.GetRelativePath(FullPath, candidate);
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException
+                or NotSupportedException
+                or PathTooLongException)
+        {
+            return false;
+        }
 
         // A path that escapes the root yields "..", "../x", or (across volumes) a rooted path.
         if (Path.IsPathRooted(relative))

@@ -75,22 +75,15 @@ public sealed class FileSearchTool : ITool
             requested = pathValue.AsString();
         }
 
-        if (!_root.TryResolve(requested, out string? startPath))
+        Result<string> resolvedStart = WorkspaceFileAccess.ResolveReadableDirectory(_root, requested);
+        if (!resolvedStart.IsSuccess)
         {
-            return ToolResult.Failure(new Error(
-                FileToolErrorCodes.PathOutsideRoot,
-                $"Path '{requested}' is not inside the workspace root."));
-        }
-
-        if (!Directory.Exists(startPath))
-        {
-            string code = File.Exists(startPath) ? FileToolErrorCodes.NotADirectory : FileToolErrorCodes.PathNotFound;
-            return ToolResult.Failure(new Error(code, $"Directory '{requested}' was not found."));
+            return ToolResult.Failure(resolvedStart.Error!);
         }
 
         List<SearchMatch> matches = [];
         bool truncated = false;
-        foreach (string file in EnumerateSearchableFiles(startPath))
+        foreach (string file in EnumerateSearchableFiles(resolvedStart.Value))
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (matches.Count >= MaxMatches)
@@ -111,13 +104,9 @@ public sealed class FileSearchTool : ITool
 
     private IEnumerable<string> EnumerateSearchableFiles(string startPath)
     {
-        EnumerationOptions options = new()
-        {
-            RecurseSubdirectories = true,
-            IgnoreInaccessible = true,
-            AttributesToSkip = FileAttributes.None,
-        };
-        foreach (string file in Directory.EnumerateFiles(startPath, "*", options))
+        foreach (string file in WorkspaceFileAccess.EnumerateFilesRecursivelySafely(
+            startPath,
+            directory => !IsExcluded(directory)))
         {
             if (!IsExcluded(file))
             {
@@ -152,6 +141,11 @@ public sealed class FileSearchTool : ITool
         ref bool truncated,
         CancellationToken cancellationToken)
     {
+        if (WorkspaceFileAccess.IsLinkOrReparsePoint(file))
+        {
+            return;
+        }
+
         string text;
         try
         {

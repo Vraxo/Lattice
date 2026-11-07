@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.1 Build Plan
 
-> **Status:** in progress — Phases 0 and 1.1 verified in Windows CI; Phase 1.2 window and workspace connection tests queued for CI verification. This is the active, sequential implementation checklist.
+> **Status:** in progress — Phase 1.2 verified in Windows CI (run `42392810055`); Phase 2 static workspace symlink/reparse-point safeguards queued for CI verification. This is the active, sequential implementation checklist.
 >
 > **First deliverable:** a runnable Lattice desktop application that connects to a local code workspace, inspects a real file, and finds source-text occurrences with visible file-and-line evidence.
 >
@@ -111,20 +111,20 @@ Use the following unless an actual compatibility/build issue requires a document
 
 ### 2.1 Inspect and implement static link/reparse-point checks
 
-- [ ] Trace all direct-read and recursive-search path handling from the UI-facing composition down to the shared workspace file-access boundary.
-- [ ] Implement conservative static symlink/reparse-point protection at the shared workspace access boundary rather than adding UI-only checks.
-- [ ] Reject direct file access when the root-to-target path contains a symlink or reparse-point component.
-- [ ] During recursive search/list traversal, skip linked files and directories rather than following them.
-- [ ] Preserve ordinary in-root file access and existing lexical traversal protection.
-- [ ] Keep the threat-model statement explicit: this is a static check and is **not** race-resistant against a link being replaced concurrently.
+- [x] Trace all direct-read and recursive-search path handling from the UI-facing composition down to the shared workspace file-access boundary.
+- [x] Implement conservative static symlink/reparse-point protection at the shared workspace access boundary rather than adding UI-only checks.
+- [x] Reject direct file access when the root-to-target path contains a symlink or reparse-point component.
+- [x] During recursive search/list traversal, skip linked files and directories rather than following them.
+- [x] Preserve ordinary in-root file access and existing lexical traversal protection.
+- [x] Keep the threat-model statement explicit: this is a static check and is **not** race-resistant against a link being replaced concurrently.
 
 ### 2.2 Test the safety boundary
 
-- [ ] Add tests for a normal file under the workspace root.
-- [ ] Add tests for .. traversal and rooted/absolute path attempts.
-- [ ] Add tests for a linked file and a linked directory where the platform supports creating them; skip only platform-specific cases that genuinely cannot be created, and explain the limitation.
-- [ ] Verify linked entries are not read or traversed and that ordinary files still work.
-- [ ] Verify the first Desktop composition still grants read-only access; no write or command capability is registered.
+- [x] Add tests for a normal file under the workspace root.
+- [x] Add tests for .. traversal and rooted/absolute path attempts.
+- [x] Add tests for a linked file and a linked directory where the platform supports creating them; skip only platform-specific cases that genuinely cannot be created, and explain the limitation.
+- [x] Verify linked entries are not read or traversed and that ordinary files still work.
+- [x] Verify the first Desktop composition still grants read-only access; no write or command capability is registered.
 
 **Done when:** Existing workspace reads/searches remain functional, linked paths cannot be followed by the static checks, the behavior is test-covered, and no write/command path is exposed.
 

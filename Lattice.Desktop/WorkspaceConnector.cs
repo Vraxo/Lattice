@@ -45,7 +45,14 @@ internal static class WorkspaceConnector
 
         try
         {
-            return WorkspaceConnectionResult.Succeeded(new WorkspaceRoot(fullPath));
+            WorkspaceRoot root = new(fullPath);
+            if (root.IsLinkOrReparsePoint)
+            {
+                return WorkspaceConnectionResult.Failed(
+                    $"Workspace directory '{fullPath}' is a symbolic link or reparse point. Connect the target directory directly.");
+            }
+
+            return WorkspaceConnectionResult.Succeeded(new ConnectedWorkspace(root));
         }
         catch (Exception exception) when (
             exception is DirectoryNotFoundException
