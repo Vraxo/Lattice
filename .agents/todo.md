@@ -113,23 +113,25 @@ Desktop 0.2 is complete when:
 
 ### 1.1 Build the conversation layout
 
-- [ ] Replace the "Workspace Request" panel and "Run" command form with a conventional chat layout.
-- [ ] Give user messages and assistant replies distinct alignment, styling, and accessible semantics.
-- [ ] Keep history chronological and preserve inline file viewers/evidence cards inside assistant turns.
-- [ ] Keep the workspace indicator visible but compact; the conversation should dominate the window.
-- [ ] Add a useful empty state inviting the user to ask about the connected codebase.
-- [ ] Remove visible instructions that teach `inspect <path>` or `find symbol <name>` as required syntax.
+- [x] Replace the "Workspace Request" panel and "Run" command form with a conventional chat layout.
+- [x] Give user messages and assistant replies distinct alignment, styling, and accessible semantics.
+- [x] Keep history chronological and preserve inline file viewers/evidence cards inside assistant turns.
+- [x] Keep the workspace indicator visible but compact; the conversation should dominate the window.
+- [x] Add a useful empty state inviting the user to ask about the connected codebase.
+- [x] Remove visible instructions that teach `inspect <path>` or `find symbol <name>` as required syntax.
 
 ### 1.2 Implement the chat composer
 
-- [ ] Replace the single-line input with a multiline textarea and a clearly labeled Send action.
-- [ ] Enter submits; Shift+Enter inserts a newline. Ensure reliable, accessible behavior.
-- [ ] Keep sending disabled while a request is processing; show a subtle in-conversation processing state, not "Running command".
-- [ ] Clear the composer only after a message is accepted for processing; do not lose text on validation/unexpected failure.
-- [ ] Keep focus behavior and scrolling usable as turns are appended.
-- [ ] Add bUnit tests for composer rendering, input, Enter/Shift+Enter, Send, busy state, and history display.
+- [x] Replace the single-line input with a multiline textarea and a clearly labeled Send action.
+- [x] Enter submits; Shift+Enter inserts a newline. Ensure reliable, accessible behavior.
+- [x] Keep sending disabled while a request is processing; show a subtle in-conversation processing state, not "Running command".
+- [x] Clear the composer only after a message is accepted for processing; do not lose text on validation/unexpected failure.
+- [x] Keep focus behavior and scrolling usable as turns are appended.
+- [x] Add bUnit tests for composer rendering, input, Enter/Shift+Enter, Send, busy state, and history display.
 
 **Done when:** A user sends a conversational message, sees it as a user bubble, and receives the existing real workspace operation's result as an assistant turn. The interface no longer resembles a command console.
+
+> **Phase 1 note:** Verified in Windows/.NET 10 CI run `42404067427` on PR #12 (`Lattice.Core.Tests`: 749/749, `Lattice.Desktop.Tests`: 44/44, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 

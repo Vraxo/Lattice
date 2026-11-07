@@ -9,6 +9,16 @@ public sealed record IntentPattern
         RequestIntentKind intent,
         ImmutableArray<string> literals,
         string? slotName)
+        : this(id, intent, literals, slotName, [])
+    {
+    }
+
+    public IntentPattern(
+        string id,
+        RequestIntentKind intent,
+        ImmutableArray<string> literals,
+        string? slotName,
+        ImmutableArray<string> suffixLiterals)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -25,23 +35,26 @@ public sealed record IntentPattern
             throw new ArgumentException("A pattern must have at least one literal token.", nameof(literals));
         }
 
-        foreach (string literal in literals)
-        {
-            if (string.IsNullOrWhiteSpace(literal) || literal.Contains('{') || literal.Contains('}'))
-            {
-                throw new ArgumentException($"Literal token '{literal}' is not valid.", nameof(literals));
-            }
-        }
+        ValidateLiterals(literals, nameof(literals));
 
         if (slotName is not null && string.IsNullOrWhiteSpace(slotName))
         {
             throw new ArgumentException("Slot name must not be empty when present.", nameof(slotName));
         }
 
+        ImmutableArray<string> normalizedSuffix = suffixLiterals.IsDefault ? [] : suffixLiterals;
+        if (slotName is null && !normalizedSuffix.IsEmpty)
+        {
+            throw new ArgumentException("Suffix literals require a capture slot.", nameof(suffixLiterals));
+        }
+
+        ValidateLiterals(normalizedSuffix, nameof(suffixLiterals));
+
         Id = id;
         Intent = intent;
         Literals = literals;
         SlotName = slotName;
+        SuffixLiterals = normalizedSuffix;
     }
 
     public string Id { get; }
@@ -52,19 +65,55 @@ public sealed record IntentPattern
 
     public string? SlotName { get; }
 
+    public ImmutableArray<string> SuffixLiterals { get; }
+
+    public int LiteralCount => Literals.Length + SuffixLiterals.Length;
+
     /// <summary>
     /// Splits a template such as <c>what is {topic}</c> into literal tokens and an optional
     /// trailing slot name. At most one slot is allowed and it must be the final token.
     /// </summary>
-    /// <returns></returns>
     public static bool TryParseTemplate(
         string template,
         out ImmutableArray<string> literals,
         out string? slotName,
         out string? error)
     {
+        if (!TryParseTemplate(
+            template,
+            out literals,
+            out slotName,
+            out ImmutableArray<string> suffixLiterals,
+            out error))
+        {
+            return false;
+        }
+
+        if (!suffixLiterals.IsEmpty)
+        {
+            literals = [];
+            slotName = null;
+            error = "A slot must be the final token of a pattern.";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Splits a template such as <c>where does {symbol} appear</c> into leading literal tokens,
+    /// an optional single capture slot, and optional trailing literal tokens.
+    /// </summary>
+    public static bool TryParseTemplate(
+        string template,
+        out ImmutableArray<string> literals,
+        out string? slotName,
+        out ImmutableArray<string> suffixLiterals,
+        out string? error)
+    {
         literals = [];
         slotName = null;
+        suffixLiterals = [];
         error = null;
         if (string.IsNullOrWhiteSpace(template))
         {
@@ -73,7 +122,8 @@ public sealed record IntentPattern
         }
 
         string[] tokens = template.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-        ImmutableArray<string>.Builder literalBuilder = ImmutableArray.CreateBuilder<string>();
+        ImmutableArray<string>.Builder prefixBuilder = ImmutableArray.CreateBuilder<string>();
+        ImmutableArray<string>.Builder suffixBuilder = ImmutableArray.CreateBuilder<string>();
         for (int i = 0; i < tokens.Length; i++)
         {
             string token = tokens[i];
@@ -98,9 +148,9 @@ public sealed record IntentPattern
                     return false;
                 }
 
-                if (i != tokens.Length - 1)
+                if (prefixBuilder.Count == 0)
                 {
-                    error = "A slot must be the final token of a pattern.";
+                    error = "A pattern must start with at least one literal token before its slot.";
                     return false;
                 }
 
@@ -108,21 +158,27 @@ public sealed record IntentPattern
                 continue;
             }
 
-            literalBuilder.Add(token);
+            if (slotName is null)
+            {
+                prefixBuilder.Add(token);
+            }
+            else
+            {
+                suffixBuilder.Add(token);
+            }
         }
 
-        if (literalBuilder.Count == 0)
+        if (prefixBuilder.Count == 0)
         {
             error = "A pattern must have at least one literal token.";
             return false;
         }
 
-        literals = literalBuilder.ToImmutable();
+        literals = prefixBuilder.ToImmutable();
+        suffixLiterals = suffixBuilder.ToImmutable();
         return true;
     }
 
-    // ImmutableArray<T> compares by reference of its backing array, so the record's
-    // synthesized equality would treat equal-but-distinct literal sets as unequal.
     public bool Equals(IntentPattern? other)
     {
         if (other is null)
@@ -133,7 +189,8 @@ public sealed record IntentPattern
         return Id == other.Id
             && Intent == other.Intent
             && SlotName == other.SlotName
-            && Literals.SequenceEqual(other.Literals);
+            && Literals.SequenceEqual(other.Literals)
+            && SuffixLiterals.SequenceEqual(other.SuffixLiterals);
     }
 
     public override int GetHashCode()
@@ -147,6 +204,22 @@ public sealed record IntentPattern
             hash.Add(literal);
         }
 
+        foreach (string suffix in SuffixLiterals)
+        {
+            hash.Add(suffix);
+        }
+
         return hash.ToHashCode();
+    }
+
+    private static void ValidateLiterals(ImmutableArray<string> tokens, string paramName)
+    {
+        foreach (string literal in tokens)
+        {
+            if (string.IsNullOrWhiteSpace(literal) || literal.Contains('{') || literal.Contains('}'))
+            {
+                throw new ArgumentException($"Literal token '{literal}' is not valid.", paramName);
+            }
+        }
     }
 }

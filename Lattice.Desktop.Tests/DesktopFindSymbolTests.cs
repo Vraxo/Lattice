@@ -117,7 +117,7 @@ public sealed class DesktopFindSymbolTests
     [InlineData("explain Calculator")]
     [InlineData("find symbol")]
     [InlineData("find Calculator")]
-    [InlineData("open README.md")]
+    [InlineData("refactor README.md")]
     [InlineData("find symbol Two Words")]
     public async Task UnsupportedRequestsAreNotSilentlyConverted(string request)
     {
