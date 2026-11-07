@@ -2,7 +2,13 @@
 
 Lattice is a **symbolic, tool-using coding assistant** built around explicit state, bounded actions, and evidence from the user's workspace. It does not use an LLM or a trained generative model.
 
-## Desktop 0.1 (`Lattice.Desktop`)
+## Desktop application
+
+Desktop 0.1 delivered a read-only PhotinoX.Blazor workspace interface. **Desktop 0.2 is the next active increment:** replacing its command-like request form with a conversational interface and ordinary bounded natural-language phrasing.
+
+The active assignment is [`.agents/todo.md`](.agents/todo.md). The 0.1 implementation checklist is archived under [`.agents/archive/desktop-0.1.md`](.agents/archive/desktop-0.1.md).
+
+### Desktop 0.1 baseline (`Lattice.Desktop`)
 
 Lattice Desktop 0.1 provides a read-only PhotinoX.Blazor desktop window for connecting a local code workspace, inspecting UTF-8 files, and running grounded source-text symbol searches with visible file-and-line citations.
 
@@ -30,7 +36,7 @@ dotnet run --project Lattice.Cli
 
 ### Supported requests
 
-After entering an existing local folder path and selecting **Connect**, Desktop 0.1 accepts two read-only request forms:
+The currently merged Desktop 0.1 baseline accepts these read-only request forms; Desktop 0.2 is replacing the command-oriented interaction with natural phrasing:
 
 | Request form | Behavior | Example |
 |---|---|---|

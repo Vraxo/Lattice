@@ -2,6 +2,9 @@
 
 ## Active
 
+- [Desktop 0.2 conversational implementation plan](../.agents/todo.md) — active sequential assignment and acceptance gates.
+- [Desktop 0.1 completed checklist](../.agents/archive/desktop-0.1.md) — preserved implementation history.
+
 - [Sequential Desktop 0.1 build plan](../.agents/todo.md) — ordered phases, checkboxes, and acceptance gates.
 - [Windows desktop smoke test](windows-smoke-test.md) — manual Photino window launch and Connect → Inspect → Find verification steps.
 - [Desktop direction](DESKTOP_DIRECTION.md) — current product scope, first workflows, safety boundary, and acceptance target.

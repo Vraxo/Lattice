@@ -115,3 +115,23 @@ Do not resume M9/M10 or introduce embeddings, semantic retrieval, broad natural-
 Do not implement file editing, patch preview/application, arbitrary shell commands, or build/test command execution as part of Desktop 0.1. A later, separately scoped increment may add a narrow edit-preview flow with explicit user approval after the read-only product is working.
 
 **The priority is a working application that can be used and judged.**
+
+
+## 9. Desktop 0.2 — conversational interaction
+
+Desktop 0.1 proved the workspace operations but exposed them as explicit request commands. The next active increment changes the primary interaction to chat.
+
+The user should be able to write ordinary, supported phrases such as:
+
+- "Where is WorkspaceRoot used in this project?"
+- "Can you find where WorkspaceRoot is used throughout this project?"
+- "Show me Lattice/WorkspaceRoot.cs."
+- "What's in Lattice/WorkspaceRoot.cs?"
+
+The interface should display separate user and assistant messages, a multiline composer, and file/search evidence inline with the assistant reply. The workspace selector remains available but compact.
+
+Language interpretation remains deterministic and bounded. It may support a single captured value surrounded by known prefix/suffix literals; it must preserve ambiguity instead of guessing. It is not general English comprehension and does not use an LLM.
+
+A minimal conversational follow-up such as "Show me that file" may resolve only when the immediately relevant preceding turn identifies one unambiguous file. Otherwise Lattice asks which file the user means.
+
+The complete ordered scope and acceptance criteria are in [the active Desktop 0.2 checklist](../.agents/todo.md).
