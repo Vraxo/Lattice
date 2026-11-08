@@ -1,26 +1,36 @@
-# Windows desktop smoke test
+# Windows Desktop Smoke Test (Desktop 0.2)
 
-Automated CI verifies solution restore, Release build, workspace symlink/reparse-point safety boundaries, and headless bUnit component rendering (`Lattice.Desktop.Tests`), including connecting to the real `Lattice` checkout and exercising `inspect` and `find symbol`. Headless tests do **not** open a native Photino/WebView2 window or verify OS window lifecycle, focus, scrolling, or resize behavior.
+This checklist covers the genuinely manual Windows GUI verification steps for `Lattice.Desktop` (`PhotinoX.Blazor` + WebView2) that headless CI cannot assert on its own.
 
-Run the manual walkthrough below on a Windows 10/11 machine with the .NET 10 SDK installed before marking the remaining manual GUI launch items complete in [`.agents/todo.md`](../.agents/todo.md).
+## Prerequisites
 
-## Launch commands
+- Windows 10 or Windows 11 with the Microsoft Edge WebView2 Runtime installed.
+- .NET 10 SDK (`10.0.x`).
+- A local checkout of the `Lattice` repository.
 
-From the repository root in PowerShell:
+## Launch
+
+From PowerShell or Windows Terminal in the repository root:
 
 ```powershell
-dotnet restore Lattice.slnx
-dotnet build Lattice.slnx --configuration Release --no-restore
-dotnet test Lattice.slnx --configuration Release --no-build
-dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Release --no-build
+dotnet run --project Lattice.Desktop -c Release
 ```
 
-## Manual checklist
+## Manual Verification Steps
 
-- [ ] **Window launch:** Confirm the native Photino window opens with title `Lattice`, dark theme styling applied (`wwwroot/app.css`), and active workspace indicator showing `Not connected`.
-- [ ] **Invalid workspace validation:** Leave the folder path blank or enter a nonexistent path (for example `C:\does-not-exist-lattice`) and click **Connect**; confirm a clear alert message is shown and the indicator remains `Not connected`.
-- [ ] **Connect real repository (Phase 1.2):** Enter the full local path to your `Lattice` checkout and click **Connect**; confirm **Active workspace** updates to that resolved path in read-only mode.
-- [ ] **Inspect real file (Phase 3.2):** Enter `inspect Lattice/WorkspaceRoot.cs` and click **Run**; confirm the turn card displays `Lattice/WorkspaceRoot.cs`, line count, and scrollable C# source contents.
-- [ ] **Find symbol with grounded evidence (Phase 4 / 5.2):** Enter `find symbol WorkspaceQuestionAnswerer` and click **Run**; confirm the UI labels the result as **Source-text search** (not semantic symbol resolution) and lists matching relative file paths, 1-based line numbers (for example `Lattice/WorkspaceQuestionAnswerer.cs:11`), and line snippets while keeping the earlier `inspect` turn visible above/below in `#turn-history`.
-- [ ] **Error and empty states:** Run `find symbol NonExistentSymbolXYZ`, `inspect Lattice/MissingFile.cs`, `inspect ../outside.txt`, `show README.md`, and `hello`; confirm distinct `No Matches`, `Missing File`, `Access Rejected`, `Ambiguous Input`, and `Unsupported Input` cards appear and prior history remains intact.
-- [ ] **Window lifecycle:** Resize the window narrow and wide, verify keyboard Tab focus across inputs and buttons, and close/relaunch cleanly without errors.
+- [ ] **Window opens cleanly as a chat interface:** A native desktop window titled `Lattice` opens without WebView2 console errors or blank-page flashes. Verify the compact workspace header bar at the top, the conversational empty state in the center, and the multiline message composer (`Send`) at the bottom — with no command-console `Run` button or syntax-teaching prompts.
+- [ ] **Invalid workspace rejection:** Enter a non-existent folder path (for example `C:\does-not-exist-lattice-smoke`) and click **Connect**. Confirm an inline validation banner appears and the active workspace remains `Not connected`.
+- [ ] **Connect the `Lattice` repository:** Enter the path to your local `Lattice` repository checkout and click **Connect**. Confirm the workspace badge updates to `<full-path> (Read-only)`.
+- [ ] **Composer keyboard behavior (`Shift+Enter` vs `Enter`):** Focus the message composer, type a line, press `Shift+Enter`, and confirm a newline is inserted without sending. Replace the draft with `Show me Lattice/WorkspaceRoot.cs.` and press `Enter`; confirm the message sends, the composer clears on acceptance, and focus returns to the composer.
+- [ ] **Natural file viewing:** Verify the user message (`You`) and assistant reply (`Lattice`) appear as distinct chat turns, with `Here is 'Lattice/WorkspaceRoot.cs' (... lines).` and a scrollable read-only viewer displaying `Lattice/WorkspaceRoot.cs`. Try `What's in README.md?` as a second file view.
+- [ ] **Natural source-text search:** Send `Where is WorkspaceRoot used in this project?` and `Can you find where WorkspaceQuestionAnswerer is used throughout this project?`. Confirm each assistant reply reports actual match and file counts (for example `I found N matching occurrences of 'WorkspaceRoot' across M files.`), displays relative `path:line` citations with matching snippets, and includes the concise note explaining that matches are literal source-text matches rather than semantic references.
+- [ ] **Ambiguous multi-file follow-up:** Immediately after a multi-file search such as `Where is WorkspaceRoot used in this project?`, send `Show me that file.`. Confirm Lattice asks which file you would like to open (listing candidate relative paths) and does **not** guess or open the first file.
+- [ ] **Unambiguous single-file follow-up:** Connect to the `<repo>\Lattice` subfolder (or search for an identifier that appears in only one file in your connected folder, such as `Where does EnumerateSearchableFiles appear?` inside `<repo>\Lattice`), verify the search reports `in 1 file`, and then send `Show me that file.` (or `Open it.`). Confirm Lattice opens that single file inline.
+- [ ] **Workspace switch clears follow-up context:** Re-connect the top-level `<repo>` folder in the workspace bar and immediately send `Show me that file.`. Confirm Lattice asks which file you want to open rather than reusing the previous workspace's file reference.
+- [ ] **Plain-language error, unknown, and ambiguity handling:** Test:
+  - `show README.md` (asks a targeted clarification question without raw pattern IDs)
+  - `What's in Lattice/DoesNotExist.cs?` (plain-language missing-file reply, no raw `files.path.*` error codes)
+  - `Show me ../outside.txt.` (plain-language workspace-confinement rejection)
+  - `Rewrite README.md to add badges.` (brief explanation of what Lattice can currently help with, without `Unsupported request` / `Supported forms` console phrasing)
+  Confirm all earlier user and assistant turns remain visible in chronological order.
+- [ ] **Resize, scroll, keyboard navigation, and close:** Resize the window between normal and narrow widths, confirm long code lines scroll horizontally inside `.file-contents` without breaking the window layout, check keyboard `Tab` focus rings across controls and scrollable panes, and close the window cleanly.

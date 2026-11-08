@@ -13,7 +13,9 @@ internal sealed record DesktopTurnEntry(
     int? LineCount = null,
     string? SearchQuery = null,
     ImmutableArray<EvidenceReference> Evidence = default,
-    string? ErrorCode = null)
+    string? ErrorCode = null,
+    string? MatchedPatternId = null,
+    string? CapturedValue = null)
 {
     public ImmutableArray<EvidenceReference> SafeEvidence =>
         Evidence.IsDefault ? [] : Evidence;

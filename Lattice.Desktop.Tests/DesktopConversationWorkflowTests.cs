@@ -66,7 +66,7 @@ public sealed class DesktopConversationWorkflowTests
             .ToArray();
         Assert.Contains("README.md:2", evidenceLocations);
         Assert.Contains("src/TokenAlpha.cs:2", evidenceLocations);
-        Assert.Contains("zero literal occurrences", cards[3].QuerySelector(".no-matches-note")!.TextContent, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("MissingSymbol", cards[3].QuerySelector("[data-message-role='assistant']")!.TextContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -102,7 +102,8 @@ public sealed class DesktopConversationWorkflowTests
         Assert.Equal(3, cards.Count);
         Assert.Equal("FileInspected", cards[0].GetAttribute("data-turn-kind"));
         Assert.Equal("UnexpectedError", cards[1].GetAttribute("data-turn-kind"));
-        Assert.Contains("Simulated storage failure", cards[1].TextContent, StringComparison.Ordinal);
+        Assert.Contains("unexpected error", cards[1].TextContent, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("InvalidOperationException", cards[1].TextContent, StringComparison.Ordinal);
         Assert.Equal("SearchResults", cards[2].GetAttribute("data-turn-kind"));
         Assert.False(session.IsBusy);
     }
@@ -131,15 +132,16 @@ public sealed class DesktopConversationWorkflowTests
         await component.Find("#workspace-path").InputAsync(firstWorkspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        await component.Find("#request-input").InputAsync("inspect README.md");
-        Task inflight = component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync("inspect README.md");
+        Task inflight = component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
         try
         {
             component.WaitForAssertion(() =>
             {
-                Assert.True(component.Find("#request-form fieldset").HasAttribute("disabled"));
+                Assert.True(component.Find("#chat-form fieldset").HasAttribute("disabled"));
                 Assert.True(component.Find("#workspace-form fieldset").HasAttribute("disabled"));
-                Assert.Contains("Running", component.Find("#submit-request").TextContent, StringComparison.Ordinal);
+                Assert.Single(component.FindAll("#pending-turn"));
+                Assert.Contains("Checking the workspace", component.Find("#pending-turn").TextContent, StringComparison.Ordinal);
             });
 
             // Attempt overlapping request and workspace switch while busy.
@@ -192,10 +194,98 @@ public sealed class DesktopConversationWorkflowTests
             location => location.StartsWith("Lattice/WorkspaceQuestionAnswerer.cs:", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task RenderedChatWalksThroughAllDefinitionOfDonePhrasesAndFollowUpsAgainstRealRepository()
+    {
+        string repoRoot = LocateLatticeRepositoryRoot();
+        await using BunitContext context = new();
+        context.Services.AddSingleton<DesktopSession>();
+        IRenderedComponent<App> component = context.Render<App>();
+
+        await component.Find("#workspace-path").InputAsync(repoRoot);
+        await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        string[] searchPhrases =
+        [
+            "Where does WorkspaceRoot appear?",
+            "Where is WorkspaceRoot used in this project?",
+            "Can you find where WorkspaceRoot is used throughout this project?",
+            "Search this project for WorkspaceRoot.",
+            "Find all occurrences of WorkspaceRoot.",
+        ];
+        foreach (string phrase in searchPhrases)
+        {
+            await SubmitRequestAsync(component, phrase);
+        }
+
+        // Follow-up after multi-file search must ask which file rather than guessing.
+        await SubmitRequestAsync(component, "Show me that file.");
+
+        string[] inspectPhrases =
+        [
+            "Show me Lattice/WorkspaceRoot.cs.",
+            "Open the file Lattice/WorkspaceRoot.cs.",
+            "Can you read Lattice/WorkspaceRoot.cs?",
+            "What's in Lattice/WorkspaceRoot.cs?",
+        ];
+        foreach (string phrase in inspectPhrases)
+        {
+            await SubmitRequestAsync(component, phrase);
+        }
+
+        // Single-file search followed by "Show me that file." must open Lattice.Desktop/Program.cs.
+        string singleFileIdentifier = "ConfigureMain" + "Window";
+        await SubmitRequestAsync(component, $"Where does {singleFileIdentifier} appear?");
+        await SubmitRequestAsync(component, "Show me that file.");
+
+        var cards = component.FindAll("#turn-history > li.chat-exchange");
+        Assert.Equal(12, cards.Count);
+
+        for (int i = 0; i < searchPhrases.Length; i++)
+        {
+            Assert.Equal(searchPhrases[i], cards[i].QuerySelector(".user-body")!.TextContent);
+            Assert.Equal("SearchResults", cards[i].GetAttribute("data-turn-kind"));
+            Assert.Contains("matching occurrences of 'WorkspaceRoot'", cards[i].QuerySelector(".turn-summary")!.TextContent, StringComparison.Ordinal);
+            Assert.NotNull(cards[i].QuerySelector(".evidence-list[tabindex='0']"));
+        }
+
+        Assert.Equal("AmbiguousInput", cards[5].GetAttribute("data-turn-kind"));
+        Assert.Empty(cards[5].QuerySelectorAll(".file-viewer"));
+        Assert.Contains("Which file would you like me to open?", cards[5].QuerySelector(".turn-summary")!.TextContent, StringComparison.Ordinal);
+
+        for (int i = 0; i < inspectPhrases.Length; i++)
+        {
+            var card = cards[6 + i];
+            Assert.Equal(inspectPhrases[i], card.QuerySelector(".user-body")!.TextContent);
+            Assert.Equal("FileInspected", card.GetAttribute("data-turn-kind"));
+            Assert.Equal("Lattice/WorkspaceRoot.cs", card.QuerySelector(".file-path")!.TextContent);
+            Assert.NotNull(card.QuerySelector(".file-contents[tabindex='0']"));
+            Assert.Contains("public sealed class WorkspaceRoot", card.QuerySelector(".file-contents")!.TextContent, StringComparison.Ordinal);
+        }
+
+        Assert.Equal("SearchResults", cards[10].GetAttribute("data-turn-kind"));
+        Assert.Contains("in 1 file", cards[10].QuerySelector(".turn-summary")!.TextContent, StringComparison.Ordinal);
+
+        Assert.Equal("FileInspected", cards[11].GetAttribute("data-turn-kind"));
+        Assert.Equal("Lattice.Desktop/Program.cs", cards[11].QuerySelector(".file-path")!.TextContent);
+        Assert.Contains(singleFileIdentifier, cards[11].QuerySelector(".file-contents")!.TextContent, StringComparison.Ordinal);
+
+        foreach (var assistantNode in component.FindAll("[data-message-role='assistant'] .turn-summary"))
+        {
+            string reply = assistantNode.TextContent;
+            Assert.DoesNotContain("find.where-", reply, StringComparison.Ordinal);
+            Assert.DoesNotContain("inspect.show-me", reply, StringComparison.Ordinal);
+            Assert.DoesNotContain("files.read", reply, StringComparison.Ordinal);
+            Assert.DoesNotContain("files.search", reply, StringComparison.Ordinal);
+            Assert.DoesNotContain("inspect <", reply, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("find symbol <", reply, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     private static async Task SubmitRequestAsync(IRenderedComponent<App> component, string request)
     {
-        await component.Find("#request-input").InputAsync(request);
-        await component.Find("#request-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+        await component.Find("#message-input").InputAsync(request);
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
     }
 
     private static string LocateLatticeRepositoryRoot()

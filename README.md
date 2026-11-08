@@ -34,23 +34,33 @@ The legacy controlled-statement console harness remains available separately:
 dotnet run --project Lattice.Cli
 ```
 
-### Supported requests
+### Conversational workspace interaction
 
-The currently merged Desktop 0.1 baseline accepts these read-only request forms; Desktop 0.2 is replacing the command-oriented interaction with natural phrasing:
+Connect a local project folder in the header bar, then ask about files or identifiers in ordinary conversational English in the message composer (`Enter` sends; `Shift+Enter` inserts a newline):
 
-| Request form | Behavior | Example |
-|---|---|---|
-| `inspect <relative-path>` | Reads a UTF-8 text file inside the connected workspace root and renders its contents in a scrollable pane. | `inspect Lattice/WorkspaceRoot.cs` |
-| `find symbol <name>` | Runs bounded, case-insensitive **literal source-text search** across workspace files and displays matching `path:line` citations and snippets. | `find symbol WorkspaceQuestionAnswerer` |
+- **Finding source occurrences**
+  - `"Where does WorkspaceRoot appear?"`
+  - `"Where is WorkspaceRoot used in this project?"`
+  - `"Can you find where WorkspaceRoot is used throughout this project?"`
+  - `"Search this project for WorkspaceRoot."`
+  - `"Find all occurrences of WorkspaceRoot."`
+- **Viewing workspace files**
+  - `"Show me Lattice/WorkspaceRoot.cs."`
+  - `"Open the file Lattice/WorkspaceRoot.cs."`
+  - `"Can you read Lattice/WorkspaceRoot.cs?"`
+  - `"What's in Lattice/WorkspaceRoot.cs?"`
+- **Narrow follow-up references**
+  - `"Show me that file."` or `"Open it."` opens the file when the immediately preceding turn identifies **one unambiguous file**; if the preceding search matched multiple files (or no recent file is in context), Lattice asks which file you mean rather than guessing.
 
-Prior requests, summaries, inspected file contents, and search citations stay visible in chronological order during the session. Distinct UI states are shown for unsupported input, ambiguous input (such as `show README.md`), no matches, invalid/unconnected workspaces, missing files, access rejections, and unexpected errors.
+User messages and evidence-grounded assistant replies remain visible in chronological order during the session, with relative `path:line` citations, matching snippets, and inline read-only file viewers. Compatibility aliases (`find symbol <name>` and `inspect <relative-path>`) remain accepted, while unsupported or ambiguous messages receive plain-language explanations or targeted clarification questions without raw error codes or internal pattern IDs.
 
 ### Current limitations and safety boundaries
 
+- **Non-LLM bounded phrase interpretation:** Requests are matched deterministically against an explicit, inspectable phrase catalog (`config/nlp/patterns.json` + `RequestInterpreter`) with at most one captured identifier or path slot. Lattice does not use an LLM, embeddings, network calls, or unrestricted English comprehension; unsupported or competing phrasings are surfaced honestly rather than guessed.
 - **Read-only workspace access:** `Lattice.Desktop` registers only `FileSearchTool`, `ReadFileTool`, and `ListDirectoryTool` under `ToolPermissionPolicy.ReadOnlyOnly`. No file writes, patch application, or shell/command execution capabilities are registered.
-- **Literal source-text search (not semantic resolution):** `find symbol <name>` performs case-insensitive substring matching over UTF-8 workspace files (scanning up to 100 matches and displaying up to 20 citations; skipping `.git`, `.vs`, `artifacts`, `bin`, and `obj`). It does **not** perform Roslyn or AST declaration/reference resolution.
-- **File size and encoding bounds:** `inspect` and search skip or reject files larger than 262,144 bytes and reject invalid UTF-8 binary data rather than substituting replacement characters.
-- **Narrow symbolic grammar:** Free-form natural language, multi-word symbol queries, and unsupported commands are rejected explicitly rather than guessed or silently converted into another operation.
+- **Literal source-text search (not semantic resolution):** Source searches perform case-insensitive literal substring matching over UTF-8 workspace files (scanning up to 100 matches and displaying up to 20 citations; skipping `.git`, `.vs`, `artifacts`, `bin`, and `obj`). They do **not** perform Roslyn or AST declaration/reference resolution.
+- **Narrow single-file follow-up context:** Follow-up references (`"Show me that file"`, `"Open it"`) track only the most recent turn's unambiguous single file or candidate file list, route through the same read-only `ReadFileTool` boundary, and clear automatically whenever the connected workspace changes.
+- **File size and encoding bounds:** File reads and searches skip or reject files larger than 262,144 bytes and reject invalid UTF-8 binary data rather than substituting replacement characters.
 - **Static symlink and reparse-point guard:** Workspace operations are confined to the explicitly connected root. Direct reads/directory resolution reject root-to-target paths containing symbolic links or reparse points, and directory/search traversal skips linked files and linked directories. This is a conservative **static** check at resolution/enumeration time and is **not** race-resistant (TOCTOU-resistant) against concurrent filesystem link replacement.
 - **Untrusted workspace text:** Inspected file text and search snippets are treated purely as passive data and are never reparsed or executed as instructions.
 
@@ -58,9 +68,9 @@ Prior requests, summaries, inspected file contents, and search citations stay vi
 
 | Project | Purpose |
 |---|---|
-| `Lattice/` | `Lattice.Core` — UI-independent domain types, agent loop, workspace tools, safety boundary, and retrieval |
-| `Lattice.Desktop/` | Desktop 0.1 executable host (`PhotinoX.Blazor` 5.3.5) and read-only workspace session UI |
-| `Lattice.Desktop.Tests/` | Desktop session, composition, and rendered bUnit Blazor component tests |
+| `Lattice/` | `Lattice.Core` — UI-independent domain types, agent loop, bounded phrase interpreter, workspace tools, safety boundary, and retrieval |
+| `Lattice.Desktop/` | Desktop 0.2 executable host (`PhotinoX.Blazor` 5.3.5) and conversational read-only workspace UI |
+| `Lattice.Desktop.Tests/` | Desktop session, phrase routing, follow-up context, and rendered bUnit chat component tests |
 | `Lattice.CSharp/` | Optional Roslyn syntax/semantic inspection and narrow syntax-edit library |
 | `Lattice.Python/` | Optional Python AST syntax adapter |
 | `Lattice.Cli/` | Limited controlled-statement console harness |
@@ -69,8 +79,9 @@ Prior requests, summaries, inspected file contents, and search citations stay vi
 
 ## Documentation
 
-- [Sequential Desktop 0.1 build plan](.agents/todo.md) — ordered phases, verification notes, and remaining manual GUI checks.
+- [Active Desktop 0.2 build plan](.agents/todo.md) — ordered phases, verification notes, and remaining manual GUI checks.
+- [Completed Desktop 0.1 archive](.agents/archive/desktop-0.1.md) — baseline desktop slice record.
 - [Windows desktop smoke test](docs/windows-smoke-test.md) — step-by-step manual Photino launch walkthrough.
-- [Desktop product direction](docs/DESKTOP_DIRECTION.md) — product scope and first acceptance target.
+- [Desktop product direction](docs/DESKTOP_DIRECTION.md) — product scope and current milestone direction.
 - [Documentation index](docs/README.md)
 - [Historical research-first specifications and milestone records](docs/archive/research-first/) — retained for provenance, not active instructions.

@@ -110,8 +110,15 @@ public static class IntentPatternCatalogParser
             RequestIntentKind? intent = ReadIntent(element, path, diagnostics);
             string? template = ReadString(element, "template", path, diagnostics);
             ImmutableArray<string> literals = [];
+            ImmutableArray<string> suffixLiterals = [];
             string? slotName = null;
-            if (template is not null && !IntentPattern.TryParseTemplate(template, out literals, out slotName, out string? error))
+            if (template is not null
+                && !IntentPattern.TryParseTemplate(
+                    template,
+                    out literals,
+                    out slotName,
+                    out suffixLiterals,
+                    out string? error))
             {
                 diagnostics.Add($"{path}.template: {error}");
                 continue;
@@ -119,7 +126,7 @@ public static class IntentPatternCatalogParser
 
             if (id is not null && intent is not null && template is not null)
             {
-                builder.Add(new IntentPattern(id, intent.Value, literals, slotName));
+                builder.Add(new IntentPattern(id, intent.Value, literals, slotName, suffixLiterals));
             }
         }
 

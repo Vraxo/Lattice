@@ -1,18 +1,14 @@
 # Documentation
 
-## Active
+Active Desktop 0.2 documents:
 
-- [Desktop 0.2 conversational implementation plan](../.agents/todo.md) — active sequential assignment and acceptance gates.
-- [Desktop 0.1 completed checklist](../.agents/archive/desktop-0.1.md) — preserved implementation history.
+- [Desktop product direction](DESKTOP_DIRECTION.md) — product goal, architecture rules, and current Desktop 0.2 direction.
+- [Active Desktop 0.2 build plan](../.agents/todo.md) — sequential phases, verification log, and manual GUI checks.
+- [Completed Desktop 0.1 archive](../.agents/archive/desktop-0.1.md) — historical Desktop 0.1 completion record.
+- [Windows desktop smoke test](windows-smoke-test.md) — manual Windows Photino launch checklist.
+- [Repository README](../README.md) — build, test, launch, and conversational interaction guide.
+- [Agent guidelines](../AGENTS.md) — working rules for contributors and coding agents.
 
-- [Sequential Desktop 0.1 build plan](../.agents/todo.md) — ordered phases, checkboxes, and acceptance gates.
-- [Windows desktop smoke test](windows-smoke-test.md) — manual Photino window launch and Connect → Inspect → Find verification steps.
-- [Desktop direction](DESKTOP_DIRECTION.md) — current product scope, first workflows, safety boundary, and acceptance target.
-- [Repository README](../README.md) — project status, prerequisites, launch commands, supported requests, and limitations.
-- [Coding-agent instructions](../AGENTS.md) — current instructions for implementation work.
+## Archive
 
-## Historical research-first material
-
-The documents in [archive/research-first](archive/research-first/) are retained for provenance and to help explain the code that already exists. They include the former PRD, architecture, roadmap, decision records, work protocol, work queue, and detailed component specifications.
-
-They are historical references, not active requirements. In case of conflict, use the code and tests for existing behavior and `DESKTOP_DIRECTION.md` for current product priorities.
+Earlier research-first deterministic agent specifications and milestone records have been moved to [`docs/archive/research-first/`](archive/research-first/) for historical provenance. They are not active instructions for the desktop application.

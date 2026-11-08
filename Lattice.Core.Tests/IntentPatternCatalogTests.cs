@@ -67,6 +67,37 @@ public sealed class IntentPatternCatalogTests
         Assert.Throws<ArgumentException>(() => new IntentPatternCatalog(patterns));
     }
 
+    [Fact]
+    public void AcceptsVersion10And11CatalogsIncludingSurroundedSlotTemplates()
+    {
+        const string v10Json =
+            "{\"patternVersion\":\"1.0\",\"patterns\":[{\"id\":\"inspect.path\",\"intent\":\"inspect-path\",\"template\":\"inspect {path}\"}]}";
+        const string v11Json =
+            "{\"patternVersion\":\"1.1\",\"patterns\":[{\"id\":\"find.appear\",\"intent\":\"find-symbol\",\"template\":\"where does {symbol} appear\"}]}";
+
+        Result<IntentPatternCatalog> v10 = IntentPatternCatalogParser.Parse(v10Json);
+        Result<IntentPatternCatalog> v11 = IntentPatternCatalogParser.Parse(v11Json);
+
+        Assert.True(v10.IsSuccess, v10.Error?.Message);
+        Assert.True(v11.IsSuccess, v11.Error?.Message);
+        IntentPattern pattern = Assert.Single(v11.Value.Patterns);
+        Assert.Equal<IEnumerable<string>>(["where", "does"], pattern.Literals);
+        Assert.Equal("symbol", pattern.SlotName);
+        Assert.Equal<IEnumerable<string>>(["appear"], pattern.SuffixLiterals);
+    }
+
+    [Theory]
+    [InlineData("{symbol} appear")]
+    [InlineData("where does {a} and {b} appear")]
+    [InlineData("where does {} appear")]
+    public void RejectsMalformedSurroundedSlotTemplatesInCatalog(string template)
+    {
+        Error error = Failure(
+            $"{{\"patternVersion\":\"1.1\",\"patterns\":[{{\"id\":\"bad\",\"intent\":\"find-symbol\",\"template\":\"{template}\"}}]}}");
+        Assert.Equal("nlp.invalid-patterns", error.Code);
+        Assert.Contains("patterns[0].template", error.Message);
+    }
+
     private static Error Failure(string json)
     {
         Result<IntentPatternCatalog> result = IntentPatternCatalogParser.Parse(json);

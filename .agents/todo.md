@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.2: Conversational Workspace Interaction
 
-> **Status:** approved next increment; not started.
+> **Status:** in progress on `arena/9b7807a5-lattice` (starting from `main` at `477e732c7f07155445b4ca22419b3dd92733ac1b`).
 >
 > **Previous checkpoint:** Desktop 0.1 is merged into main at `77a857bde251b21083a02db75501bac1d44fee43`. Its completed checklist is preserved at [archive/desktop-0.1.md](archive/desktop-0.1.md).
 >
@@ -89,21 +89,23 @@ Desktop 0.2 is complete when:
 
 ### 0.1 Inspect the current application
 
-- [ ] Inspect current main, working tree, solution, Desktop project, Desktop tests, and CI workflow.
-- [ ] Read the archived Desktop 0.1 checklist and current Windows smoke test to identify behavior that must remain intact.
-- [ ] Trace the UI flow through `App.razor`, `DesktopSession`, and `DesktopRequestProcessor`.
-- [ ] Trace pattern parsing/matching through `IntentPattern`, `IntentPatternCatalogParser`, `RequestInterpreter`, and `config/nlp/patterns.json`.
-- [ ] Identify existing tests for session history, request matching, search evidence, inspection, ambiguity, and unsupported input.
+- [x] Inspect current main, working tree, solution, Desktop project, Desktop tests, and CI workflow.
+- [x] Read the archived Desktop 0.1 checklist and current Windows smoke test to identify behavior that must remain intact.
+- [x] Trace the UI flow through `App.razor`, `DesktopSession`, and `DesktopRequestProcessor`.
+- [x] Trace pattern parsing/matching through `IntentPattern`, `IntentPatternCatalogParser`, `RequestInterpreter`, and `config/nlp/patterns.json`.
+- [x] Identify existing tests for session history, request matching, search evidence, inspection, ambiguity, and unsupported input.
 
 **Done when:** The agent knows which UI and interpreter components must change and which read-only behavior must remain untouched.
 
 ### 0.2 Record the known baseline
 
 - [x] Preserve the Desktop 0.1 CI baseline: Windows/.NET 10, 749 Core tests + 38 Desktop tests = 787 passed, 0 failed, 0 skipped (PR #11 CI run 42394747121).
-- [ ] Confirm the merged main commit and current PR CI workflow before creating the feature branch.
-- [ ] Do not spend time attempting local dotnet commands if the SDK is unavailable; use PR CI for code checkpoints.
+- [x] Confirm the merged main commit and current PR CI workflow before creating the feature branch.
+- [x] Do not spend time attempting local dotnet commands if the SDK is unavailable; use PR CI for code checkpoints.
 
 **Done when:** The starting commit and known baseline are recorded accurately. Distinguish pre-existing warnings/failures from regressions.
+
+> **Phase 0 note:** Confirmed `main` at `477e732c7f07155445b4ca22419b3dd92733ac1b` (following Desktop 0.1 merge `77a857bde251b21083a02db75501bac1d44fee43`) with green Windows/.NET 10 CI run `42397651659` (`Lattice.Core.Tests`: 749/749, `Lattice.Desktop.Tests`: 38/38, 787 total passed, 0 failed, 0 skipped; 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in untouched `Lattice/*.cs`; 0 warnings in `Lattice.Desktop` / `Lattice.Desktop.Tests`). Local `.NET` SDK is absent in this container, so checkpoints are verified via PR CI on `arena/9b7807a5-lattice`.
 
 ---
 
@@ -111,23 +113,25 @@ Desktop 0.2 is complete when:
 
 ### 1.1 Build the conversation layout
 
-- [ ] Replace the "Workspace Request" panel and "Run" command form with a conventional chat layout.
-- [ ] Give user messages and assistant replies distinct alignment, styling, and accessible semantics.
-- [ ] Keep history chronological and preserve inline file viewers/evidence cards inside assistant turns.
-- [ ] Keep the workspace indicator visible but compact; the conversation should dominate the window.
-- [ ] Add a useful empty state inviting the user to ask about the connected codebase.
-- [ ] Remove visible instructions that teach `inspect <path>` or `find symbol <name>` as required syntax.
+- [x] Replace the "Workspace Request" panel and "Run" command form with a conventional chat layout.
+- [x] Give user messages and assistant replies distinct alignment, styling, and accessible semantics.
+- [x] Keep history chronological and preserve inline file viewers/evidence cards inside assistant turns.
+- [x] Keep the workspace indicator visible but compact; the conversation should dominate the window.
+- [x] Add a useful empty state inviting the user to ask about the connected codebase.
+- [x] Remove visible instructions that teach `inspect <path>` or `find symbol <name>` as required syntax.
 
 ### 1.2 Implement the chat composer
 
-- [ ] Replace the single-line input with a multiline textarea and a clearly labeled Send action.
-- [ ] Enter submits; Shift+Enter inserts a newline. Ensure reliable, accessible behavior.
-- [ ] Keep sending disabled while a request is processing; show a subtle in-conversation processing state, not "Running command".
-- [ ] Clear the composer only after a message is accepted for processing; do not lose text on validation/unexpected failure.
-- [ ] Keep focus behavior and scrolling usable as turns are appended.
-- [ ] Add bUnit tests for composer rendering, input, Enter/Shift+Enter, Send, busy state, and history display.
+- [x] Replace the single-line input with a multiline textarea and a clearly labeled Send action.
+- [x] Enter submits; Shift+Enter inserts a newline. Ensure reliable, accessible behavior.
+- [x] Keep sending disabled while a request is processing; show a subtle in-conversation processing state, not "Running command".
+- [x] Clear the composer only after a message is accepted for processing; do not lose text on validation/unexpected failure.
+- [x] Keep focus behavior and scrolling usable as turns are appended.
+- [x] Add bUnit tests for composer rendering, input, Enter/Shift+Enter, Send, busy state, and history display.
 
 **Done when:** A user sends a conversational message, sees it as a user bubble, and receives the existing real workspace operation's result as an assistant turn. The interface no longer resembles a command console.
+
+> **Phase 1 note:** Verified in Windows/.NET 10 CI run `42404067427` on PR #12 (`Lattice.Core.Tests`: 749/749, `Lattice.Desktop.Tests`: 44/44, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 
@@ -135,28 +139,30 @@ Desktop 0.2 is complete when:
 
 ### 2.1 Natural phrasings for source search
 
-- [ ] Add deterministic patterns for all search phrasings in the Definition of done.
-- [ ] Support a single captured identifier surrounded by known literal words where needed, including fixed trailing words such as "appear", "used in this project", and "used throughout this project".
-- [ ] Prefer the smallest compatible extension to the existing pattern representation/interpreter; no fuzzy matcher, embeddings, ML, or unrestricted regex routing.
-- [ ] Match case-insensitively and tolerate ordinary terminal punctuation while preserving the captured identifier.
-- [ ] Keep competing interpretations explicit and deterministic; never silently choose an arbitrary action.
-- [ ] Preserve explicit forms like `find symbol WorkspaceRoot` as optional compatibility aliases, but do not present them as the primary interaction.
+- [x] Add deterministic patterns for all search phrasings in the Definition of done.
+- [x] Support a single captured identifier surrounded by known literal words where needed, including fixed trailing words such as "appear", "used in this project", and "used throughout this project".
+- [x] Prefer the smallest compatible extension to the existing pattern representation/interpreter; no fuzzy matcher, embeddings, ML, or unrestricted regex routing.
+- [x] Match case-insensitively and tolerate ordinary terminal punctuation while preserving the captured identifier.
+- [x] Keep competing interpretations explicit and deterministic; never silently choose an arbitrary action.
+- [x] Preserve explicit forms like `find symbol WorkspaceRoot` as optional compatibility aliases, but do not present them as the primary interaction.
 
 ### 2.2 Natural phrasings for file inspection
 
-- [ ] Add deterministic patterns for "show me", "open the file", "read", and "what's in" phrasings.
-- [ ] Preserve path characters, extensions, separators, and valid spaces; reject ambiguity rather than guessing.
-- [ ] Keep reads routed through the existing `ReadFileTool` and workspace access boundary.
-- [ ] Preserve `inspect <relative-path>` as an optional compatibility alias.
+- [x] Add deterministic patterns for "show me", "open the file", "read", and "what's in" phrasings.
+- [x] Preserve path characters, extensions, separators, and valid spaces; reject ambiguity rather than guessing.
+- [x] Keep reads routed through the existing `ReadFileTool` and workspace access boundary.
+- [x] Preserve `inspect <relative-path>` as an optional compatibility alias.
 
 ### 2.3 Verify the phrase grammar
 
-- [ ] Add unit tests for every required phrase, casing, sentence punctuation, identifiers with underscores/dots, and file paths with extensions.
-- [ ] Add negative tests for unsupported phrasing, empty/missing captures, ambiguous matches, and malformed templates.
-- [ ] Verify existing pattern catalogs remain compatible, or document/test a deliberate schema-version change.
-- [ ] Preserve original user text and expose the matched pattern/capture for diagnostics.
+- [x] Add unit tests for every required phrase, casing, sentence punctuation, identifiers with underscores/dots, and file paths with extensions.
+- [x] Add negative tests for unsupported phrasing, empty/missing captures, ambiguous matches, and malformed templates.
+- [x] Verify existing pattern catalogs remain compatible, or document/test a deliberate schema-version change.
+- [x] Preserve original user text and expose the matched pattern/capture for diagnostics.
 
 **Done when:** All required phrases map deterministically to existing bounded intents, while ambiguity and unsupported input remain explicit.
+
+> **Phase 2 note:** Verified in Windows/.NET 10 CI run `42404988743` on PR #12 (`Lattice.Core.Tests`: 789/789, `Lattice.Desktop.Tests`: 58/58, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 
@@ -164,27 +170,29 @@ Desktop 0.2 is complete when:
 
 ### 3.1 Search replies
 
-- [ ] Route natural-language search requests through the existing `WorkspaceQuestionAnswerer` and `FileSearchTool`.
-- [ ] Produce concise natural replies based on actual counts/evidence, e.g. "I found 8 matching occurrences across 3 files."
-- [ ] Keep each citation's relative path, 1-based line number, and matching snippet.
-- [ ] Explain that results are literal source-text matches, not semantic declarations/references, without repeating a large warning after every result.
-- [ ] Preserve clear no-match and access-error responses in conversational wording.
+- [x] Route natural-language search requests through the existing `WorkspaceQuestionAnswerer` and `FileSearchTool`.
+- [x] Produce concise natural replies based on actual counts/evidence, e.g. "I found 8 matching occurrences across 3 files."
+- [x] Keep each citation's relative path, 1-based line number, and matching snippet.
+- [x] Explain that results are literal source-text matches, not semantic declarations/references, without repeating a large warning after every result.
+- [x] Preserve clear no-match and access-error responses in conversational wording.
 
 ### 3.2 File replies
 
-- [ ] Route natural-language file requests through the existing safe read path.
-- [ ] Present the file as an assistant response with filename, line count, and readable inline file viewer.
-- [ ] Handle missing paths, directories, invalid paths, oversized files, invalid encoding, and symlink/reparse-point rejection in plain language.
-- [ ] Never show raw internal error codes or require users to memorize command syntax.
+- [x] Route natural-language file requests through the existing safe read path.
+- [x] Present the file as an assistant response with filename, line count, and readable inline file viewer.
+- [x] Handle missing paths, directories, invalid paths, oversized files, invalid encoding, and symlink/reparse-point rejection in plain language.
+- [x] Never show raw internal error codes or require users to memorize command syntax.
 
 ### 3.3 Unknown and ambiguous messages
 
-- [ ] Replace "Unsupported request" and "Supported forms are ..." with brief, useful explanations of what Lattice can currently help with.
-- [ ] For genuinely ambiguous input, ask one specific clarification instead of returning raw pattern IDs or diagnostics.
-- [ ] Do not claim a file was read or searched unless the corresponding tool ran and returned evidence.
-- [ ] Keep the original user message visible in the transcript.
+- [x] Replace "Unsupported request" and "Supported forms are ..." with brief, useful explanations of what Lattice can currently help with.
+- [x] For genuinely ambiguous input, ask one specific clarification instead of returning raw pattern IDs or diagnostics.
+- [x] Do not claim a file was read or searched unless the corresponding tool ran and returned evidence.
+- [x] Keep the original user message visible in the transcript.
 
 **Done when:** Users see ordinary assistant replies grounded in actual results, rather than tool-oriented status strings.
+
+> **Phase 3 note:** Verified in Windows/.NET 10 CI run `42405289974` on PR #12 (`Lattice.Core.Tests`: 789/789, `Lattice.Desktop.Tests`: 61/61, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 
@@ -192,18 +200,20 @@ Desktop 0.2 is complete when:
 
 ### 4.1 Resolve unambiguous recent file references
 
-- [ ] Track only the minimal context needed to resolve a recent file reference; do not add a general memory/knowledge system.
-- [ ] Support "Show me that file" or "Open it" only when the preceding result identifies exactly one unambiguous file.
-- [ ] If the preceding search result contains several files, ask which file the user means. Do not silently choose the first result.
-- [ ] Keep resolved paths relative to the active workspace and route them through the same safe file-read path.
-- [ ] Clear/invalidate stale references when the workspace changes.
+- [x] Track only the minimal context needed to resolve a recent file reference; do not add a general memory/knowledge system.
+- [x] Support "Show me that file" or "Open it" only when the preceding result identifies exactly one unambiguous file.
+- [x] If the preceding search result contains several files, ask which file the user means. Do not silently choose the first result.
+- [x] Keep resolved paths relative to the active workspace and route them through the same safe file-read path.
+- [x] Clear/invalidate stale references when the workspace changes.
 
 ### 4.2 Test context and ambiguity
 
-- [ ] Add tests for one-file follow-up, multiple-file ambiguity, no preceding reference, workspace switching, and stale/missing targets.
-- [ ] Add rendered tests proving clarification appears as an assistant response and no unintended read occurs.
+- [x] Add tests for one-file follow-up, multiple-file ambiguity, no preceding reference, workspace switching, and stale/missing targets.
+- [x] Add rendered tests proving clarification appears as an assistant response and no unintended read occurs.
 
 **Done when:** A small, test-covered follow-up works without guessing or weakening workspace confinement.
+
+> **Phase 4 note:** Verified in Windows/.NET 10 CI run `42405676321` on PR #12 (`Lattice.Core.Tests`: 789/789, `Lattice.Desktop.Tests`: 70/70, 0 failed, 0 skipped, 0 new warnings).
 
 ---
 
@@ -211,21 +221,30 @@ Desktop 0.2 is complete when:
 
 ### 5.1 Polish and regression-test
 
-- [ ] Ensure message hierarchy, spacing, long code blocks, evidence lists, and scrolling work at normal/narrow window sizes.
-- [ ] Preserve responsive layout, keyboard access, focus indicators, and accessible labels/roles.
-- [ ] Verify the UI does not expose internal pattern/tool IDs, command syntax, or raw exceptions as normal assistant language.
-- [ ] Add/complete session and bUnit tests for all Definition of done examples, follow-up context, unknown input, ambiguity, errors, and retained history.
-- [ ] Preserve all Desktop 0.1 workspace safety and read-only tests.
+- [x] Ensure message hierarchy, spacing, long code blocks, evidence lists, and scrolling work at normal/narrow window sizes.
+- [x] Preserve responsive layout, keyboard access, focus indicators, and accessible labels/roles.
+- [x] Verify the UI does not expose internal pattern/tool IDs, command syntax, or raw exceptions as normal assistant language.
+- [x] Add/complete session and bUnit tests for all Definition of done examples, follow-up context, unknown input, ambiguity, errors, and retained history.
+- [x] Preserve all Desktop 0.1 workspace safety and read-only tests.
 
 ### 5.2 CI and documentation
 
-- [ ] Run full Release restore/build/test on Windows/.NET 10 through the draft PR.
-- [ ] Verify final CI with exact per-project test counts and zero failures/skips.
-- [ ] Update README with conversational interaction and natural-language examples; remove command-console framing.
-- [ ] Update `docs/windows-smoke-test.md` to test conversational phrases and follow-up references.
-- [ ] Record exact verification evidence and leave manual Windows launch unchecked.
+- [x] Run full Release restore/build/test on Windows/.NET 10 through the draft PR.
+- [x] Verify final CI with exact per-project test counts and zero failures/skips.
+- [x] Update README with conversational interaction and natural-language examples; remove command-console framing.
+- [x] Update `docs/windows-smoke-test.md` to test conversational phrases and follow-up references.
+- [x] Record exact verification evidence and leave manual Windows launch unchecked.
+- [ ] Manual Windows Photino GUI launch verification (`docs/windows-smoke-test.md`) — requires interactive Windows desktop session.
 
 **Done when:** Desktop 0.2 is implemented and CI-verified, with only the genuinely manual GUI smoke test remaining for the user.
+
+> **Phase 5 verification log:**
+> - Pull Request: `https://github.com/Vraxo/Lattice/pull/12` (`arena/9b7807a5-lattice` -> `main`)
+> - Windows `.NET 10` Release CI run `42406051699` (commit `11f0322`):
+>   - `Lattice.Core.Tests`: **789 passed**, 0 failed, 0 skipped
+>   - `Lattice.Desktop.Tests`: **71 passed**, 0 failed, 0 skipped
+>   - Total: **860 passed**, 0 failed, 0 skipped, 0 new warnings
+> - Manual Windows Photino GUI launch (`docs/windows-smoke-test.md`) remains unchecked for interactive Windows verification.
 
 ---
 

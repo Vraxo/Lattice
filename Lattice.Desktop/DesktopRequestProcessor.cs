@@ -1,20 +1,25 @@
+using System.Collections.Immutable;
 using Lattice.Core;
 
 namespace Lattice.Desktop;
 
 internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = null)
 {
-    private const string InspectPatternId = "inspect.path";
-    private const string FindSymbolNamedPatternId = "find.symbol-named";
+    internal const string ShowThatFilePatternId = "inspect.show-that-file";
     private const string BroadFindPatternId = "find.symbol";
-    private const string SupportedFormsNote =
-        "Supported requests are 'inspect <relative-path>' and 'find symbol <name>'.";
+    private const string CapabilitiesHelpText =
+        "I can open UTF-8 files in the connected workspace (for example, \"Show me README.md\") or find where an identifier appears in source text (for example, \"Where is WorkspaceRoot used in this project?\").";
 
     private readonly RequestInterpreter _interpreter = interpreter ?? CreateDefaultInterpreter();
 
     public static DesktopRequestProcessor Default { get; } = new();
 
-    public DesktopTurnEntry Execute(ConnectedWorkspace? workspace, string rawRequest)
+    public RequestInterpreter Interpreter => _interpreter;
+
+    public DesktopTurnEntry Execute(
+        ConnectedWorkspace? workspace,
+        string rawRequest,
+        RecentFileContext? recentFileContext = null)
     {
         string requestText = rawRequest?.Trim() ?? string.Empty;
         if (workspace is null)
@@ -22,10 +27,11 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             return new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InvalidWorkspace,
-                "No workspace is connected. Connect an existing local folder before running a request.",
+                "I'm not connected to a workspace yet. Connect a local project folder in the header bar above, then ask me about a file or identifier.",
                 WorkspacePath: null);
         }
 
+        RecentFileContext activeContext = recentFileContext ?? RecentFileContext.None;
         RequestInterpretation interpretation = _interpreter.Interpret(requestText);
         return interpretation.Kind switch
         {
@@ -34,68 +40,165 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             IntentMatchKind.Unknown => BuildUnsupportedEntry(
                 workspace,
                 requestText,
-                $"Unsupported request. {SupportedFormsNote}"),
-            IntentMatchKind.Matched => ExecuteMatched(workspace, requestText, interpretation),
+                $"I'm not able to answer that kind of request yet. {CapabilitiesHelpText}"),
+            IntentMatchKind.Matched => ExecuteMatched(workspace, requestText, interpretation, activeContext),
             _ => BuildUnsupportedEntry(
                 workspace,
                 requestText,
-                $"Unsupported request. {SupportedFormsNote}"),
+                $"I'm not able to answer that kind of request yet. {CapabilitiesHelpText}"),
         };
+    }
+
+    internal static bool IsFollowUpReferenceTurn(DesktopTurnEntry entry)
+    {
+        if (entry.MatchedPatternId == ShowThatFilePatternId)
+        {
+            return true;
+        }
+
+        return entry.CapturedValue is not null && IsFollowUpFileReference(entry.CapturedValue);
     }
 
     private static DesktopTurnEntry ExecuteMatched(
         ConnectedWorkspace workspace,
         string requestText,
-        RequestInterpretation interpretation)
+        RequestInterpretation interpretation,
+        RecentFileContext recentFileContext)
     {
         IntentMatch match = interpretation.Match!;
-        if (match.PatternId == InspectPatternId && match.Slot is not null)
+        if (interpretation.Intent == RequestIntentKind.InspectPath)
         {
-            return ExecuteInspect(workspace, requestText, match.Slot.Value);
+            if (match.PatternId == ShowThatFilePatternId)
+            {
+                return ExecuteFollowUpInspect(
+                    workspace,
+                    requestText,
+                    recentFileContext,
+                    match.PatternId,
+                    capturedReference: "that file");
+            }
+
+            if (match.Slot is not null)
+            {
+                string relativePath = UnwrapMatchingQuotes(match.Slot.Value.Trim());
+                if (IsFollowUpFileReference(relativePath))
+                {
+                    return ExecuteFollowUpInspect(
+                        workspace,
+                        requestText,
+                        recentFileContext,
+                        match.PatternId,
+                        relativePath);
+                }
+
+                return ExecuteInspect(workspace, requestText, relativePath, match.PatternId);
+            }
         }
 
-        if (match.PatternId == FindSymbolNamedPatternId && match.Slot is not null)
+        if (interpretation.Intent == RequestIntentKind.FindSymbol && match.Slot is not null)
         {
-            return ExecuteFindSymbol(workspace, requestText, interpretation, match.Slot.Value);
-        }
+            if (match.PatternId == BroadFindPatternId)
+            {
+                string target = UnwrapMatchingQuotes(match.Slot.Value.Trim());
+                return BuildUnsupportedEntry(
+                    workspace,
+                    requestText,
+                    $"I'm not sure whether you want to open a file or search for occurrences of '{target}'. Try asking \"Where does {target} appear?\" or \"Show me {target}\".",
+                    matchedPatternId: match.PatternId,
+                    capturedValue: target);
+            }
 
-        if (match.PatternId == BroadFindPatternId
-            && string.Equals(match.Slot?.Value.Trim(), "symbol", StringComparison.OrdinalIgnoreCase))
-        {
-            return BuildUnsupportedEntry(
-                workspace,
-                requestText,
-                "Missing symbol name. Usage: find symbol <name>.");
+            string symbol = UnwrapMatchingQuotes(match.Slot.Value.Trim());
+            return ExecuteFindSymbol(workspace, requestText, interpretation, symbol, match.PatternId);
         }
 
         if (interpretation.Intent is RequestIntentKind.Question or RequestIntentKind.Explanation)
         {
-            EvidenceAnswer unsupported = workspace.QuestionAnswerer.Answer(interpretation);
             return BuildUnsupportedEntry(
                 workspace,
                 requestText,
-                $"{unsupported.Text} {SupportedFormsNote}");
+                $"I can't explain code behavior or answer open-ended conceptual questions — I only report directly observed workspace files and literal text matches. {CapabilitiesHelpText}",
+                matchedPatternId: match.PatternId,
+                capturedValue: match.Slot?.Value);
         }
 
         return BuildUnsupportedEntry(
             workspace,
             requestText,
-            $"Unsupported request form. {SupportedFormsNote}");
+            $"I'm not able to handle that request yet. {CapabilitiesHelpText}",
+            matchedPatternId: match.PatternId,
+            capturedValue: match.Slot?.Value);
+    }
+
+    private static DesktopTurnEntry ExecuteFollowUpInspect(
+        ConnectedWorkspace workspace,
+        string requestText,
+        RecentFileContext recentFileContext,
+        string patternId,
+        string capturedReference)
+    {
+        if (recentFileContext.Kind == RecentFileContextKind.SingleFile
+            && !string.IsNullOrWhiteSpace(recentFileContext.SingleRelativePath))
+        {
+            return ExecuteInspect(
+                workspace,
+                requestText,
+                recentFileContext.SingleRelativePath,
+                patternId);
+        }
+
+        if (recentFileContext.Kind == RecentFileContextKind.MultipleFiles
+            && !recentFileContext.CandidateRelativePaths.IsEmpty)
+        {
+            ImmutableArray<string> candidates = recentFileContext.CandidateRelativePaths;
+            const int maxListed = 5;
+            string listed = string.Join(
+                ", ",
+                candidates.Take(maxListed).Select(path => $"'{path}'"));
+            string summary = candidates.Length <= maxListed
+                ? $"The previous search matched {candidates.Length} files ({listed}). Which file would you like me to open?"
+                : $"The previous search matched {candidates.Length} files, including {listed}. Which file would you like me to open?";
+
+            return new DesktopTurnEntry(
+                requestText,
+                DesktopTurnKind.AmbiguousInput,
+                summary,
+                workspace.Root.FullPath,
+                MatchedPatternId: patternId,
+                CapturedValue: capturedReference);
+        }
+
+        return new DesktopTurnEntry(
+            requestText,
+            DesktopTurnKind.AmbiguousInput,
+            "There isn't a single recent file in our conversation yet. Which file in the connected workspace would you like me to open?",
+            workspace.Root.FullPath,
+            MatchedPatternId: patternId,
+            CapturedValue: capturedReference);
+    }
+
+    private static bool IsFollowUpFileReference(string candidate)
+    {
+        return candidate.Equals("it", StringComparison.OrdinalIgnoreCase)
+            || candidate.Equals("that", StringComparison.OrdinalIgnoreCase)
+            || candidate.Equals("that file", StringComparison.OrdinalIgnoreCase)
+            || candidate.Equals("this file", StringComparison.OrdinalIgnoreCase);
     }
 
     private static DesktopTurnEntry ExecuteFindSymbol(
         ConnectedWorkspace workspace,
         string requestText,
         RequestInterpretation interpretation,
-        string rawSymbol)
+        string symbol,
+        string patternId)
     {
-        string symbol = rawSymbol.Trim();
         if (string.IsNullOrEmpty(symbol))
         {
             return BuildUnsupportedEntry(
                 workspace,
                 requestText,
-                "Missing symbol name. Usage: find symbol <name>.");
+                "Which identifier would you like me to look for? Try asking \"Where does WorkspaceRoot appear?\"",
+                matchedPatternId: patternId);
         }
 
         if (symbol.Any(char.IsWhiteSpace))
@@ -103,54 +206,105 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             return BuildUnsupportedEntry(
                 workspace,
                 requestText,
-                $"Symbol search expects a single symbol name without spaces (received '{symbol}'). Usage: find symbol <name>.");
+                $"I can search for one identifier name at a time, and '{symbol}' contains spaces. Ask about a single type, member, or token name instead.",
+                matchedPatternId: patternId,
+                capturedValue: symbol);
         }
 
-        EvidenceAnswer answer = workspace.QuestionAnswerer.Answer(interpretation);
+        RequestInterpretation normalizedInterpretation =
+            interpretation.Match!.Slot!.Value == symbol
+                ? interpretation
+                : RequestInterpretation.Matched(
+                    interpretation.Text,
+                    new IntentMatch(
+                        patternId,
+                        RequestIntentKind.FindSymbol,
+                        new IntentSlot(interpretation.Match.Slot.Name, symbol)));
+
+        EvidenceAnswer answer = workspace.QuestionAnswerer.Answer(normalizedInterpretation);
         return answer.Status switch
         {
             EvidenceAnswerStatus.Answered => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.SearchResults,
-                answer.Text,
+                FormatSearchAnsweredSummary(symbol, answer.Evidence),
                 workspace.Root.FullPath,
                 SearchQuery: symbol,
-                Evidence: answer.Evidence),
+                Evidence: answer.Evidence,
+                MatchedPatternId: patternId,
+                CapturedValue: symbol),
             EvidenceAnswerStatus.InsufficientEvidence when answer.Text.StartsWith(
                 "No occurrences of ",
                 StringComparison.Ordinal) => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.NoMatches,
-                answer.Text,
+                $"I searched the connected workspace and found no literal source-text occurrences of '{symbol}'.",
                 workspace.Root.FullPath,
-                SearchQuery: symbol),
+                SearchQuery: symbol,
+                MatchedPatternId: patternId,
+                CapturedValue: symbol),
             EvidenceAnswerStatus.InsufficientEvidence => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
-                answer.Text,
+                $"I couldn't complete the search for '{symbol}' due to a workspace read error.",
                 workspace.Root.FullPath,
-                SearchQuery: symbol),
+                SearchQuery: symbol,
+                MatchedPatternId: patternId,
+                CapturedValue: symbol),
             _ => BuildUnsupportedEntry(
                 workspace,
                 requestText,
-                $"{answer.Text} {SupportedFormsNote}"),
+                $"I couldn't run that search request. {CapabilitiesHelpText}",
+                matchedPatternId: patternId,
+                capturedValue: symbol),
         };
+    }
+
+    private static string FormatSearchAnsweredSummary(
+        string symbol,
+        ImmutableArray<EvidenceReference> evidence)
+    {
+        int occurrenceCount = evidence.Length;
+        int fileCount = evidence
+            .Select(reference => reference.RelativePath)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
+        string occurrencePhrase = occurrenceCount == 1
+            ? "1 matching occurrence"
+            : $"{occurrenceCount} matching occurrences";
+        if (fileCount == 1)
+        {
+            return $"I found {occurrencePhrase} of '{symbol}' in 1 file.";
+        }
+
+        return $"I found {occurrencePhrase} of '{symbol}' across {fileCount} files.";
     }
 
     private static DesktopTurnEntry ExecuteInspect(
         ConnectedWorkspace workspace,
         string requestText,
-        string rawRelativePath)
+        string relativePath,
+        string patternId)
     {
-        string relativePath = rawRelativePath.Trim();
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            return BuildUnsupportedEntry(
+                workspace,
+                requestText,
+                "Which file in the connected workspace would you like me to open?",
+                matchedPatternId: patternId);
+        }
+
         if (!workspace.Registry.TryResolve(workspace.Toolset.Read, out ITool? readTool))
         {
             return new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.UnexpectedError,
-                "The workspace file-read tool is not registered.",
+                "File reading is currently unavailable in this workspace session.",
                 workspace.Root.FullPath,
-                InspectedRelativePath: relativePath);
+                InspectedRelativePath: relativePath,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath);
         }
 
         ArgumentBag arguments = ArgumentBag.From(
@@ -166,11 +320,13 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             return new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.FileInspected,
-                $"Inspected '{relativePath}' ({lineLabel}).",
+                $"Here is '{relativePath}' ({lineLabel}).",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
                 FileContents: contents,
-                LineCount: lines);
+                LineCount: lines,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath);
         }
 
         Error error = invocation.Result.Error!;
@@ -179,52 +335,66 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             FileToolErrorCodes.PathNotFound => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.MissingFile,
-                $"File '{relativePath}' was not found in the connected workspace.",
+                $"'{relativePath}' was not found in the connected workspace. Check the relative path and try again.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
             FileToolErrorCodes.PathOutsideRoot => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.AccessRejected,
-                $"Rejected '{relativePath}': path must be relative and stay inside the connected workspace root.",
+                $"I can only read files inside the connected workspace folder, so I can't open '{relativePath}'. Please give me a relative path within this project.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
             FileToolErrorCodes.ReparsePointNotAllowed => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.AccessRejected,
-                $"Rejected '{relativePath}': symbolic links and reparse points are blocked by the static workspace check.",
+                $"I can't open '{relativePath}' because symbolic links and reparse points are blocked for workspace safety.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
             FileToolErrorCodes.NotAFile => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
-                $"'{relativePath}' is a directory, not a file. Specify a relative file path with 'inspect <relative-path>'.",
+                $"'{relativePath}' is a directory, not a file. Ask me to open a specific file inside that folder instead.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
             FileToolErrorCodes.FileTooLarge => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
-                $"'{relativePath}' exceeds the {ReadFileTool.MaxBytes:N0}-byte inspection limit.",
+                $"'{relativePath}' is larger than the {ReadFileTool.MaxBytes:N0}-byte limit for inline viewing.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
             FileToolErrorCodes.EncodingInvalid => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
-                $"'{relativePath}' is not valid UTF-8 text and cannot be inspected.",
+                $"'{relativePath}' isn't valid UTF-8 text, so I can't display its contents safely.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
             _ => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
-                $"Could not inspect '{relativePath}': {error.Message}",
+                $"I couldn't read '{relativePath}' due to a file-access error in the workspace.",
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
-                ErrorCode: error.Code),
+                ErrorCode: error.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: relativePath),
         };
     }
 
@@ -233,12 +403,39 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         string requestText,
         RequestInterpretation interpretation)
     {
-        ClarificationRequest? clarification = ClarificationGenerator.TryCreate(interpretation);
-        string detail = clarification?.Question ?? "More than one interpretation matched.";
+        ImmutableArray<RequestIntentKind> intents = [.. interpretation.Candidates
+            .Select(candidate => candidate.Intent)
+            .Distinct(),];
+        string? sharedTarget = interpretation.Candidates
+            .Select(candidate => candidate.Slot?.Value.Trim())
+            .Where(value => !string.IsNullOrEmpty(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .SingleOrDefault();
+
+        string question;
+        if (sharedTarget is not null
+            && intents.Contains(RequestIntentKind.InspectPath)
+            && intents.Contains(RequestIntentKind.FindSymbol))
+        {
+            question =
+                $"Did you want me to open the file '{sharedTarget}' or search where the identifier '{sharedTarget}' appears in this project?";
+        }
+        else if (sharedTarget is not null && intents.Contains(RequestIntentKind.InspectPath))
+        {
+            question =
+                $"Did you want me to open the file '{sharedTarget}'? Ask \"Show me {sharedTarget}\" to view its contents, or ask where an identifier appears.";
+        }
+        else
+        {
+            ClarificationRequest? clarification = ClarificationGenerator.TryCreate(interpretation);
+            question = clarification?.Question
+                ?? "Could you clarify whether you want to open a specific file or search where an identifier appears in this project?";
+        }
+
         return new DesktopTurnEntry(
             requestText,
             DesktopTurnKind.AmbiguousInput,
-            $"Ambiguous request ({detail}) {SupportedFormsNote}",
+            question,
             workspace.Root.FullPath);
     }
 
@@ -247,26 +444,54 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         string requestText,
         RequestInterpretation interpretation)
     {
-        string message = interpretation.Intent == RequestIntentKind.InspectPath
-            ? "Missing file path. Usage: inspect <relative-path>."
-            : $"Incomplete request. {SupportedFormsNote}";
+        string message = interpretation.Intent switch
+        {
+            RequestIntentKind.InspectPath =>
+                "Which file in the connected workspace would you like me to open? Include its relative path, such as \"Show me README.md\".",
+            RequestIntentKind.FindSymbol =>
+                "Which identifier would you like me to search for in this project? For example, ask \"Where does WorkspaceRoot appear?\"",
+            _ =>
+                $"Could you be a bit more specific? {CapabilitiesHelpText}",
+        };
         return new DesktopTurnEntry(
             requestText,
             DesktopTurnKind.UnsupportedInput,
             message,
-            workspace.Root.FullPath);
+            workspace.Root.FullPath,
+            MatchedPatternId: interpretation.Match?.PatternId);
     }
 
     private static DesktopTurnEntry BuildUnsupportedEntry(
         ConnectedWorkspace workspace,
         string requestText,
-        string message)
+        string message,
+        string? matchedPatternId = null,
+        string? capturedValue = null)
     {
         return new DesktopTurnEntry(
             requestText,
             DesktopTurnKind.UnsupportedInput,
             message,
-            workspace.Root.FullPath);
+            workspace.Root.FullPath,
+            MatchedPatternId: matchedPatternId,
+            CapturedValue: capturedValue);
+    }
+
+    private static string UnwrapMatchingQuotes(string value)
+    {
+        if (value.Length >= 2)
+        {
+            char first = value[0];
+            char last = value[^1];
+            if ((first == '"' && last == '"')
+                || (first == '\'' && last == '\'')
+                || (first == '`' && last == '`'))
+            {
+                return value[1..^1].Trim();
+            }
+        }
+
+        return value;
     }
 
     private static RequestInterpreter CreateDefaultInterpreter()
