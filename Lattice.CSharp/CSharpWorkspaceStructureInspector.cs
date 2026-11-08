@@ -389,11 +389,10 @@ public sealed class CSharpWorkspaceStructureInspector
         EnumDeclarationSyntax? containingEnum = node.Ancestors().OfType<EnumDeclarationSyntax>().FirstOrDefault();
         string? containingTypeName = containingType?.Identifier.ValueText ?? containingEnum?.Identifier.ValueText;
 
-        string[] namespaceParts = node.AncestorsAndSelf()
+        string[] namespaceParts = [.. node.AncestorsAndSelf()
             .OfType<BaseNamespaceDeclarationSyntax>()
             .Reverse()
-            .Select(namespaceNode => namespaceNode.Name.ToString())
-            .ToArray();
+            .Select(namespaceNode => namespaceNode.Name.ToString())];
 
         declarations.Add(new CSharpDeclaration(
             relativePath,
