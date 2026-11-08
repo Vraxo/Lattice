@@ -140,8 +140,8 @@ public sealed class CSharpWorkspaceStructureInspector
                 totalSourceBytes += sourceBytes;
                 sourceFilesRead++;
 
-                SyntaxTree tree = CSharpSyntaxTree.ParseText(source, path: relativePath);
-                if (tree.GetDiagnostics().Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
+                SyntaxTree tree = CSharpSyntaxTree.ParseText(source, path: relativePath, cancellationToken: cancellationToken);
+                if (tree.GetDiagnostics(cancellationToken).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
                 {
                     syntaxErrorFiles++;
                 }
@@ -163,7 +163,7 @@ public sealed class CSharpWorkspaceStructureInspector
             .OrderBy(declaration => declaration.RelativePath, StringComparer.OrdinalIgnoreCase)
             .ThenBy(declaration => declaration.Line)
             .ThenBy(declaration => declaration.Column)
-            .ThenBy(declaration => declaration.Name, StringComparer.OrdinalIgnoreCase)];
+            .ThenBy(declaration => declaration.Name, StringComparer.OrdinalIgnoreCase),];
 
         return Result<CSharpWorkspaceStructure>.Success(new CSharpWorkspaceStructure(
             ordered,

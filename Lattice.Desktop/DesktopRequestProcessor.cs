@@ -226,7 +226,7 @@ internal sealed class DesktopRequestProcessor(
         ImmutableArray<CSharpDeclaration> declarations = [.. selected
             .OrderBy(declaration => declaration.RelativePath, StringComparer.OrdinalIgnoreCase)
             .ThenBy(declaration => declaration.Line)
-            .ThenBy(declaration => declaration.Column)];
+            .ThenBy(declaration => declaration.Column),];
 
         string summary = BuildCSharpStructureSummary(queryKind, target, declarations, structure);
         return new DesktopTurnEntry(
@@ -249,7 +249,7 @@ internal sealed class DesktopRequestProcessor(
     {
         CSharpDeclaration[] matchingTypes = [.. declarations.Where(
             declaration => IsTypeDeclaration(declaration)
-                && declaration.Name.Equals(typeName, StringComparison.OrdinalIgnoreCase))];
+                && declaration.Name.Equals(typeName, StringComparison.OrdinalIgnoreCase)),]
         if (matchingTypes.Length == 0)
         {
             return [];
