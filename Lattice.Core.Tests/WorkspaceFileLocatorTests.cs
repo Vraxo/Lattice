@@ -42,6 +42,15 @@ public sealed class WorkspaceFileLocatorTests
         Assert.Equal<IEnumerable<string>>(
             ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
             lookup.Value.SafeRelativePaths);
+
+        Result<string> noRootMatch = locator.TryFindSingleRootFile("Program.cs");
+        Assert.True(noRootMatch.IsSuccess);
+        Assert.Equal(string.Empty, noRootMatch.Value);
+
+        workspace.WriteFile("README.md", "# Root");
+        Result<string> singleRootMatch = locator.TryFindSingleRootFile("readme.md");
+        Assert.True(singleRootMatch.IsSuccess);
+        Assert.Equal("README.md", singleRootMatch.Value);
     }
 
     [Fact]

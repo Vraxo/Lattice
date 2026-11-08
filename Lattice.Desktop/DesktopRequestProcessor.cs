@@ -179,13 +179,13 @@ internal sealed class DesktopRequestProcessor(
         }
 
         // Preserve root-level precedence case-insensitively across platforms before nested lookup.
-        Result<string?> rootMatch = workspace.FileLocator.TryFindSingleRootFile(requestedPath);
+        Result<string> rootMatch = workspace.FileLocator.TryFindSingleRootFile(requestedPath);
         if (!rootMatch.IsSuccess)
         {
             return MapFileError(workspace, requestText, requestedPath, patternId, rootMatch.Error!);
         }
 
-        if (rootMatch.Value is not null)
+        if (!string.IsNullOrEmpty(rootMatch.Value))
         {
             return ExecuteDirectInspect(
                 workspace,

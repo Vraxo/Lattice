@@ -74,12 +74,13 @@ public sealed class WorkspaceFileLocator
     /// <summary>
     /// Checks immediate non-linked files in the workspace root for a single case-insensitive
     /// basename match so root-level precedence is consistent across Windows and POSIX filesystems.
+    /// Returns an empty string when zero or multiple root-level files match.
     /// </summary>
-    public Result<string?> TryFindSingleRootFile(string fileName)
+    public Result<string> TryFindSingleRootFile(string fileName)
     {
         if (!IsBareFileName(fileName))
         {
-            return Result<string?>.Failure(new Error(
+            return Result<string>.Failure(new Error(
                 FileToolErrorCodes.QueryInvalid,
                 $"'{fileName}' is not a bare filename."));
         }
@@ -87,7 +88,7 @@ public sealed class WorkspaceFileLocator
         Result<string> resolvedRoot = WorkspaceFileAccess.ResolveReadableDirectory(_root, ".");
         if (!resolvedRoot.IsSuccess)
         {
-            return Result<string?>.Failure(resolvedRoot.Error!);
+            return Result<string>.Failure(resolvedRoot.Error!);
         }
 
         string target = fileName.Trim();
@@ -107,8 +108,8 @@ public sealed class WorkspaceFileLocator
         }
 
         return rootMatches.Count == 1
-            ? Result<string?>.Success(rootMatches[0])
-            : Result<string?>.Success(null);
+            ? Result<string>.Success(rootMatches[0])
+            : Result<string>.Success(string.Empty);
     }
 
     /// <summary>
