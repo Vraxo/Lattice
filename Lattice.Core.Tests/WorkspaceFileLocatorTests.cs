@@ -54,6 +54,29 @@ public sealed class WorkspaceFileLocatorTests
     }
 
     [Fact]
+    public void FindByFileNameFallsBackToFileStemOnlyWhenNoExactNameExists()
+    {
+        using TempWorkspace workspace = new();
+        workspace.WriteFile("Lattice.Cli/Program.cs", "// cli");
+        workspace.WriteFile("Lattice.Desktop/Program.cs", "// desktop");
+
+        WorkspaceFileLocator locator = new(new WorkspaceRoot(workspace.Path));
+
+        Result<WorkspaceFileLookupResult> lookup = locator.FindByFileName("program");
+        Assert.True(lookup.IsSuccess);
+        Assert.Equal(2, lookup.Value.TotalMatches);
+        Assert.Equal<IEnumerable<string>>(
+            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
+            lookup.Value.SafeRelativePaths);
+
+        workspace.WriteFile("tools/program", "exact extensionless filename");
+        Result<WorkspaceFileLookupResult> exact = locator.FindByFileName("program");
+        Assert.True(exact.IsSuccess);
+        Assert.Equal(1, exact.Value.TotalMatches);
+        Assert.Equal<IEnumerable<string>>(["tools/program"], exact.Value.SafeRelativePaths);
+    }
+
+    [Fact]
     public void FindByFileNameSkipsExcludedDirectoriesAndDoesNotReadFileContents()
     {
         using TempWorkspace workspace = new();

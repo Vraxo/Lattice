@@ -51,6 +51,50 @@ public sealed class WorkspaceFileDiscoveryTests
     }
 
     [Fact]
+    public async Task ExtensionlessStemFindsProgramCsAndNumericReplySelectsDisplayedCandidate()
+    {
+        using DesktopTempWorkspace workspace = new();
+        workspace.WriteFile("CherryCode.Terminal/Program.cs", "// terminal entry\n");
+        workspace.WriteFile("CherryCode/Program.cs", "// app entry\n");
+
+        DesktopSession session = await ConnectSessionAsync(workspace.Path);
+        session.MessageInput = "Show me program";
+        await session.SendMessageAsync();
+
+        DesktopTurnEntry ambiguous = Assert.Single(session.Entries);
+        Assert.Equal(DesktopTurnKind.AmbiguousInput, ambiguous.Kind);
+        Assert.Equal(2, ambiguous.TotalCandidateCount);
+        Assert.Contains("CherryCode.Terminal/Program.cs", ambiguous.Summary, StringComparison.Ordinal);
+        Assert.Contains("CherryCode/Program.cs", ambiguous.Summary, StringComparison.Ordinal);
+        Assert.Null(ambiguous.FileContents);
+
+        session.MessageInput = "2";
+        await session.SendMessageAsync();
+
+        Assert.Equal(2, session.Entries.Count);
+        DesktopTurnEntry opened = session.Entries[1];
+        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
+        Assert.Equal("CherryCode/Program.cs", opened.InspectedRelativePath);
+        Assert.Equal("// app entry\n", opened.FileContents);
+    }
+
+    [Fact]
+    public async Task ExtensionlessStemOpensUniqueProgramCs()
+    {
+        using DesktopTempWorkspace workspace = new();
+        workspace.WriteFile("src/Program.cs", "class Program { }\n");
+
+        DesktopSession session = await ConnectSessionAsync(workspace.Path);
+        session.MessageInput = "Show me program";
+        await session.SendMessageAsync();
+
+        DesktopTurnEntry opened = Assert.Single(session.Entries);
+        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
+        Assert.Equal("src/Program.cs", opened.InspectedRelativePath);
+        Assert.Equal("class Program { }\n", opened.FileContents);
+    }
+
+    [Fact]
     public async Task DuplicateNestedBasenamesListRelativePathsWithoutReadingUntilUserSelectsCandidate()
     {
         using DesktopTempWorkspace workspace = new();

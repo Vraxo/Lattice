@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using Lattice.Core;
 
@@ -297,6 +298,16 @@ internal sealed class DesktopRequestProcessor(
         if (string.IsNullOrEmpty(normalized))
         {
             return false;
+        }
+
+        if (int.TryParse(normalized, NumberStyles.None, CultureInfo.InvariantCulture, out int candidateNumber)
+            && candidateNumber >= 1
+            && candidateNumber <= Math.Min(
+                recentFileContext.CandidateRelativePaths.Length,
+                DefaultMaxDisplayedCandidatePaths))
+        {
+            selectedRelativePath = recentFileContext.CandidateRelativePaths[candidateNumber - 1];
+            return true;
         }
 
         string? exactCandidate = recentFileContext.CandidateRelativePaths

@@ -107,8 +107,35 @@ public sealed class WorkspaceFileLocator
             }
         }
 
-        return rootMatches.Count == 1
-            ? Result<string>.Success(rootMatches[0])
+        if (rootMatches.Count == 1)
+        {
+            return Result<string>.Success(rootMatches[0]);
+        }
+
+        if (rootMatches.Count > 1 || Path.GetExtension(target).Length != 0)
+        {
+            return Result<string>.Success(string.Empty);
+        }
+
+        // When the user omits an extension, a unique root-level file with that stem
+        // takes precedence over nested files, just like an exact root-level filename.
+        List<string> stemMatches = [];
+        foreach ((string fullPath, bool isDirectory) in WorkspaceFileAccess.EnumerateDirectoryEntriesSafely(resolvedRoot.Value))
+        {
+            if (isDirectory || IsExcluded(fullPath))
+            {
+                continue;
+            }
+
+            string entryName = Path.GetFileName(fullPath);
+            if (Path.GetFileNameWithoutExtension(entryName).Equals(target, StringComparison.OrdinalIgnoreCase))
+            {
+                stemMatches.Add(entryName);
+            }
+        }
+
+        return stemMatches.Count == 1
+            ? Result<string>.Success(stemMatches[0])
             : Result<string>.Success(string.Empty);
     }
 
@@ -143,11 +170,29 @@ public sealed class WorkspaceFileLocator
         ScanDirectory(
             resolvedRoot.Value,
             target,
+            matchFileStem: false,
             matches,
             ref totalMatches,
             ref scannedFiles,
             ref hasMoreMatches,
             cancellationToken);
+
+        // Prefer an exact filename (including extension) anywhere in the workspace.
+        // Only fall back to filename-stem matching when the request omitted an extension
+        // and no exact filename exists.
+        if (totalMatches == 0 && Path.GetExtension(target).Length == 0 && !hasMoreMatches)
+        {
+            scannedFiles = 0;
+            ScanDirectory(
+                resolvedRoot.Value,
+                target,
+                matchFileStem: true,
+                matches,
+                ref totalMatches,
+                ref scannedFiles,
+                ref hasMoreMatches,
+                cancellationToken);
+        }
 
         matches.Sort(CompareRelativePathsDeterministically);
         return Result<WorkspaceFileLookupResult>.Success(new WorkspaceFileLookupResult(
@@ -160,6 +205,7 @@ public sealed class WorkspaceFileLocator
     private void ScanDirectory(
         string directoryPath,
         string targetFileName,
+        bool matchFileStem,
         List<string> matches,
         ref int totalMatches,
         ref int scannedFiles,
@@ -200,7 +246,11 @@ public sealed class WorkspaceFileLocator
             }
 
             scannedFiles++;
-            if (!Path.GetFileName(filePath).Equals(targetFileName, StringComparison.OrdinalIgnoreCase))
+            string entryName = Path.GetFileName(filePath);
+            bool matchesRequestedName = matchFileStem
+                ? Path.GetFileNameWithoutExtension(entryName).Equals(targetFileName, StringComparison.OrdinalIgnoreCase)
+                : entryName.Equals(targetFileName, StringComparison.OrdinalIgnoreCase);
+            if (!matchesRequestedName)
             {
                 continue;
             }
@@ -235,6 +285,7 @@ public sealed class WorkspaceFileLocator
             ScanDirectory(
                 subdirectory,
                 targetFileName,
+                matchFileStem,
                 matches,
                 ref totalMatches,
                 ref scannedFiles,
