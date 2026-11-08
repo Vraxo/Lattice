@@ -244,7 +244,7 @@ public sealed class WorkspaceFileDiscoveryTests
             .QuerySelectorAll(".candidate-path")
             .Select(node => node.TextContent)];
         Assert.Equal<IEnumerable<string>>(
-            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
+            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs", "tests/evaluation/m9_3/baseline/Program.cs"],
             programCandidates);
 
         // 2. Replying with a displayed relative path opens that exact file.

@@ -25,7 +25,7 @@ dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Rele
 - [ ] **Unique nested basename discovery:** Send `Show me WorkspaceRoot.cs.`. Confirm Lattice locates `Lattice/WorkspaceRoot.cs` automatically without requiring the folder prefix, shows `Here is 'Lattice/WorkspaceRoot.cs' (... lines).`, and displays its contents inline.
 - [ ] **Duplicate basename clarification & candidate selection (`Show me Program.cs`):**
   1. Send `Show me Program.cs.`.
-  2. Confirm Lattice does **not** guess or read either file yet; instead, it lists the matching relative paths (`Lattice.Cli/Program.cs` and `Lattice.Desktop/Program.cs`) and asks which one to open.
+  2. Confirm Lattice does **not** guess or read any file yet; instead, it lists the matching relative paths (`Lattice.Cli/Program.cs`, `Lattice.Desktop/Program.cs`, and `tests/evaluation/m9_3/baseline/Program.cs`) and asks which one to open.
   3. Reply directly with `Lattice.Desktop/Program.cs` (or `Show me Lattice.Desktop/Program.cs.`).
   4. Confirm Lattice opens `Lattice.Desktop/Program.cs` inline.
 - [ ] **Missing basename vs explicit path precedence:**
