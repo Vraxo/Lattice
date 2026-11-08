@@ -193,6 +193,45 @@ public sealed class CSharpStructureChatTests
         Assert.Empty(entry.SafeDeclarations);
     }
 
+    [Fact]
+    public async Task StructureScanStopsAfterMaximumSourceFilesAndMarksResultTruncated()
+    {
+        using DesktopTempWorkspace workspace = new();
+        for (int index = 1; index <= CSharpWorkspaceStructureInspector.MaxSourceFilesRead + 1; index++)
+        {
+            workspace.WriteFile($"src/Type{index:D3}.cs", $"public class Type{index:D3} {{ }}");
+        }
+
+        DesktopSession session = await ConnectSessionAsync(workspace.Path);
+        session.MessageInput = "What classes are in this project?";
+        await session.SendMessageAsync();
+
+        DesktopTurnEntry entry = Assert.Single(session.Entries);
+        Assert.Equal(CSharpWorkspaceStructureInspector.MaxSourceFilesRead, entry.StructureSourceFileCount);
+        Assert.True(entry.StructureIsTruncated);
+        Assert.Equal(CSharpWorkspaceStructureInspector.MaxSourceFilesRead, entry.SafeDeclarations.Length);
+    }
+
+    [Fact]
+    public async Task StructureScanStopsAtMaximumDeclarationCountAndMarksResultTruncated()
+    {
+        using DesktopTempWorkspace workspace = new();
+        string source = string.Join(
+            Environment.NewLine,
+            Enumerable.Range(1, CSharpWorkspaceStructureInspector.MaxDeclarations + 1)
+                .Select(index => $"public class GeneratedType{index:D4} {{ }}"));
+        workspace.WriteFile("src/ManyTypes.cs", source);
+
+        DesktopSession session = await ConnectSessionAsync(workspace.Path);
+        session.MessageInput = "What classes are in this project?";
+        await session.SendMessageAsync();
+
+        DesktopTurnEntry entry = Assert.Single(session.Entries);
+        Assert.Equal(CSharpWorkspaceStructureInspector.MaxDeclarations, entry.SafeDeclarations.Length);
+        Assert.True(entry.StructureIsTruncated);
+        Assert.Contains("safety limit", entry.Summary, StringComparison.Ordinal);
+    }
+
     private static async Task<DesktopSession> ConnectSessionAsync(string workspacePath)
     {
         DesktopSession session = new()
