@@ -73,64 +73,76 @@ The theme should be dark gray rather than blue-black: neutral charcoal backgroun
 
 # Phase 0 — Inspect the merged Desktop 0.2 implementation
 
-- [ ] Inspect the current main commit, working tree, solution, and CI workflow.
-- [ ] Trace file requests through the pattern catalog, `DesktopRequestProcessor`, `DesktopSession`, and existing read/file-discovery boundaries.
-- [ ] Inspect `WorkspaceRoot`, `WorkspaceFileAccess`, `FileSearchTool`, and `ListDirectoryTool` before choosing the safe place for basename lookup.
-- [ ] Identify the current traversal exclusions, result limits, and symlink/reparse-point handling. Reuse them where possible.
-- [ ] Inspect all existing Desktop tests for missing files, recent-file contexts, multiple candidates, workspace switching, and UI rendering.
-- [ ] Audit `app.css` for the existing blue/navy color values and identify every affected component/state.
+- [x] Inspect the current main commit, working tree, solution, and CI workflow.
+- [x] Trace file requests through the pattern catalog, `DesktopRequestProcessor`, `DesktopSession`, and existing read/file-discovery boundaries.
+- [x] Inspect `WorkspaceRoot`, `WorkspaceFileAccess`, `FileSearchTool`, and `ListDirectoryTool` before choosing the safe place for basename lookup.
+- [x] Identify the current traversal exclusions, result limits, and symlink/reparse-point handling. Reuse them where possible.
+- [x] Inspect all existing Desktop tests for missing files, recent-file contexts, multiple candidates, workspace switching, and UI rendering.
+- [x] Audit `app.css` for the existing blue/navy color values and identify every affected component/state.
 
 **Done when:** The implementation plan uses the existing safe workspace boundary and the theme change is limited to presentation.
+
+> **Phase 0 note:** Inspected `main` at `7d1b5a0af06683e9683ff3c7326f9c0cd51b372e` (green Windows/.NET 10 CI run `42450268128`, following Desktop 0.2 merge `ae2cb8d61a2d0e8c81b59259416c15bc2c158193` with 789 Core + 71 Desktop = 860 passing tests). `WorkspaceFileAccess` is `internal` to `Lattice.Core`, so workspace-wide basename discovery belongs in `Lattice.Core` (`WorkspaceFileLocator`) reusing `WorkspaceFileAccess.ResolveReadableDirectory`, `WorkspaceFileAccess.EnumerateDirectoryEntriesSafely`, and the shared `[".git", ".vs", "artifacts", "bin", "obj"]` exclusion set without reading file contents. Audited all blue-black/navy styles across `Lattice.Desktop/wwwroot/app.css`.
 
 # Phase 1 — Find files by basename
 
 ### 1.1 Exact path first, basename fallback second
 
-- [ ] Preserve the current behavior for an exact relative path.
-- [ ] When a request contains only a basename and the exact root-relative file does not exist, search nested directories under the connected root.
-- [ ] Match the filename itself, not file contents, and do not interpret this request as a source-symbol search.
-- [ ] Reuse existing safe traversal/exclusion logic or introduce the smallest shared filename lookup at the correct boundary.
-- [ ] Ensure the lookup cannot follow symlink/reparse-point files or directories, cannot escape the root, and has an explicit result bound.
-- [ ] Keep the operation read-only and avoid reading candidate file contents merely to enumerate filenames.
+- [x] Preserve the current behavior for an exact relative path.
+- [x] When a request contains only a basename and the exact root-relative file does not exist, search nested directories under the connected root.
+- [x] Match the filename itself, not file contents, and do not interpret this request as a source-symbol search.
+- [x] Reuse existing safe traversal/exclusion logic or introduce the smallest shared filename lookup at the correct boundary.
+- [x] Ensure the lookup cannot follow symlink/reparse-point files or directories, cannot escape the root, and has an explicit result bound.
+- [x] Keep the operation read-only and avoid reading candidate file contents merely to enumerate filenames.
 
 ### 1.2 Handle zero, one, and multiple matches
 
-- [ ] One match: route its relative path through the existing `ReadFileTool` path and display the actual contents.
-- [ ] Multiple matches: display a numbered or clearly separated list of full relative paths and ask which one to open.
-- [ ] Do not choose a candidate automatically when more than one file matches.
-- [ ] Preserve candidate relative paths in the narrow recent-file/conversation context only as needed for a user to select one.
-- [ ] Accept a subsequent explicit relative path from the candidate list and open that exact candidate.
-- [ ] Zero matches: explain that no file with that name was found anywhere in the connected workspace.
-- [ ] For very large result sets, show a clear truncated list and the total count; do not flood the chat.
+- [x] One match: route its relative path through the existing `ReadFileTool` path and display the actual contents.
+- [x] Multiple matches: display a numbered or clearly separated list of full relative paths and ask which one to open.
+- [x] Do not choose a candidate automatically when more than one file matches.
+- [x] Preserve candidate relative paths in the narrow recent-file/conversation context only as needed for a user to select one.
+- [x] Accept a subsequent explicit relative path from the candidate list and open that exact candidate.
+- [x] Zero matches: explain that no file with that name was found anywhere in the connected workspace.
+- [x] For very large result sets, show a clear truncated list and the total count; do not flood the chat.
 
 **Done when:** "Show me Program.cs" locates files in nested projects, opens the file if unique, and asks for an explicit path when duplicates exist.
 
+> **Phase 1 note:** Verified in Windows/.NET 10 CI run `42450939400` on Draft PR #13 (`Lattice.Core.Tests`: 807/807, `Lattice.Desktop.Tests`: 82/82, 889 total passed, 0 failed, 0 skipped, 0 new warnings).
+
 # Phase 2 — Apply the neutral charcoal theme
 
-- [ ] Introduce a small set of CSS custom properties for the neutral palette rather than leaving many unrelated hard-coded shades.
-- [ ] Use a charcoal main background (approximately `#222222`–`#252525`), slightly lighter panels (approximately `#2A2A2A`–`#303030`), darker inset surfaces, and subtle gray borders.
-- [ ] Replace saturated blue message bubbles, buttons, focus rings, and blue-tinted panels with restrained neutral gray treatments.
-- [ ] Keep readable off-white primary text and legible muted gray secondary text.
-- [ ] Preserve visual distinction between user and assistant turns through contrast, alignment, and spacing rather than strong color.
-- [ ] Keep success/error/clarification states recognizable without turning the overall theme colorful.
-- [ ] Verify code blocks, file paths, evidence snippets, composer, workspace badge, hover/disabled states, and focus indicators in the new palette.
-- [ ] Respect `prefers-reduced-motion` and do not introduce visual regressions at narrow widths.
+- [x] Introduce a small set of CSS custom properties for the neutral palette rather than leaving many unrelated hard-coded shades.
+- [x] Use a charcoal main background (approximately `#222222`–`#252525`), slightly lighter panels (approximately `#2A2A2A`–`#303030`), darker inset surfaces, and subtle gray borders.
+- [x] Replace saturated blue message bubbles, buttons, focus rings, and blue-tinted panels with restrained neutral gray treatments.
+- [x] Keep readable off-white primary text and legible muted gray secondary text.
+- [x] Preserve visual distinction between user and assistant turns through contrast, alignment, and spacing rather than strong color.
+- [x] Keep success/error/clarification states recognizable without turning the overall theme colorful.
+- [x] Verify code blocks, file paths, evidence snippets, composer, workspace badge, hover/disabled states, and focus indicators in the new palette.
+- [x] Respect `prefers-reduced-motion` and do not introduce visual regressions at narrow widths.
 
 **Done when:** The full application has a cohesive neutral dark-gray appearance with good text/focus contrast, and no dominant blue-black styling remains.
 
 # Phase 3 — Regression tests, docs, and CI
 
-- [ ] Add unit tests for root basename, nested unique basename, duplicate basename in multiple projects, missing basename, and exact-path precedence.
-- [ ] Add tests for case variation, filenames with dots/spaces where supported, and ordinary final punctuation.
-- [ ] Add safety tests proving filename lookup does not follow linked files/directories, escape the workspace, or enumerate excluded/generated directories contrary to the shared traversal policy.
-- [ ] Add session/UI tests for candidate listing, explicit selection, no-match wording, and no read before a candidate is selected.
-- [ ] Run the existing Desktop and Core test suites; preserve all Desktop 0.2 functionality.
-- [ ] Update README and `docs/windows-smoke-test.md` with "Show me Program.cs" behavior and duplicate-path clarification.
-- [ ] Inspect the final diff for unsafe traversal, unintended capabilities, inconsistent colors, and accidental changes to source-text search.
-- [ ] Run full Release restore/build/test in Windows/.NET 10 PR CI and record exact results.
+- [x] Add unit tests for root basename, nested unique basename, duplicate basename in multiple projects, missing basename, and exact-path precedence.
+- [x] Add tests for case variation, filenames with dots/spaces where supported, and ordinary final punctuation.
+- [x] Add safety tests proving filename lookup does not follow linked files/directories, escape the workspace, or enumerate excluded/generated directories contrary to the shared traversal policy.
+- [x] Add session/UI tests for candidate listing, explicit selection, no-match wording, and no read before a candidate is selected.
+- [x] Run the existing Desktop and Core test suites; preserve all Desktop 0.2 functionality.
+- [x] Update README and `docs/windows-smoke-test.md` with "Show me Program.cs" behavior and duplicate-path clarification.
+- [x] Inspect the final diff for unsafe traversal, unintended capabilities, inconsistent colors, and accidental changes to source-text search.
+- [x] Run full Release restore/build/test in Windows/.NET 10 PR CI and record exact results.
 - [ ] Keep the native Photino GUI smoke check explicitly pending for the user.
 
 **Done when:** The file-discovery behavior, theme, and regressions are covered by automated tests and green CI, with only manual window verification remaining.
+
+> **Phase 3 verification log:**
+> - Pull Request: `https://github.com/Vraxo/Lattice/pull/13` (`arena/1f7e469e-lattice` -> `main`)
+> - Windows `.NET 10` Release CI run `42451266301` (commit `fb9090c`):
+>   - `Lattice.Core.Tests`: **807 passed**, 0 failed, 0 skipped
+>   - `Lattice.Desktop.Tests`: **84 passed**, 0 failed, 0 skipped
+>   - Total: **891 passed**, 0 failed, 0 skipped, 0 new warnings (only the 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in untouched `Lattice/*.cs`)
+> - Manual Windows Photino GUI launch (`docs/windows-smoke-test.md`) remains unchecked for interactive Windows verification.
 
 ---
 

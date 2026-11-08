@@ -9,8 +9,6 @@ public sealed class FileSearchTool : ITool
     public const int MaxLineLength = 200;
     private const string QueryParameter = "query";
     private const string PathParameter = "path";
-    private static readonly string[] DefaultExclusions =
-        [".git", ".vs", "artifacts", "bin", "obj"];
 
     private readonly WorkspaceRoot _root;
     private readonly HashSet<string> _exclusions;
@@ -20,7 +18,7 @@ public sealed class FileSearchTool : ITool
         ArgumentNullException.ThrowIfNull(root);
         _root = root;
         _exclusions = new HashSet<string>(
-            excludedDirectories ?? DefaultExclusions,
+            excludedDirectories ?? WorkspaceFileLocator.DefaultExcludedDirectories,
             StringComparer.OrdinalIgnoreCase);
     }
 

@@ -197,6 +197,14 @@ internal sealed class DesktopSession(
         }
 
         if (entry.Kind == DesktopTurnKind.AmbiguousInput
+            && !entry.SafeAllCandidatePaths.IsEmpty)
+        {
+            return RecentFileContext.Multiple(
+                entry.SafeAllCandidatePaths,
+                ambiguousFileName: entry.CapturedValue);
+        }
+
+        if (entry.Kind == DesktopTurnKind.AmbiguousInput
             && previousContext.Kind == RecentFileContextKind.MultipleFiles
             && DesktopRequestProcessor.IsFollowUpReferenceTurn(entry))
         {

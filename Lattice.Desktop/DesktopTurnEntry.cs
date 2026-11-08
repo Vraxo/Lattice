@@ -15,10 +15,26 @@ internal sealed record DesktopTurnEntry(
     ImmutableArray<EvidenceReference> Evidence = default,
     string? ErrorCode = null,
     string? MatchedPatternId = null,
-    string? CapturedValue = null)
+    string? CapturedValue = null,
+    ImmutableArray<string> CandidatePaths = default,
+    ImmutableArray<string> AllCandidatePaths = default,
+    int? TotalCandidateCount = null,
+    bool HasMoreCandidates = false,
+    string? LeadSummary = null)
 {
     public ImmutableArray<EvidenceReference> SafeEvidence =>
         Evidence.IsDefault ? [] : Evidence;
+
+    public ImmutableArray<string> SafeCandidatePaths =>
+        CandidatePaths.IsDefault ? [] : CandidatePaths;
+
+    public ImmutableArray<string> SafeAllCandidatePaths =>
+        AllCandidatePaths.IsDefault ? SafeCandidatePaths : AllCandidatePaths;
+
+    public int OmittedCandidateCount =>
+        TotalCandidateCount is int total
+            ? Math.Max(0, total - SafeCandidatePaths.Length)
+            : 0;
 
     public bool IsError =>
         Kind is DesktopTurnKind.MissingFile

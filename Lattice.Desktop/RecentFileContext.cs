@@ -5,7 +5,8 @@ namespace Lattice.Desktop;
 internal sealed record RecentFileContext(
     RecentFileContextKind Kind,
     string? SingleRelativePath,
-    ImmutableArray<string> CandidateRelativePaths)
+    ImmutableArray<string> CandidateRelativePaths,
+    string? AmbiguousFileName = null)
 {
     public static RecentFileContext None { get; } = new(RecentFileContextKind.None, null, []);
 
@@ -15,10 +16,12 @@ internal sealed record RecentFileContext(
         return new RecentFileContext(RecentFileContextKind.SingleFile, relativePath, [relativePath]);
     }
 
-    public static RecentFileContext Multiple(ImmutableArray<string> relativePaths)
+    public static RecentFileContext Multiple(
+        ImmutableArray<string> relativePaths,
+        string? ambiguousFileName = null)
     {
         return relativePaths.IsDefaultOrEmpty
             ? None
-            : new RecentFileContext(RecentFileContextKind.MultipleFiles, null, relativePaths);
+            : new RecentFileContext(RecentFileContextKind.MultipleFiles, null, relativePaths, ambiguousFileName);
     }
 }

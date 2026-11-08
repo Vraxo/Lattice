@@ -4,10 +4,11 @@ namespace Lattice.Desktop;
 
 internal sealed class ConnectedWorkspace
 {
-    public ConnectedWorkspace(WorkspaceRoot root)
+    public ConnectedWorkspace(WorkspaceRoot root, WorkspaceFileLocator? fileLocator = null)
     {
         ArgumentNullException.ThrowIfNull(root);
         Root = root;
+        FileLocator = fileLocator ?? new WorkspaceFileLocator(root);
         ReadFileTool = new ReadFileTool(root);
         FileSearchTool = new FileSearchTool(root);
         ListDirectoryTool = new ListDirectoryTool(root);
@@ -18,6 +19,8 @@ internal sealed class ConnectedWorkspace
     }
 
     public WorkspaceRoot Root { get; }
+
+    public WorkspaceFileLocator FileLocator { get; }
 
     public ReadFileTool ReadFileTool { get; }
 
