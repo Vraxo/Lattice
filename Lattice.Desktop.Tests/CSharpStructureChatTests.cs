@@ -99,7 +99,7 @@ public sealed class CSharpStructureChatTests
     {
         using DesktopTempWorkspace workspace = new();
         workspace.WriteFile("src/Visible.cs", "public class Visible { }");
-        workspace.WriteBytes("src/Binary.cs", [0xFF, 0xFE, 0xC3, 0x28]);
+        workspace.WriteBytes("src/Binary.cs", [0xFF, 0xC3, 0x28]);
         workspace.WriteFile("bin/Generated.cs", "public class Generated { }");
         workspace.WriteFile("obj/Generated.cs", "public class GeneratedToo { }");
 

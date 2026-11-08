@@ -164,7 +164,7 @@ Supported requests include:
 - "Where is WorkspaceRoot defined?"
 - "Show me the members of WorkspaceRoot."
 
-The workspace inspector reads C# files through the existing `ListDirectoryTool` and `ReadFileTool` under the read-only permission policy. It skips generated/build directories and has explicit directory, depth, source-file, total-byte, and declaration bounds. Results include the declaration kind, signature, relative path, and line/column.
+The workspace inspector reads C# files through the existing `ListDirectoryTool` and `ReadFileTool` under the read-only permission policy. It skips generated/build directories and has explicit directory, depth, source-file (500 examined / 200 successfully read), total-byte, and declaration bounds. Results include the declaration kind, signature, relative path, and line/column.
 
 **This is not semantic project analysis.** The inspector parses syntax trees, but it does not load MSBuild projects, resolve NuGet/project references, compile the workspace, identify call sites, resolve overloads, or prove that a declaration is the target of a given reference. Literal source-text search remains a separate capability.
 

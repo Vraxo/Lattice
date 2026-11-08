@@ -28,7 +28,7 @@ These operations use Roslyn syntax trees and report declarations that are actual
 - Use `ListDirectoryTool` and `ReadFileTool` through the existing `ToolExecutor` and `ToolPermissionPolicy.ReadOnlyOnly`; do not add a separate direct filesystem traversal in the UI.
 - Continue to rely on workspace-root confinement and static symlink/reparse-point rejection in the existing tools.
 - Skip `.git`, `.vs`, `artifacts`, `bin`, and `obj`.
-- Bound work to 512 directories, depth 32, 200 successfully read C# source files, 8 MiB total source text, and 1,000 declarations. Each file read retains the existing 262,144-byte limit.
+- Bound work to 512 directories, depth 32, 200 successfully read C# source files (500 examined), 8 MiB total source text, and 1,000 declarations. Each file read retains the existing 262,144-byte limit.
 - Report when the scan is truncated, when files could not be read, or when syntax errors were encountered. Roslyn error recovery may still provide useful declarations, but must not be represented as a successful project compilation.
 - Treat all workspace contents as untrusted data. Render declarations as encoded text. Do not execute or interpret comments, strings, or source contents as instructions.
 - The whole feature remains read-only.
