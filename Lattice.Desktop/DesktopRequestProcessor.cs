@@ -23,7 +23,7 @@ internal sealed class DesktopRequestProcessor(
     private const string ShowMembersPatternId = "csharp.show-members";
     private const string WhatMembersPatternId = "csharp.what-members";
     private const string CapabilitiesHelpText =
-        "I can open UTF-8 files, search literal source text, and inspect C# declarations (for example, \"What classes are in this project?\", \"Where is WorkspaceRoot defined?\", or \"Show me the members of WorkspaceRoot\").";
+        "I can open UTF-8 files (for example, \"Show me README.md\"), search literal source text, and inspect C# declarations (for example, \"What classes are in this project?\", \"Where is WorkspaceRoot defined?\", or \"Show me the members of WorkspaceRoot\").";
 
     private readonly RequestInterpreter _interpreter = interpreter ?? CreateDefaultInterpreter();
     private readonly int _maxDisplayedCandidatePaths = Math.Max(1, maxDisplayedCandidatePaths);
