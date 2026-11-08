@@ -128,13 +128,21 @@ The theme should be dark gray rather than blue-black: neutral charcoal backgroun
 - [x] Add tests for case variation, filenames with dots/spaces where supported, and ordinary final punctuation.
 - [x] Add safety tests proving filename lookup does not follow linked files/directories, escape the workspace, or enumerate excluded/generated directories contrary to the shared traversal policy.
 - [x] Add session/UI tests for candidate listing, explicit selection, no-match wording, and no read before a candidate is selected.
-- [ ] Run the existing Desktop and Core test suites; preserve all Desktop 0.2 functionality.
+- [x] Run the existing Desktop and Core test suites; preserve all Desktop 0.2 functionality.
 - [x] Update README and `docs/windows-smoke-test.md` with "Show me Program.cs" behavior and duplicate-path clarification.
 - [x] Inspect the final diff for unsafe traversal, unintended capabilities, inconsistent colors, and accidental changes to source-text search.
-- [ ] Run full Release restore/build/test in Windows/.NET 10 PR CI and record exact results.
+- [x] Run full Release restore/build/test in Windows/.NET 10 PR CI and record exact results.
 - [ ] Keep the native Photino GUI smoke check explicitly pending for the user.
 
 **Done when:** The file-discovery behavior, theme, and regressions are covered by automated tests and green CI, with only manual window verification remaining.
+
+> **Phase 3 verification log:**
+> - Pull Request: `https://github.com/Vraxo/Lattice/pull/13` (`arena/1f7e469e-lattice` -> `main`)
+> - Windows `.NET 10` Release CI run `42451266301` (commit `fb9090c`):
+>   - `Lattice.Core.Tests`: **807 passed**, 0 failed, 0 skipped
+>   - `Lattice.Desktop.Tests`: **84 passed**, 0 failed, 0 skipped
+>   - Total: **891 passed**, 0 failed, 0 skipped, 0 new warnings (only the 10 pre-existing StyleCop `SA1515`/`SA1516` warnings in untouched `Lattice/*.cs`)
+> - Manual Windows Photino GUI launch (`docs/windows-smoke-test.md`) remains unchecked for interactive Windows verification.
 
 ---
 
