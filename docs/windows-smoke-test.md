@@ -23,6 +23,7 @@ dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Rele
 - [ ] **Connect the `Lattice` repository:** Enter the path to your local `Lattice` repository checkout and click **Connect**. Confirm the workspace indicator updates to `<full-path>` with a subtle connected indicator dot.
 - [ ] **Root-level basename precedence:** Send `What's in README.md?`. Confirm Lattice opens the root `README.md` (not `docs/README.md`) in the inline read-only viewer.
 - [ ] **Unique nested basename discovery:** Send `Show me WorkspaceRoot.cs.`. Confirm Lattice locates `Lattice/WorkspaceRoot.cs` automatically without requiring the folder prefix, shows `Here is 'Lattice/WorkspaceRoot.cs' (... lines).`, and displays its contents inline.
+- [ ] **Extensionless filename-stem lookup & numbered selection:** Send `Show me program`. Confirm it finds files named `Program.cs` by stem; when there are duplicates, reply with `2` and confirm the second displayed candidate opens. An exact extensionless filename named `program` takes precedence over stem matches.
 - [ ] **Duplicate basename clarification & candidate selection (`Show me Program.cs`):**
   1. Send `Show me Program.cs.`.
   2. Confirm Lattice does **not** guess or read any file yet; instead, it lists the matching relative paths (`Lattice.Cli/Program.cs`, `Lattice.Desktop/Program.cs`, and `tests/evaluation/m9_3/baseline/Program.cs`) and asks which one to open.
