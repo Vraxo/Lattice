@@ -39,6 +39,29 @@ public sealed class CSharpStructureChatTests
     }
 
     [Fact]
+    public async Task ListTypesIncludesStructsInterfacesEnumsDelegatesAndRecordStructs()
+    {
+        using DesktopTempWorkspace workspace = new();
+        workspace.WriteFile(
+            "src/Types.cs",
+            "namespace Demo;\npublic struct Vector { }\npublic record struct Position(int X, int Y);\npublic interface IThing { }\npublic enum Mode { One, Two }\npublic delegate void Callback();\n");
+
+        DesktopSession session = await ConnectSessionAsync(workspace.Path);
+        session.MessageInput = "What types are in this project?";
+        await session.SendMessageAsync();
+
+        DesktopTurnEntry entry = Assert.Single(session.Entries);
+        Assert.Equal(DesktopTurnKind.CSharpStructureResults, entry.Kind);
+        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Vector" && declaration.Kind == "struct");
+        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Position"
+            && declaration.Kind == "record struct"
+            && declaration.Signature.Contains("(int X, int Y)", StringComparison.Ordinal));
+        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "IThing" && declaration.Kind == "interface");
+        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Mode" && declaration.Kind == "enum");
+        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Callback" && declaration.Kind == "delegate");
+    }
+
+    [Fact]
     public async Task FindDefinitionReturnsExactDeclarationLocationAndAllowsOpeningThatFile()
     {
         using DesktopTempWorkspace workspace = new();

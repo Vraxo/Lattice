@@ -264,7 +264,7 @@ internal sealed class DesktopRequestProcessor(
 
     private static bool IsTypeDeclaration(CSharpDeclaration declaration)
     {
-        return declaration.Kind is "class" or "record" or "struct" or "interface" or "enum" or "delegate";
+        return declaration.Kind is "class" or "record" or "record struct" or "struct" or "interface" or "enum" or "delegate";
     }
 
     private static string BuildCSharpStructureSummary(

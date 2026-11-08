@@ -411,6 +411,7 @@ public sealed class CSharpWorkspaceStructureInspector
     {
         return type switch
         {
+            RecordDeclarationSyntax record when record.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword) => "record struct",
             RecordDeclarationSyntax => "record",
             ClassDeclarationSyntax => "class",
             StructDeclarationSyntax => "struct",
@@ -424,8 +425,11 @@ public sealed class CSharpWorkspaceStructureInspector
         string keyword = type is RecordDeclarationSyntax record
             ? $"record {record.ClassOrStructKeyword.Text}".TrimEnd()
             : type.Keyword.Text;
+        string primaryParameters = type is RecordDeclarationSyntax { ParameterList: not null } record
+            ? record.ParameterList.ToString()
+            : string.Empty;
         string baseList = type.BaseList?.ToString() ?? string.Empty;
-        return $"{FormatModifiers(type.Modifiers)}{keyword} {type.Identifier}{type.TypeParameterList}{baseList}";
+        return $"{FormatModifiers(type.Modifiers)}{keyword} {type.Identifier}{type.TypeParameterList}{primaryParameters}{baseList}";
     }
 
     private static string FormatModifiers(SyntaxTokenList modifiers)
