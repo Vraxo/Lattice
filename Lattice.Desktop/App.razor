@@ -1,5 +1,6 @@
 @namespace Lattice.Desktop
 @using Lattice.Core
+@using Lattice.CSharp
 @inject DesktopSession Session
 
 <main class="chat-shell">
@@ -68,15 +69,16 @@
                     <h2 class="empty-title">Ask about your codebase</h2>
                     <p class="empty-description">
                         Connected to <code>@Session.ConnectedWorkspacePath</code> in read-only mode.
-                        Ask Lattice to open a file or find where an identifier appears across this project.
+                        Ask Lattice to open files, search source text, or inspect C# types and members.
                     </p>
                     <ul class="example-list" aria-label="Example questions">
                         <li>“Where is WorkspaceRoot used in this project?”</li>
+                        <li>“Where is WorkspaceRoot defined?”</li>
+                        <li>“Show me the members of WorkspaceRoot.”</li>
                         <li>“Show me Program.cs.”</li>
-                        <li>“What's in README.md?”</li>
                     </ul>
                     <p class="empty-footnote">
-                        Searches match case-insensitive literal source text rather than compiler-resolved symbol references.
+                        Source search matches literal text. C# structure inspection reads syntax declarations; project compilation and reference resolution are not included yet.
                     </p>
                 }
                 else
@@ -84,12 +86,12 @@
                     <h2 class="empty-title">Connect a workspace folder to begin</h2>
                     <p class="empty-description">
                         Enter an existing local folder path in the header bar above and select <strong>Connect</strong>.
-                        Once connected, you can ask questions about files and source-text occurrences in that directory.
+                        Once connected, you can ask about files, literal source-text occurrences, and C# declaration structure in that directory.
                     </p>
                     <ul class="example-list" aria-label="Example questions">
                         <li>“Where does WorkspaceRoot appear?”</li>
+                        <li>“Where is WorkspaceRoot defined?”</li>
                         <li>“Open the file README.md.”</li>
-                        <li>“Search this project for ToolExecutor.”</li>
                     </ul>
                     <p class="empty-footnote">
                         All workspace access stays read-only and confined to the connected folder.
@@ -171,6 +173,47 @@
                                     </ul>
                                 </div>
                             }
+                            else if (entry.Kind == DesktopTurnKind.CSharpStructureResults)
+                            {
+                                <section class="structure-box" aria-label="C# declarations">
+                                    <div class="structure-header">
+                                        <span>Roslyn syntax declarations</span>
+                                        <span>@(entry.StructureSourceFileCount ?? 0) source files inspected</span>
+                                    </div>
+                                    @if (entry.SafeDeclarations.IsEmpty)
+                                    {
+                                        <p class="structure-empty">No matching C# declarations were found.</p>
+                                    }
+                                    else
+                                    {
+                                        <ol class="structure-list" tabindex="0">
+                                            @foreach (CSharpDeclaration declaration in entry.SafeDeclarations)
+                                            {
+                                                <li class="structure-item" data-declaration-name="@declaration.Name">
+                                                    <div class="structure-meta">
+                                                        <span class="structure-kind">@declaration.Kind</span>
+                                                        <code class="structure-location">@declaration.RelativePath:@declaration.Line</code>
+                                                    </div>
+                                                    <code class="structure-signature">@declaration.Signature</code>
+                                                    @if (!string.IsNullOrEmpty(declaration.Namespace))
+                                                    {
+                                                        <span class="structure-namespace">namespace @declaration.Namespace</span>
+                                                    }
+                                                </li>
+                                            }
+                                        </ol>
+                                    }
+                                    @if (entry.StructureIsTruncated)
+                                    {
+                                        <p class="structure-note">The scan reached a configured safety limit; results may be incomplete.</p>
+                                    }
+                                    @if ((entry.StructureSyntaxErrorFiles ?? 0) > 0)
+                                    {
+                                        <p class="structure-note">@entry.StructureSyntaxErrorFiles source files contained syntax errors; declarations shown are based on Roslyn's recovered syntax.</p>
+                                    }
+                                    <p class="structure-footnote">Syntax-based declaration discovery only. It does not yet compile the project or resolve symbol references.</p>
+                                </section>
+                            }
                         </article>
                     </li>
                 }
@@ -226,14 +269,14 @@
                         @bind="Session.MessageInput"
                         @bind:event="oninput"
                         @onkeydown="HandleComposerKeyDownAsync"
-                        placeholder="Ask about a file or where an identifier appears in this project…"
+                        placeholder="Ask about files, C# types, members, or where an identifier is used…"
                         aria-describedby="composer-hint"></textarea>
                     <button id="send-message" type="submit" class="primary send-button">
                         @(Session.IsSubmitting ? "Sending…" : "Send")
                     </button>
                 </div>
                 <p id="composer-hint" class="composer-hint">
-                    <kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line · Read-only workspace · Literal source-text search (not semantic resolution)
+                    <kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line · Read-only workspace · Literal text search · C# syntax structure (not semantic resolution)
                 </p>
             </fieldset>
         </form>
@@ -285,7 +328,7 @@
 
     private static string GetExchangeClass(DesktopTurnKind kind) => kind switch
     {
-        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults => "exchange-ok",
+        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults or DesktopTurnKind.CSharpStructureResults => "exchange-ok",
         DesktopTurnKind.NoMatches => "exchange-neutral",
         DesktopTurnKind.AmbiguousInput or DesktopTurnKind.UnsupportedInput => "exchange-clarification",
         _ => "exchange-error",
@@ -293,7 +336,7 @@
 
     private static string GetAssistantClass(DesktopTurnKind kind) => kind switch
     {
-        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults => "assistant-ok",
+        DesktopTurnKind.FileInspected or DesktopTurnKind.SearchResults or DesktopTurnKind.CSharpStructureResults => "assistant-ok",
         DesktopTurnKind.NoMatches => "assistant-neutral",
         DesktopTurnKind.AmbiguousInput or DesktopTurnKind.UnsupportedInput => "assistant-clarification",
         _ => "assistant-error",

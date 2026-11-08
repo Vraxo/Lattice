@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Text;
 using Lattice.Core;
+using Lattice.CSharp;
 
 namespace Lattice.Desktop;
 
@@ -13,6 +14,14 @@ internal sealed class DesktopRequestProcessor(
     internal const string ShowThatFilePatternId = "inspect.show-that-file";
     internal const string CandidateSelectionPatternId = "inspect.candidate-selection";
     private const string BroadFindPatternId = "find.symbol";
+    private const string ListTypesPatternId = "csharp.list-types";
+    private const string ListClassesPatternId = "csharp.list-classes";
+    private const string ListClassesShortPatternId = "csharp.list-classes-short";
+    private const string FindDefinitionPatternId = "csharp.find-definition";
+    private const string FindDeclarationPatternId = "csharp.find-declaration";
+    private const string ListMembersPatternId = "csharp.list-members";
+    private const string ShowMembersPatternId = "csharp.show-members";
+    private const string WhatMembersPatternId = "csharp.what-members";
     private const string CapabilitiesHelpText =
         "I can open UTF-8 files in the connected workspace (for example, \"Show me Program.cs\" or \"Show me README.md\") or find where an identifier appears in source text (for example, \"Where is WorkspaceRoot used in this project?\").";
 
@@ -83,6 +92,12 @@ internal sealed class DesktopRequestProcessor(
         RecentFileContext recentFileContext)
     {
         IntentMatch match = interpretation.Match!;
+        if (TryGetCSharpQueryKind(match.PatternId, out DesktopCSharpQueryKind structureQuery))
+        {
+            string? target = match.Slot?.Value.Trim();
+            return ExecuteCSharpStructure(workspace, requestText, match.PatternId, structureQuery, target);
+        }
+
         if (interpretation.Intent == RequestIntentKind.InspectPath)
         {
             if (match.PatternId == ShowThatFilePatternId)
@@ -149,6 +164,154 @@ internal sealed class DesktopRequestProcessor(
             $"I'm not able to handle that request yet. {CapabilitiesHelpText}",
             matchedPatternId: match.PatternId,
             capturedValue: match.Slot?.Value);
+    }
+
+    private static bool TryGetCSharpQueryKind(
+        string patternId,
+        out DesktopCSharpQueryKind queryKind)
+    {
+        queryKind = patternId switch
+        {
+            ListTypesPatternId => DesktopCSharpQueryKind.ListTypes,
+            ListClassesPatternId or ListClassesShortPatternId => DesktopCSharpQueryKind.ListClasses,
+            FindDefinitionPatternId or FindDeclarationPatternId => DesktopCSharpQueryKind.FindDefinition,
+            ListMembersPatternId or ShowMembersPatternId or WhatMembersPatternId => DesktopCSharpQueryKind.ListMembers,
+            _ => (DesktopCSharpQueryKind)(-1),
+        };
+
+        return Enum.IsDefined(queryKind);
+    }
+
+    private static DesktopTurnEntry ExecuteCSharpStructure(
+        ConnectedWorkspace workspace,
+        string requestText,
+        string patternId,
+        DesktopCSharpQueryKind queryKind,
+        string? rawTarget)
+    {
+        string target = UnwrapMatchingQuotes(rawTarget ?? string.Empty);
+        if ((queryKind is DesktopCSharpQueryKind.FindDefinition or DesktopCSharpQueryKind.ListMembers)
+            && string.IsNullOrWhiteSpace(target))
+        {
+            string prompt = queryKind == DesktopCSharpQueryKind.FindDefinition
+                ? "Which C# identifier would you like me to locate?"
+                : "Which C# type would you like me to inspect?";
+            return BuildUnsupportedEntry(workspace, requestText, prompt, matchedPatternId: patternId);
+        }
+
+        Result<CSharpWorkspaceStructure> inspected = workspace.CSharpStructureInspector.Inspect();
+        if (!inspected.IsSuccess)
+        {
+            return new DesktopTurnEntry(
+                requestText,
+                DesktopTurnKind.InspectError,
+                "I couldn't inspect C# source files in the connected workspace.",
+                workspace.Root.FullPath,
+                ErrorCode: inspected.Error!.Code,
+                MatchedPatternId: patternId,
+                CapturedValue: target);
+        }
+
+        CSharpWorkspaceStructure structure = inspected.Value;
+        IEnumerable<CSharpDeclaration> selected = queryKind switch
+        {
+            DesktopCSharpQueryKind.ListTypes => structure.SafeDeclarations.Where(IsTypeDeclaration),
+            DesktopCSharpQueryKind.ListClasses => structure.SafeDeclarations.Where(
+                declaration => declaration.Kind is "class" or "record"),
+            DesktopCSharpQueryKind.FindDefinition => structure.SafeDeclarations.Where(
+                declaration => declaration.Name.Equals(target, StringComparison.OrdinalIgnoreCase)),
+            DesktopCSharpQueryKind.ListMembers => FindMembers(structure.SafeDeclarations, target),
+            _ => [],
+        };
+        ImmutableArray<CSharpDeclaration> declarations = [.. selected
+            .OrderBy(declaration => declaration.RelativePath, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(declaration => declaration.Line)
+            .ThenBy(declaration => declaration.Column)];
+
+        string summary = BuildCSharpStructureSummary(queryKind, target, declarations, structure);
+        return new DesktopTurnEntry(
+            requestText,
+            DesktopTurnKind.CSharpStructureResults,
+            summary,
+            workspace.Root.FullPath,
+            MatchedPatternId: patternId,
+            CapturedValue: target,
+            Declarations: declarations,
+            StructureSourceFileCount: structure.SourceFilesRead,
+            StructureSkippedFileCount: structure.SourceFilesSkipped,
+            StructureSyntaxErrorFiles: structure.SyntaxErrorFiles,
+            StructureIsTruncated: structure.IsTruncated);
+    }
+
+    private static IEnumerable<CSharpDeclaration> FindMembers(
+        ImmutableArray<CSharpDeclaration> declarations,
+        string typeName)
+    {
+        CSharpDeclaration[] matchingTypes = [.. declarations.Where(
+            declaration => IsTypeDeclaration(declaration)
+                && declaration.Name.Equals(typeName, StringComparison.OrdinalIgnoreCase))];
+        if (matchingTypes.Length == 0)
+        {
+            return [];
+        }
+
+        return declarations.Where(declaration =>
+            declaration.ContainingType is not null
+            && declaration.ContainingType.Equals(typeName, StringComparison.OrdinalIgnoreCase)
+            && matchingTypes.Any(typeDeclaration =>
+                typeDeclaration.Namespace.Equals(declaration.Namespace, StringComparison.Ordinal)));
+    }
+
+    private static bool IsTypeDeclaration(CSharpDeclaration declaration)
+    {
+        return declaration.Kind is "class" or "record" or "struct" or "interface" or "enum" or "delegate";
+    }
+
+    private static string BuildCSharpStructureSummary(
+        DesktopCSharpQueryKind queryKind,
+        string target,
+        ImmutableArray<CSharpDeclaration> declarations,
+        CSharpWorkspaceStructure structure)
+    {
+        string summary = queryKind switch
+        {
+            DesktopCSharpQueryKind.ListTypes when declarations.IsEmpty =>
+                $"I didn't find any C# type declarations in the {structure.SourceFilesRead} source files I inspected.",
+            DesktopCSharpQueryKind.ListTypes =>
+                $"I found {declarations.Length} C# type declarations across {structure.SourceFilesRead} source files.",
+            DesktopCSharpQueryKind.ListClasses when declarations.IsEmpty =>
+                $"I didn't find any C# classes or records in the {structure.SourceFilesRead} source files I inspected.",
+            DesktopCSharpQueryKind.ListClasses =>
+                $"I found {declarations.Length} C# classes and records across {structure.SourceFilesRead} source files.",
+            DesktopCSharpQueryKind.FindDefinition when declarations.IsEmpty =>
+                $"I couldn't find a C# declaration named '{target}' in the connected workspace.",
+            DesktopCSharpQueryKind.FindDefinition =>
+                declarations.Length == 1
+                    ? $"I found one C# declaration named '{target}'."
+                    : $"I found {declarations.Length} C# declarations named '{target}'.",
+            DesktopCSharpQueryKind.ListMembers when declarations.IsEmpty =>
+                $"I couldn't find any declared members for the C# type '{target}'.",
+            DesktopCSharpQueryKind.ListMembers =>
+                $"I found {declarations.Length} declared members of '{target}'.",
+            _ => "I inspected the connected workspace's C# structure.",
+        };
+
+        if (structure.IsTruncated)
+        {
+            summary += " The scan reached a safety limit, so the results may be incomplete.";
+        }
+
+        if (structure.SourceFilesSkipped > 0)
+        {
+            summary += $" I skipped {structure.SourceFilesSkipped} source files that couldn't be read safely.";
+        }
+
+        if (structure.SyntaxErrorFiles > 0)
+        {
+            summary += $" {structure.SyntaxErrorFiles} inspected files contained syntax errors; Roslyn's recovered syntax was used where possible.";
+        }
+
+        return summary;
     }
 
     private DesktopTurnEntry ExecuteInspectWithBasenameFallback(
