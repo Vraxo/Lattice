@@ -2,7 +2,7 @@
 
 > **Archive status:** Desktop 0.2 was merged into `main` in [PR #12](https://github.com/Vraxo/Lattice/pull/12) on 2026-11-08. This file preserves the original implementation assignment as it stood at merge time; unchecked items below are not a claim that the merged product is unfinished.
 
->
+
 > **Previous checkpoint:** Desktop 0.1 is merged into main at `77a857bde251b21083a02db75501bac1d44fee43`. Its completed checklist is preserved at [archive/desktop-0.1.md](archive/desktop-0.1.md).
 >
 > **Deliverable:** turn the existing read-only workspace console into a genuinely conversational desktop experience. Users should ask ordinary, bounded questions about their connected codebase; they should not need to memorize tool commands.
