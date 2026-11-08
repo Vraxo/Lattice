@@ -567,9 +567,48 @@ button:disabled {
 button:focus-visible,
 #workspace-path:focus-visible,
 .file-contents:focus-visible,
-.evidence-list:focus-visible {
+.evidence-list:focus-visible,
+.candidate-list:focus-visible {
     outline: 2px solid #79c0ff;
     outline-offset: 2px;
+}
+
+.candidate-box {
+    margin-top: 6px;
+    min-width: 0;
+    border: 1px solid #293847;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0b0f14;
+}
+
+.candidate-list {
+    margin: 0;
+    padding: 8px 14px 8px 34px;
+    max-height: min(300px, 36vh);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.candidate-item {
+    font-size: 12.5px;
+    color: #b4c2d0;
+}
+
+.candidate-path {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 12.5px;
+    color: #dce5ee;
+    word-break: break-all;
+}
+
+.candidate-omitted-note {
+    padding: 7px 12px;
+    border-top: 1px solid #1b2632;
+    font-size: 12px;
+    color: #8fa3b8;
 }
 
 @media (prefers-reduced-motion: reduce) {

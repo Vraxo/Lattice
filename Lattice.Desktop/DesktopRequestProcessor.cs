@@ -1,16 +1,22 @@
 using System.Collections.Immutable;
+using System.Text;
 using Lattice.Core;
 
 namespace Lattice.Desktop;
 
-internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = null)
+internal sealed class DesktopRequestProcessor(
+    RequestInterpreter? interpreter = null,
+    int maxDisplayedCandidatePaths = DesktopRequestProcessor.DefaultMaxDisplayedCandidatePaths)
 {
+    internal const int DefaultMaxDisplayedCandidatePaths = 10;
     internal const string ShowThatFilePatternId = "inspect.show-that-file";
+    internal const string CandidateSelectionPatternId = "inspect.candidate-selection";
     private const string BroadFindPatternId = "find.symbol";
     private const string CapabilitiesHelpText =
-        "I can open UTF-8 files in the connected workspace (for example, \"Show me README.md\") or find where an identifier appears in source text (for example, \"Where is WorkspaceRoot used in this project?\").";
+        "I can open UTF-8 files in the connected workspace (for example, \"Show me Program.cs\" or \"Show me README.md\") or find where an identifier appears in source text (for example, \"Where is WorkspaceRoot used in this project?\").";
 
     private readonly RequestInterpreter _interpreter = interpreter ?? CreateDefaultInterpreter();
+    private readonly int _maxDisplayedCandidatePaths = Math.Max(1, maxDisplayedCandidatePaths);
 
     public static DesktopRequestProcessor Default { get; } = new();
 
@@ -33,6 +39,16 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
 
         RecentFileContext activeContext = recentFileContext ?? RecentFileContext.None;
         RequestInterpretation interpretation = _interpreter.Interpret(requestText);
+        if (interpretation.Kind == IntentMatchKind.Unknown
+            && TryResolveCandidateSelection(requestText, activeContext, out string? selectedRelativePath))
+        {
+            return ExecuteDirectInspect(
+                workspace,
+                requestText,
+                selectedRelativePath!,
+                CandidateSelectionPatternId);
+        }
+
         return interpretation.Kind switch
         {
             IntentMatchKind.Ambiguous => BuildAmbiguousEntry(workspace, requestText, interpretation),
@@ -59,7 +75,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         return entry.CapturedValue is not null && IsFollowUpFileReference(entry.CapturedValue);
     }
 
-    private static DesktopTurnEntry ExecuteMatched(
+    private DesktopTurnEntry ExecuteMatched(
         ConnectedWorkspace workspace,
         string requestText,
         RequestInterpretation interpretation,
@@ -80,18 +96,22 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
 
             if (match.Slot is not null)
             {
-                string relativePath = UnwrapMatchingQuotes(match.Slot.Value.Trim());
-                if (IsFollowUpFileReference(relativePath))
+                string requestedPath = UnwrapMatchingQuotes(match.Slot.Value.Trim());
+                if (IsFollowUpFileReference(requestedPath))
                 {
                     return ExecuteFollowUpInspect(
                         workspace,
                         requestText,
                         recentFileContext,
                         match.PatternId,
-                        relativePath);
+                        requestedPath);
                 }
 
-                return ExecuteInspect(workspace, requestText, relativePath, match.PatternId);
+                return ExecuteInspectWithBasenameFallback(
+                    workspace,
+                    requestText,
+                    requestedPath,
+                    match.PatternId);
             }
         }
 
@@ -130,6 +150,189 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
             capturedValue: match.Slot?.Value);
     }
 
+    private DesktopTurnEntry ExecuteInspectWithBasenameFallback(
+        ConnectedWorkspace workspace,
+        string requestText,
+        string requestedPath,
+        string patternId)
+    {
+        if (string.IsNullOrEmpty(requestedPath))
+        {
+            return BuildUnsupportedEntry(
+                workspace,
+                requestText,
+                "Which file in the connected workspace would you like me to open?",
+                matchedPatternId: patternId);
+        }
+
+        // Exact relative path always takes precedence.
+        DesktopTurnEntry directResult = ExecuteDirectInspect(
+            workspace,
+            requestText,
+            requestedPath,
+            patternId);
+
+        if (!WorkspaceFileLocator.IsBareFileName(requestedPath)
+            || directResult.Kind != DesktopTurnKind.MissingFile)
+        {
+            return directResult;
+        }
+
+        // Preserve root-level precedence case-insensitively across platforms before nested lookup.
+        Result<string?> rootMatch = workspace.FileLocator.TryFindSingleRootFile(requestedPath);
+        if (!rootMatch.IsSuccess)
+        {
+            return MapFileError(workspace, requestText, requestedPath, patternId, rootMatch.Error!);
+        }
+
+        if (rootMatch.Value is not null)
+        {
+            return ExecuteDirectInspect(
+                workspace,
+                requestText,
+                rootMatch.Value,
+                patternId,
+                capturedValueOverride: requestedPath);
+        }
+
+        Result<WorkspaceFileLookupResult> lookupResult = workspace.FileLocator.FindByFileName(requestedPath);
+        if (!lookupResult.IsSuccess)
+        {
+            return MapFileError(workspace, requestText, requestedPath, patternId, lookupResult.Error!);
+        }
+
+        WorkspaceFileLookupResult lookup = lookupResult.Value;
+        if (lookup.TotalMatches == 0)
+        {
+            return new DesktopTurnEntry(
+                requestText,
+                DesktopTurnKind.MissingFile,
+                $"I couldn't find a file named '{requestedPath}' anywhere in the connected workspace.",
+                workspace.Root.FullPath,
+                InspectedRelativePath: requestedPath,
+                ErrorCode: FileToolErrorCodes.PathNotFound,
+                MatchedPatternId: patternId,
+                CapturedValue: requestedPath);
+        }
+
+        if (lookup.TotalMatches == 1 && lookup.SafeRelativePaths.Length == 1)
+        {
+            return ExecuteDirectInspect(
+                workspace,
+                requestText,
+                lookup.SafeRelativePaths[0],
+                patternId,
+                capturedValueOverride: requestedPath);
+        }
+
+        return BuildMultipleBasenameMatchesEntry(
+            workspace,
+            requestText,
+            requestedPath,
+            patternId,
+            lookup);
+    }
+
+    private DesktopTurnEntry BuildMultipleBasenameMatchesEntry(
+        ConnectedWorkspace workspace,
+        string requestText,
+        string requestedFileName,
+        string patternId,
+        WorkspaceFileLookupResult lookup)
+    {
+        ImmutableArray<string> displayed = [.. lookup.SafeRelativePaths.Take(_maxDisplayedCandidatePaths)];
+        int omittedCount = Math.Max(0, lookup.TotalMatches - displayed.Length);
+
+        string lead;
+        if (lookup.HasMoreMatches)
+        {
+            lead =
+                $"I found more than {lookup.TotalMatches} files named '{requestedFileName}' in the connected workspace (showing the first {displayed.Length}; at least {omittedCount} more omitted). Which file would you like me to open? Reply with one of the relative paths below:";
+        }
+        else if (omittedCount > 0)
+        {
+            string omittedLabel = omittedCount == 1 ? "1 more omitted" : $"{omittedCount} more omitted";
+            lead =
+                $"I found {lookup.TotalMatches} files named '{requestedFileName}' in the connected workspace (showing the first {displayed.Length}; {omittedLabel}). Which file would you like me to open? Reply with one of the relative paths below:";
+        }
+        else
+        {
+            lead =
+                $"I found {lookup.TotalMatches} files named '{requestedFileName}' in the connected workspace. Which file would you like me to open? Reply with one of the relative paths below:";
+        }
+
+        StringBuilder fullSummary = new(lead);
+        for (int i = 0; i < displayed.Length; i++)
+        {
+            fullSummary.Append('\n').Append(i + 1).Append(". ").Append(displayed[i]);
+        }
+
+        return new DesktopTurnEntry(
+            requestText,
+            DesktopTurnKind.AmbiguousInput,
+            fullSummary.ToString(),
+            workspace.Root.FullPath,
+            MatchedPatternId: patternId,
+            CapturedValue: requestedFileName,
+            CandidatePaths: displayed,
+            AllCandidatePaths: lookup.SafeRelativePaths,
+            TotalCandidateCount: lookup.TotalMatches,
+            HasMoreCandidates: lookup.HasMoreMatches,
+            LeadSummary: lead);
+    }
+
+    private static bool TryResolveCandidateSelection(
+        string requestText,
+        RecentFileContext recentFileContext,
+        out string? selectedRelativePath)
+    {
+        selectedRelativePath = null;
+        if (recentFileContext.Kind != RecentFileContextKind.MultipleFiles
+            || recentFileContext.CandidateRelativePaths.IsEmpty)
+        {
+            return false;
+        }
+
+        string normalized = NormalizeCandidateReply(requestText);
+        if (string.IsNullOrEmpty(normalized))
+        {
+            return false;
+        }
+
+        string? exactCandidate = recentFileContext.CandidateRelativePaths
+            .FirstOrDefault(candidate => candidate.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+        if (exactCandidate is not null)
+        {
+            selectedRelativePath = exactCandidate;
+            return true;
+        }
+
+        if (!string.IsNullOrEmpty(recentFileContext.AmbiguousFileName)
+            && normalized.Contains('/', StringComparison.Ordinal)
+            && Path.GetFileName(normalized).Equals(
+                recentFileContext.AmbiguousFileName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            selectedRelativePath = normalized;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string NormalizeCandidateReply(string rawInput)
+    {
+        string value = UnwrapMatchingQuotes(rawInput.Trim());
+        while (value.Length > 1 && value[^1] is '.' or '?' or '!')
+        {
+            // Trim ordinary sentence-final punctuation, e.g. "Lattice.Desktop/Program.cs."
+            value = value[..^1].TrimEnd();
+            value = UnwrapMatchingQuotes(value);
+        }
+
+        return value.Replace('\\', '/');
+    }
+
     private static DesktopTurnEntry ExecuteFollowUpInspect(
         ConnectedWorkspace workspace,
         string requestText,
@@ -140,11 +343,12 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         if (recentFileContext.Kind == RecentFileContextKind.SingleFile
             && !string.IsNullOrWhiteSpace(recentFileContext.SingleRelativePath))
         {
-            return ExecuteInspect(
+            return ExecuteDirectInspect(
                 workspace,
                 requestText,
                 recentFileContext.SingleRelativePath,
-                patternId);
+                patternId,
+                capturedValueOverride: capturedReference);
         }
 
         if (recentFileContext.Kind == RecentFileContextKind.MultipleFiles
@@ -156,8 +360,8 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 ", ",
                 candidates.Take(maxListed).Select(path => $"'{path}'"));
             string summary = candidates.Length <= maxListed
-                ? $"The previous search matched {candidates.Length} files ({listed}). Which file would you like me to open?"
-                : $"The previous search matched {candidates.Length} files, including {listed}. Which file would you like me to open?";
+                ? $"Multiple files are in context ({listed}). Which file would you like me to open? Reply with its relative path."
+                : $"Multiple files ({candidates.Length}) are in context, including {listed}. Which file would you like me to open? Reply with its relative path.";
 
             return new DesktopTurnEntry(
                 requestText,
@@ -280,12 +484,14 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         return $"I found {occurrencePhrase} of '{symbol}' across {fileCount} files.";
     }
 
-    private static DesktopTurnEntry ExecuteInspect(
+    private static DesktopTurnEntry ExecuteDirectInspect(
         ConnectedWorkspace workspace,
         string requestText,
         string relativePath,
-        string patternId)
+        string patternId,
+        string? capturedValueOverride = null)
     {
+        string capturedValue = capturedValueOverride ?? relativePath;
         if (string.IsNullOrEmpty(relativePath))
         {
             return BuildUnsupportedEntry(
@@ -304,7 +510,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 workspace.Root.FullPath,
                 InspectedRelativePath: relativePath,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath);
+                CapturedValue: capturedValue);
         }
 
         ArgumentBag arguments = ArgumentBag.From(
@@ -326,10 +532,21 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 FileContents: contents,
                 LineCount: lines,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath);
+                CapturedValue: capturedValue);
         }
 
-        Error error = invocation.Result.Error!;
+        return MapFileError(workspace, requestText, relativePath, patternId, invocation.Result.Error!, capturedValue);
+    }
+
+    private static DesktopTurnEntry MapFileError(
+        ConnectedWorkspace workspace,
+        string requestText,
+        string relativePath,
+        string patternId,
+        Error error,
+        string? capturedValueOverride = null)
+    {
+        string capturedValue = capturedValueOverride ?? relativePath;
         return error.Code switch
         {
             FileToolErrorCodes.PathNotFound => new DesktopTurnEntry(
@@ -340,7 +557,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
             FileToolErrorCodes.PathOutsideRoot => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.AccessRejected,
@@ -349,7 +566,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
             FileToolErrorCodes.ReparsePointNotAllowed => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.AccessRejected,
@@ -358,7 +575,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
             FileToolErrorCodes.NotAFile => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
@@ -367,7 +584,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
             FileToolErrorCodes.FileTooLarge => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
@@ -376,7 +593,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
             FileToolErrorCodes.EncodingInvalid => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
@@ -385,7 +602,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
             _ => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.InspectError,
@@ -394,7 +611,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
                 InspectedRelativePath: relativePath,
                 ErrorCode: error.Code,
                 MatchedPatternId: patternId,
-                CapturedValue: relativePath),
+                CapturedValue: capturedValue),
         };
     }
 
@@ -447,7 +664,7 @@ internal sealed class DesktopRequestProcessor(RequestInterpreter? interpreter = 
         string message = interpretation.Intent switch
         {
             RequestIntentKind.InspectPath =>
-                "Which file in the connected workspace would you like me to open? Include its relative path, such as \"Show me README.md\".",
+                "Which file in the connected workspace would you like me to open? Include its name or relative path, such as \"Show me Program.cs\" or \"Show me README.md\".",
             RequestIntentKind.FindSymbol =>
                 "Which identifier would you like me to search for in this project? For example, ask \"Where does WorkspaceRoot appear?\"",
             _ =>

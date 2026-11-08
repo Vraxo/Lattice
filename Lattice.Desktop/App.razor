@@ -72,7 +72,7 @@
                     </p>
                     <ul class="example-list" aria-label="Example questions">
                         <li>“Where is WorkspaceRoot used in this project?”</li>
-                        <li>“Show me Lattice/WorkspaceRoot.cs.”</li>
+                        <li>“Show me Program.cs.”</li>
                         <li>“What's in README.md?”</li>
                     </ul>
                     <p class="empty-footnote">
@@ -122,7 +122,27 @@
                                 }
                             </div>
 
-                            <p class="message-body assistant-body turn-summary">@entry.Summary</p>
+                            <p class="message-body assistant-body turn-summary">@(entry.LeadSummary ?? entry.Summary)</p>
+
+                            @if (!entry.SafeCandidatePaths.IsEmpty)
+                            {
+                                <div class="candidate-box">
+                                    <ol class="candidate-list" tabindex="0" aria-label="Matching workspace files">
+                                        @foreach (string candidatePath in entry.SafeCandidatePaths)
+                                        {
+                                            <li class="candidate-item" data-candidate-path="@candidatePath">
+                                                <code class="candidate-path">@candidatePath</code>
+                                            </li>
+                                        }
+                                    </ol>
+                                    @if (entry.OmittedCandidateCount > 0 || entry.HasMoreCandidates)
+                                    {
+                                        <div class="candidate-omitted-note">
+                                            @FormatOmittedCandidates(entry.OmittedCandidateCount, entry.HasMoreCandidates)
+                                        </div>
+                                    }
+                                </div>
+                            }
 
                             @if (entry.Kind == DesktopTurnKind.FileInspected && entry.FileContents is not null)
                             {
@@ -285,4 +305,18 @@
         1 => "1 line",
         int count => $"{count} lines",
     };
+
+    private static string FormatOmittedCandidates(int omittedCount, bool hasMoreCandidates)
+    {
+        if (hasMoreCandidates)
+        {
+            return omittedCount > 0
+                ? $"At least {omittedCount} additional matching files omitted — specify a folder path to narrow down."
+                : "Additional matching files omitted — specify a folder path to narrow down.";
+        }
+
+        return omittedCount == 1
+            ? "1 additional matching file omitted."
+            : $"{omittedCount} additional matching files omitted.";
+    }
 }

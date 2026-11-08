@@ -73,14 +73,16 @@ The theme should be dark gray rather than blue-black: neutral charcoal backgroun
 
 # Phase 0 — Inspect the merged Desktop 0.2 implementation
 
-- [ ] Inspect the current main commit, working tree, solution, and CI workflow.
-- [ ] Trace file requests through the pattern catalog, `DesktopRequestProcessor`, `DesktopSession`, and existing read/file-discovery boundaries.
-- [ ] Inspect `WorkspaceRoot`, `WorkspaceFileAccess`, `FileSearchTool`, and `ListDirectoryTool` before choosing the safe place for basename lookup.
-- [ ] Identify the current traversal exclusions, result limits, and symlink/reparse-point handling. Reuse them where possible.
-- [ ] Inspect all existing Desktop tests for missing files, recent-file contexts, multiple candidates, workspace switching, and UI rendering.
-- [ ] Audit `app.css` for the existing blue/navy color values and identify every affected component/state.
+- [x] Inspect the current main commit, working tree, solution, and CI workflow.
+- [x] Trace file requests through the pattern catalog, `DesktopRequestProcessor`, `DesktopSession`, and existing read/file-discovery boundaries.
+- [x] Inspect `WorkspaceRoot`, `WorkspaceFileAccess`, `FileSearchTool`, and `ListDirectoryTool` before choosing the safe place for basename lookup.
+- [x] Identify the current traversal exclusions, result limits, and symlink/reparse-point handling. Reuse them where possible.
+- [x] Inspect all existing Desktop tests for missing files, recent-file contexts, multiple candidates, workspace switching, and UI rendering.
+- [x] Audit `app.css` for the existing blue/navy color values and identify every affected component/state.
 
 **Done when:** The implementation plan uses the existing safe workspace boundary and the theme change is limited to presentation.
+
+> **Phase 0 note:** Inspected `main` at `7d1b5a0af06683e9683ff3c7326f9c0cd51b372e` (green Windows/.NET 10 CI run `42450268128`, following Desktop 0.2 merge `ae2cb8d61a2d0e8c81b59259416c15bc2c158193` with 789 Core + 71 Desktop = 860 passing tests). `WorkspaceFileAccess` is `internal` to `Lattice.Core`, so workspace-wide basename discovery belongs in `Lattice.Core` (`WorkspaceFileLocator`) reusing `WorkspaceFileAccess.ResolveReadableDirectory`, `WorkspaceFileAccess.EnumerateDirectoryEntriesSafely`, and the shared `[".git", ".vs", "artifacts", "bin", "obj"]` exclusion set without reading file contents. Audited all blue-black/navy styles across `Lattice.Desktop/wwwroot/app.css`.
 
 # Phase 1 — Find files by basename
 
