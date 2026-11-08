@@ -4,11 +4,11 @@ Lattice is a **symbolic, tool-using coding assistant** built around explicit sta
 
 ## Desktop application
 
-Desktop 0.1 delivered a read-only PhotinoX.Blazor workspace interface. **Desktop 0.2 is the next active increment:** replacing its command-like request form with a conversational interface and ordinary bounded natural-language phrasing.
+Desktop 0.1 established the read-only workspace workflow. **Desktop 0.2**, merged in [PR #12](https://github.com/Vraxo/Lattice/pull/12), added the chat interface, natural-language requests, and evidence-grounded replies. The current application is conversational; its next increment adds workspace-wide basename discovery and a neutral charcoal theme.
 
-The active assignment is [`.agents/todo.md`](.agents/todo.md). The 0.1 implementation checklist is archived under [`.agents/archive/desktop-0.1.md`](.agents/archive/desktop-0.1.md).
+The active assignment is [`.agents/todo.md`](.agents/todo.md). The Desktop 0.1 and 0.2 implementation plans are preserved under [`.agents/archive/`](.agents/archive/).
 
-### Desktop 0.1 baseline (`Lattice.Desktop`)
+### Current desktop baseline (`Lattice.Desktop`)
 
 Lattice Desktop 0.1 provides a read-only PhotinoX.Blazor desktop window for connecting a local code workspace, inspecting UTF-8 files, and running grounded source-text symbol searches with visible file-and-line citations.
 
@@ -34,7 +34,7 @@ The legacy controlled-statement console harness remains available separately:
 dotnet run --project Lattice.Cli
 ```
 
-### Conversational workspace interaction
+### Conversational workspace interaction (Desktop 0.2)
 
 Connect a local project folder in the header bar, then ask about files or identifiers in ordinary conversational English in the message composer (`Enter` sends; `Shift+Enter` inserts a newline):
 
@@ -85,3 +85,12 @@ User messages and evidence-grounded assistant replies remain visible in chronolo
 - [Desktop product direction](docs/DESKTOP_DIRECTION.md) — product scope and current milestone direction.
 - [Documentation index](docs/README.md)
 - [Historical research-first specifications and milestone records](docs/archive/research-first/) — retained for provenance, not active instructions.
+
+
+### Next increment: file discovery and charcoal theme (Desktop 0.3)
+
+- `Show me Program.cs` will search nested folders when no root-level file exists.
+- A unique basename match will open directly; duplicate names will be listed by relative path and require explicit selection.
+- The UI palette is being shifted from blue-black to neutral dark gray/charcoal.
+
+See the [active Desktop 0.3 assignment](.agents/todo.md).

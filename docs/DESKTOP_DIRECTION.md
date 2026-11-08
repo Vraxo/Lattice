@@ -135,3 +135,19 @@ Language interpretation remains deterministic and bounded. It may support a sing
 A minimal conversational follow-up such as "Show me that file" may resolve only when the immediately relevant preceding turn identifies one unambiguous file. Otherwise Lattice asks which file the user means.
 
 The complete ordered scope and acceptance criteria are in [the active Desktop 0.2 checklist](../.agents/todo.md).
+
+
+## 10. Desktop 0.3 — workspace file discovery and charcoal styling
+
+User testing of Desktop 0.2 exposed an important gap: a natural file request such as "Show me Program.cs" should not be interpreted as a root-only relative path. If the exact relative path is omitted, Lattice should find matching basenames throughout the connected workspace.
+
+Resolution rules are strict and predictable:
+- An exact relative path takes precedence and opens that exact file.
+- A bare filename is searched by basename within the connected root.
+- One match opens directly.
+- Multiple matches are shown as full relative paths and require the user to select one. Lattice must never guess.
+- No match produces a friendly workspace-wide not-found response.
+
+Filename discovery is distinct from searching file contents. It must reuse the safe workspace traversal boundary and preserve root confinement, link/reparse-point exclusion, and read-only behavior.
+
+Desktop 0.3 also replaces the blue-black appearance with a neutral charcoal palette: gray backgrounds and surfaces, subtle gray borders, readable off-white text, and restrained neutral controls/focus treatment. This is a presentation-only change.
