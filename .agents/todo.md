@@ -1,6 +1,6 @@
 # Lattice — Desktop 0.4: C# Structure & Declaration Navigation
 
-> **Status:** approved and implemented on `assistant/desktop-0.4-csharp-structure`; Windows CI verification is pending.
+> **Status:** implemented and Windows CI verified on `assistant/desktop-0.4-csharp-structure`. Draft PR #15 is ready for review, stacked on PR #14; PR #14 should merge first.
 >
 > **Baseline:** Desktop 0.3 is merged in PR #13. The 0.3.1 extensionless filename refinement is in [PR #14](https://github.com/Vraxo/Lattice/pull/14), currently open with green Windows CI. This branch is stacked on PR #14 so the two scopes remain independently reviewable.
 >
@@ -91,7 +91,7 @@ These operations use Roslyn syntax trees and report declarations that are actual
 - [x] Enforce source-file, total-byte, and declaration limits; return truncation and skipped-file information.
 - [x] Parse syntax with Roslyn and collect type declarations plus direct class/struct/interface/record members.
 - [x] Include relative path, line/column, namespace, containing type, kind, and signature for each declaration.
-- [ ] Verify symlink/reparse-point behavior and resource limits in Windows CI.
+- [x] Reuse the existing workspace `ListDirectoryTool` / `ReadFileTool` safety boundary for link/reparse-point exclusion; run the full Windows suite and add explicit tests for the 200-file and 1,000-declaration truncation limits. The remaining directory/depth/total-byte/500-examined caps are explicit in the inspector and were reviewed, but are not each individually stress-tested.
 
 # Phase 2 — Conversational structure queries
 
@@ -100,7 +100,7 @@ These operations use Roslyn syntax trees and report declarations that are actual
 - [x] Display an explicit no-match result when a declaration is absent; do not fall back to literal text matching.
 - [x] Carry the relevant source file(s) into the existing narrow follow-up context so "Show me that file" works when unambiguous.
 - [x] Preserve exact user messages and normal chronological conversation history.
-- [ ] Verify phrase ambiguity and request regressions in Windows CI.
+- [x] Verify phrase routing, unsupported-input behavior, and request regressions in Windows CI.
 
 # Phase 3 — UI, tests, and documentation
 
@@ -108,12 +108,22 @@ These operations use Roslyn syntax trees and report declarations that are actual
 - [x] Show declaration kind, signature, relative path, and line number.
 - [x] State clearly that the results are syntax-based and do not compile projects or resolve references.
 - [x] Add tests for type inventory, definitions, member listings, missing definitions, unreadable files, excluded directories, follow-up context, and rendered UI.
-- [ ] Add any additional tests required by CI findings.
-- [ ] Update README, desktop direction, and Windows smoke-test steps.
-- [ ] Inspect the full diff for unintended capabilities, unsafe access, and misleading semantic claims.
-- [ ] Run Windows/.NET 10 Release restore/build/test in PR CI and record exact per-project results.
+- [x] Add regression coverage for CI findings, full type inventory (including record structs), and scan truncation limits.
+- [x] Update README, desktop direction, documentation index, and Windows smoke-test steps.
+- [x] Inspect the full diff for unintended capabilities, unsafe access, and misleading semantic claims.
+- [x] Run Windows/.NET 10 Release restore/build/test in PR CI and record exact per-project results.
+
+- [ ] Complete the native Photino launch and manual chat walkthrough on a Windows desktop; CI/bUnit do not establish this.
 
 ---
+
+> **Windows/.NET 10 verification:** PR CI run [#42455177133](https://github.com/Vraxo/Lattice/actions/runs/42455177133), head commit `cea47c5a10b43cd11dfe81e51bdd13b4f175d773`.
+> - Restore: passed.
+> - Release build: succeeded, 0 errors (75 warnings overall; no warnings in the new structure inspector, request processor, or structure chat test file).
+> - `Lattice.Core.Tests`: **808 passed**, 0 failed, 0 skipped.
+> - `Lattice.Desktop.Tests`: **96 passed**, 0 failed, 0 skipped.
+> - Total: **904 passed**, 0 failed, 0 skipped.
+> - Native Photino GUI launch and interactive smoke test remain pending on the user's Windows desktop.
 
 ## STOP — one stacked draft PR for review
 
