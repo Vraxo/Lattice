@@ -1,4 +1,5 @@
 using Bunit;
+using Lattice.CSharp;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lattice.Desktop.Tests;

@@ -16,6 +16,7 @@ public sealed class CSharpWorkspaceStructureInspector
 {
     public const int MaxDirectoriesVisited = 512;
     public const int MaxSourceFilesRead = 200;
+    public const int MaxSourceFilesExamined = 500;
     public const int MaxTotalSourceBytes = 8 * 1024 * 1024;
     public const int MaxDeclarations = 1_000;
     public const int MaxDirectoryDepth = 32;
@@ -41,6 +42,7 @@ public sealed class CSharpWorkspaceStructureInspector
         ImmutableArray<CSharpDeclaration>.Builder declarations = ImmutableArray.CreateBuilder<CSharpDeclaration>();
         int directoriesVisited = 0;
         int sourceFilesRead = 0;
+        int sourceFilesExamined = 0;
         int sourceFilesSkipped = 0;
         int totalSourceBytes = 0;
         int syntaxErrorFiles = 0;
@@ -70,7 +72,6 @@ public sealed class CSharpWorkspaceStructureInspector
                     return Result<CSharpWorkspaceStructure>.Failure(listing.Result.Error!);
                 }
 
-                sourceFilesSkipped++;
                 continue;
             }
 
@@ -109,12 +110,13 @@ public sealed class CSharpWorkspaceStructureInspector
                     continue;
                 }
 
-                if (sourceFilesRead >= MaxSourceFilesRead)
+                if (sourceFilesExamined >= MaxSourceFilesExamined || sourceFilesRead >= MaxSourceFilesRead)
                 {
                     truncated = true;
                     break;
                 }
 
+                sourceFilesExamined++;
                 string relativePath = CombineRelativePath(directory, entry);
                 ToolInvocation read = ToolExecutor.Execute(
                     _readFileTool,
