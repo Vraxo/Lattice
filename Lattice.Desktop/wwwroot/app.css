@@ -517,6 +517,100 @@ fieldset {
     overflow-wrap: anywhere;
 }
 
+.structure-box {
+    margin-top: 6px;
+    min-width: 0;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-inset);
+}
+
+.structure-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding: 8px 12px;
+    background: var(--bg-panel-header);
+    border-bottom: 1px solid var(--border-default);
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.structure-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: min(420px, 46vh);
+    overflow: auto;
+}
+
+.structure-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.structure-item:last-child {
+    border-bottom: 0;
+}
+
+.structure-meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+}
+
+.structure-kind {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.structure-location,
+.structure-signature {
+    font-family: "Cascadia Code", Consolas, monospace;
+    color: var(--text-path);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.structure-signature {
+    white-space: pre-wrap;
+    color: var(--text-primary);
+}
+
+.structure-namespace,
+.structure-note,
+.structure-footnote,
+.structure-empty {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.structure-empty,
+.structure-note,
+.structure-footnote {
+    padding: 8px 12px;
+}
+
+.structure-note {
+    border-top: 1px solid var(--border-subtle);
+}
+
+.structure-footnote {
+    background: var(--bg-panel-header);
+    border-top: 1px solid var(--border-default);
+}
+
 .candidate-box {
     margin-top: 6px;
     min-width: 0;
@@ -651,6 +745,7 @@ button:focus-visible,
 #workspace-path:focus-visible,
 .file-contents:focus-visible,
 .evidence-list:focus-visible,
+.structure-list:focus-visible,
 .candidate-list:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;

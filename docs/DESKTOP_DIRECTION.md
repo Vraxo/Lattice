@@ -134,7 +134,7 @@ Language interpretation remains deterministic and bounded. It may support a sing
 
 A minimal conversational follow-up such as "Show me that file" may resolve only when the immediately relevant preceding turn identifies one unambiguous file. Otherwise Lattice asks which file the user means.
 
-The complete ordered scope and acceptance criteria are in [the active Desktop 0.2 checklist](../.agents/todo.md).
+The original Desktop 0.2 assignment is preserved in [the archive](../.agents/archive/desktop-0.2.md).
 
 
 ## 10. Desktop 0.3 — workspace file discovery and charcoal styling
@@ -151,3 +151,21 @@ Resolution rules are strict and predictable:
 Filename discovery is distinct from searching file contents. It must reuse the safe workspace traversal boundary and preserve root confinement, link/reparse-point exclusion, and read-only behavior.
 
 Desktop 0.3 also replaces the blue-black appearance with a neutral charcoal palette: gray backgrounds and surfaces, subtle gray borders, readable off-white text, and restrained neutral controls/focus treatment. This is a presentation-only change.
+
+
+## 11. Desktop 0.4 — C# structure and declaration navigation
+
+The first C# code-understanding slice reuses the existing `Lattice.CSharp` Roslyn dependency and exposes syntax declaration facts in the desktop conversation.
+
+Supported requests include:
+
+- "What classes are in this project?"
+- "What types are in this project?"
+- "Where is WorkspaceRoot defined?"
+- "Show me the members of WorkspaceRoot."
+
+The workspace inspector reads C# files through the existing `ListDirectoryTool` and `ReadFileTool` under the read-only permission policy. It skips generated/build directories and has explicit directory, depth, source-file (500 examined / 200 successfully read), total-byte, and declaration bounds. Results include the declaration kind, signature, relative path, and line/column.
+
+**This is not semantic project analysis.** The inspector parses syntax trees, but it does not load MSBuild projects, resolve NuGet/project references, compile the workspace, identify call sites, resolve overloads, or prove that a declaration is the target of a given reference. Literal source-text search remains a separate capability.
+
+The detailed scope and acceptance gates are in the [active Desktop 0.4 checklist](../.agents/todo.md).

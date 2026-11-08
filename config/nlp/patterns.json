@@ -1,6 +1,14 @@
 {
   "patternVersion": "1.1",
   "patterns": [
+    { "id": "csharp.list-types", "intent": "question", "template": "what types are in this project" },
+    { "id": "csharp.list-classes", "intent": "question", "template": "what classes are in this project" },
+    { "id": "csharp.list-classes-short", "intent": "explanation", "template": "list classes in this project" },
+    { "id": "csharp.find-definition", "intent": "question", "template": "where is {symbol} defined" },
+    { "id": "csharp.find-declaration", "intent": "question", "template": "where is {symbol} declared" },
+    { "id": "csharp.list-members", "intent": "question", "template": "list members of {type}" },
+    { "id": "csharp.show-members", "intent": "question", "template": "show me the members of {type}" },
+    { "id": "csharp.what-members", "intent": "question", "template": "what members does {type} have" },
     { "id": "question.what-is", "intent": "question", "template": "what is {topic}" },
     { "id": "question.who-is", "intent": "question", "template": "who is {topic}" },
     { "id": "question.is", "intent": "question", "template": "is {subject}" },

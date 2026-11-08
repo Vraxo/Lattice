@@ -196,6 +196,19 @@ internal sealed class DesktopSession(
             };
         }
 
+        if (entry.Kind == DesktopTurnKind.CSharpStructureResults)
+        {
+            ImmutableArray<string> sourcePaths = [.. entry.SafeDeclarations
+                .Select(declaration => declaration.RelativePath)
+                .Distinct(StringComparer.OrdinalIgnoreCase)];
+            return sourcePaths.Length switch
+            {
+                0 => RecentFileContext.None,
+                1 => RecentFileContext.Single(sourcePaths[0]),
+                _ => RecentFileContext.Multiple(sourcePaths),
+            };
+        }
+
         if (entry.Kind == DesktopTurnKind.AmbiguousInput
             && !entry.SafeAllCandidatePaths.IsEmpty)
         {
