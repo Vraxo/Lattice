@@ -249,7 +249,7 @@ internal sealed class DesktopRequestProcessor(
     {
         CSharpDeclaration[] matchingTypes = [.. declarations.Where(
             declaration => IsTypeDeclaration(declaration)
-                && declaration.Name.Equals(typeName, StringComparison.OrdinalIgnoreCase)),]
+                && declaration.Name.Equals(typeName, StringComparison.OrdinalIgnoreCase)),];
         if (matchingTypes.Length == 0)
         {
             return [];
