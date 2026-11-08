@@ -4,6 +4,7 @@ internal enum DesktopTurnKind
 {
     FileInspected,
     SearchResults,
+    CSharpStructureResults,
     NoMatches,
     MissingFile,
     InspectError,

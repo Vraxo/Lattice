@@ -85,7 +85,7 @@ public sealed class CSharpWorkspaceStructureInspector
                     continue;
                 }
 
-                if (entry.EndsWith('/', StringComparison.Ordinal))
+                if (entry.EndsWith("/", StringComparison.Ordinal))
                 {
                     string directoryName = entry[..^1];
                     if (ExcludedDirectories.Contains(directoryName))

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Lattice.Core;
+using Lattice.CSharp;
 
 namespace Lattice.Desktop;
 
@@ -20,10 +21,18 @@ internal sealed record DesktopTurnEntry(
     ImmutableArray<string> AllCandidatePaths = default,
     int? TotalCandidateCount = null,
     bool HasMoreCandidates = false,
-    string? LeadSummary = null)
+    string? LeadSummary = null,
+    ImmutableArray<CSharpDeclaration> Declarations = default,
+    int? StructureSourceFileCount = null,
+    int? StructureSkippedFileCount = null,
+    int? StructureSyntaxErrorFiles = null,
+    bool StructureIsTruncated = false)
 {
     public ImmutableArray<EvidenceReference> SafeEvidence =>
         Evidence.IsDefault ? [] : Evidence;
+
+    public ImmutableArray<CSharpDeclaration> SafeDeclarations =>
+        Declarations.IsDefault ? [] : Declarations;
 
     public ImmutableArray<string> SafeCandidatePaths =>
         CandidatePaths.IsDefault ? [] : CandidatePaths;

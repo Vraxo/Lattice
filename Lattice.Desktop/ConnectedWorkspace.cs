@@ -1,4 +1,5 @@
 using Lattice.Core;
+using Lattice.CSharp;
 
 namespace Lattice.Desktop;
 
@@ -16,6 +17,7 @@ internal sealed class ConnectedWorkspace
         Policy = ToolPermissionPolicy.ReadOnlyOnly;
         Toolset = WorkspaceToolset.FileTools;
         QuestionAnswerer = new WorkspaceQuestionAnswerer(Registry, Policy, Toolset);
+        CSharpStructureInspector = new CSharpWorkspaceStructureInspector(root);
     }
 
     public WorkspaceRoot Root { get; }
@@ -35,4 +37,6 @@ internal sealed class ConnectedWorkspace
     public WorkspaceToolset Toolset { get; }
 
     public WorkspaceQuestionAnswerer QuestionAnswerer { get; }
+
+    public CSharpWorkspaceStructureInspector CSharpStructureInspector { get; }
 }
