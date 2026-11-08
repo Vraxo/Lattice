@@ -221,6 +221,70 @@ public sealed class WorkspaceFileDiscoveryTests
         Assert.Contains("// desktop entry", exchanges[1].QuerySelector(".file-contents")!.TextContent, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task RealRepositorySupportsShowMeProgramCsDuplicateClarificationUniqueNestedBasenameAndRootPrecedence()
+    {
+        string repoRoot = LocateLatticeRepositoryRoot();
+        await using BunitContext context = new();
+        context.Services.AddSingleton<DesktopSession>();
+        IRenderedComponent<App> component = context.Render<App>();
+
+        await component.Find("#workspace-path").InputAsync(repoRoot);
+        await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        // 1. "Show me Program.cs." discovers Lattice.Cli/Program.cs and Lattice.Desktop/Program.cs without guessing.
+        await component.Find("#message-input").InputAsync("Show me Program.cs.");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        var exchanges = component.FindAll("#turn-history > li.chat-exchange");
+        Assert.Single(exchanges);
+        Assert.Equal("AmbiguousInput", exchanges[0].GetAttribute("data-turn-kind"));
+        Assert.Empty(exchanges[0].QuerySelectorAll(".file-viewer"));
+        string[] programCandidates = [.. exchanges[0]
+            .QuerySelectorAll(".candidate-path")
+            .Select(node => node.TextContent)];
+        Assert.Equal<IEnumerable<string>>(
+            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
+            programCandidates);
+
+        // 2. Replying with a displayed relative path opens that exact file.
+        await component.Find("#message-input").InputAsync("Lattice.Desktop/Program.cs");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        // 3. Unique nested basename opens directly.
+        await component.Find("#message-input").InputAsync("Show me WorkspaceRoot.cs.");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        // 4. Root README.md takes precedence over docs/README.md.
+        await component.Find("#message-input").InputAsync("What's in README.md?");
+        await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
+
+        exchanges = component.FindAll("#turn-history > li.chat-exchange");
+        Assert.Equal(4, exchanges.Count);
+        Assert.Equal("FileInspected", exchanges[1].GetAttribute("data-turn-kind"));
+        Assert.Equal("Lattice.Desktop/Program.cs", exchanges[1].QuerySelector(".file-path")!.TextContent);
+        Assert.Equal("FileInspected", exchanges[2].GetAttribute("data-turn-kind"));
+        Assert.Equal("Lattice/WorkspaceRoot.cs", exchanges[2].QuerySelector(".file-path")!.TextContent);
+        Assert.Equal("FileInspected", exchanges[3].GetAttribute("data-turn-kind"));
+        Assert.Equal("README.md", exchanges[3].QuerySelector(".file-path")!.TextContent);
+    }
+
+    private static string LocateLatticeRepositoryRoot()
+    {
+        DirectoryInfo? current = new(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Lattice.slnx")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate Lattice.slnx above the test base directory.");
+    }
+
     private static async Task<DesktopSession> ConnectSessionAsync(string workspacePath)
     {
         DesktopSession session = new()
