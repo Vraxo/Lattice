@@ -72,8 +72,8 @@ public static partial class KnowledgePackageParser
 
         string? name = ReadRequiredString(root, "name", "document", diagnostics);
         string? description = ReadOptionalString(root, "description", "document", diagnostics);
-        HashSet<string> allIds = new(StringComparer.Ordinal);
-        HashSet<string> conceptIds = new(StringComparer.Ordinal);
+        HashSet<string> allIds = [with(StringComparer.Ordinal)];
+        HashSet<string> conceptIds = [with(StringComparer.Ordinal)];
         ImmutableArray<KnowledgeConcept> concepts = ReadConcepts(root, allIds, conceptIds, diagnostics);
         ImmutableArray<KnowledgeFact> facts = ReadFacts(root, allIds, conceptIds, diagnostics);
         ImmutableArray<KnowledgeRule> rules = ReadRules(root, allIds, conceptIds, diagnostics);

@@ -19,8 +19,8 @@ public sealed class RegressionRequestSetTests
             throw new InvalidDataException("Unsupported regression corpus version.");
         }
 
-        HashSet<string> ids = new(StringComparer.Ordinal);
-        HashSet<string> categories = new(StringComparer.Ordinal);
+        HashSet<string> ids = [with(StringComparer.Ordinal)];
+        HashSet<string> categories = [with(StringComparer.Ordinal)];
         foreach (JsonElement entry in root.GetProperty("entries").EnumerateArray())
         {
             string id = entry.GetProperty("id").GetString()!;
@@ -45,8 +45,9 @@ public sealed class RegressionRequestSetTests
                 rationale);
         }
 
-        HashSet<string> requiredCategories = new(StringComparer.Ordinal)
-        {
+        HashSet<string> requiredCategories =
+        [
+            with(StringComparer.Ordinal),
             "understanding",
             "clarification",
             "tool-selection",
@@ -55,7 +56,7 @@ public sealed class RegressionRequestSetTests
             "permission",
             "file-preservation",
             "output-grounding",
-        };
+        ];
         if (!categories.SetEquals(requiredCategories))
         {
             throw new InvalidDataException(

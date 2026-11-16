@@ -88,7 +88,7 @@ public static class IntentPatternCatalogParser
             return builder.ToImmutable();
         }
 
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         int index = 0;
         foreach (JsonElement element in property.EnumerateArray())
         {

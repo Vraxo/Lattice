@@ -112,7 +112,7 @@ internal static class LexicalScorer
     private static ImmutableArray<string> Tokenize(string text)
     {
         ImmutableArray<string>.Builder builder = ImmutableArray.CreateBuilder<string>();
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         int start = -1;
         for (int index = 0; index <= text.Length; index++)
         {

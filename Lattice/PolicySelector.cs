@@ -10,7 +10,7 @@ public sealed class PolicySelector
     {
         ArgumentNullException.ThrowIfNull(rules);
         ImmutableArray<IActionRule> array = [.. rules];
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         foreach (IActionRule rule in array)
         {
             if (string.IsNullOrWhiteSpace(rule.Id))

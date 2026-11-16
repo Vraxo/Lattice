@@ -8,7 +8,7 @@ public sealed record IntentPatternCatalog
     {
         ArgumentNullException.ThrowIfNull(patterns);
         ImmutableArray<IntentPattern> array = [.. patterns];
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         foreach (IntentPattern pattern in array)
         {
             if (!seen.Add(pattern.Id))

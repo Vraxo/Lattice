@@ -141,7 +141,7 @@ public sealed class ResponseRealizationTests
 
     private static Dictionary<string, string> Slots(JsonElement element)
     {
-        Dictionary<string, string> slots = new(StringComparer.Ordinal);
+        Dictionary<string, string> slots = [with(StringComparer.Ordinal)];
         foreach (JsonProperty property in element.EnumerateObject())
         {
             slots[property.Name] = property.Value.GetString()!;

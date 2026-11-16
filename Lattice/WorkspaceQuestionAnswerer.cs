@@ -175,7 +175,7 @@ public sealed class WorkspaceQuestionAnswerer
     /// </summary>
     private static string Realize(ResponseTemplate template, params (string Name, string Value)[] slots)
     {
-        Dictionary<string, string> values = new(StringComparer.Ordinal);
+        Dictionary<string, string> values = [with(StringComparer.Ordinal)];
         foreach ((string name, string value) in slots)
         {
             values[name] = value;

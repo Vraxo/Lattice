@@ -100,7 +100,7 @@ public static partial class ControlledLanguageParser
         }
 
         ImmutableArray<ActionArgument>.Builder arguments = ImmutableArray.CreateBuilder<ActionArgument>();
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         for (int i = 1; i < fields.Count; i++)
         {
             string field = fields[i];

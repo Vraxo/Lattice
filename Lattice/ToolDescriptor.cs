@@ -25,7 +25,7 @@ public sealed record ToolDescriptor
         }
 
         ImmutableArray<ToolParameter> parameterArray = parameters?.ToImmutableArray() ?? [];
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         foreach (ToolParameter? parameter in parameterArray)
         {
             if (!seen.Add(parameter.Name))

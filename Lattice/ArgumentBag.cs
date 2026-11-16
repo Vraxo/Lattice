@@ -17,7 +17,7 @@ public sealed record ArgumentBag
     {
         ArgumentNullException.ThrowIfNull(entries);
         ImmutableArray<ArgumentEntry> sorted = [.. entries.OrderBy(entry => entry.Name, StringComparer.Ordinal)];
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         foreach (ArgumentEntry entry in sorted)
         {
             if (!seen.Add(entry.Name))
