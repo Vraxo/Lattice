@@ -5,18 +5,18 @@ public sealed class ToolExecutionLimitsTests
     [Fact]
     public void RejectsNonPositiveTimeout()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ToolExecutionLimits(TimeSpan.Zero));
+        FluentActions.Invoking(() => new ToolExecutionLimits(TimeSpan.Zero)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void RejectsTimeoutBeyondCancellationTimerRange()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ToolExecutionLimits(TimeSpan.FromDays(60)));
+        FluentActions.Invoking(() => new ToolExecutionLimits(TimeSpan.FromDays(60))).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void DefaultHasPositiveTimeout()
     {
-        Assert.True(ToolExecutionLimits.Default.Timeout > TimeSpan.Zero);
+        (ToolExecutionLimits.Default.Timeout > TimeSpan.Zero).Should().BeTrue();
     }
 }

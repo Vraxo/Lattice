@@ -17,7 +17,7 @@ public sealed class ToolArgumentValidatorTests
     public void ValidArgumentsPass()
     {
         Result result = ToolArgumentValidator.Validate(Descriptor, TwoIntegers());
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -30,8 +30,8 @@ public sealed class ToolArgumentValidatorTests
             new ArgumentEntry("extra", ArgumentValue.FromInteger(3)),
         ]);
         Result result = ToolArgumentValidator.Validate(Descriptor, arguments);
-        Assert.False(result.IsSuccess);
-        Assert.Equal("tool.argument.unknown", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("tool.argument.unknown");
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public sealed class ToolArgumentValidatorTests
             new ArgumentEntry("right", ArgumentValue.FromInteger(2)),
         ]);
         Result result = ToolArgumentValidator.Validate(Descriptor, arguments);
-        Assert.False(result.IsSuccess);
-        Assert.Equal("tool.argument.type", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("tool.argument.type");
     }
 
     [Fact]
@@ -52,15 +52,15 @@ public sealed class ToolArgumentValidatorTests
     {
         ArgumentBag arguments = ArgumentBag.From([new ArgumentEntry("left", ArgumentValue.FromInteger(1))]);
         Result result = ToolArgumentValidator.Validate(Descriptor, arguments);
-        Assert.False(result.IsSuccess);
-        Assert.Equal("tool.argument.missing", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("tool.argument.missing");
     }
 
     [Fact]
     public void MissingOptionalArgumentPasses()
     {
         Result result = ToolArgumentValidator.Validate(Descriptor, TwoIntegers());
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
     }
 
     private static ArgumentBag TwoIntegers()

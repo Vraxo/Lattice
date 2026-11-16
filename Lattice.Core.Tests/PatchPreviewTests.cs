@@ -6,35 +6,34 @@ public sealed class PatchPreviewTests
     public void AppliedCarriesPatchedTextAndIndex()
     {
         PatchPreview preview = PatchPreview.Applied("abc", new TextPatch("b", "x"), "axc", 1);
-        Assert.True(preview.IsApplied);
-        Assert.Equal("axc", preview.PatchedText);
-        Assert.Equal(1, preview.MatchIndex);
+        preview.IsApplied.Should().BeTrue();
+        preview.PatchedText.Should().Be("axc");
+        preview.MatchIndex.Should().Be(1);
     }
 
     [Fact]
     public void ContextNotFoundHasNoPatchedText()
     {
         PatchPreview preview = PatchPreview.ContextNotFound("abc", new TextPatch("z", "x"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextNotFound, preview.Status);
-        Assert.Null(preview.PatchedText);
-        Assert.Equal(-1, preview.MatchIndex);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextNotFound);
+        preview.PatchedText.Should().BeNull();
+        preview.MatchIndex.Should().Be(-1);
     }
 
     [Fact]
     public void ContextAmbiguousHasNoPatchedText()
     {
         PatchPreview preview = PatchPreview.ContextAmbiguous("abc", new TextPatch("a", "x"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextAmbiguous, preview.Status);
-        Assert.Null(preview.PatchedText);
-        Assert.Equal(-1, preview.MatchIndex);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextAmbiguous);
+        preview.PatchedText.Should().BeNull();
+        preview.MatchIndex.Should().Be(-1);
     }
 
     [Fact]
     public void RejectsNullOriginal()
     {
-        Assert.Throws<ArgumentNullException>(
-            () => PatchPreview.Applied(null!, new TextPatch("a", "b"), "c", 0));
+        FluentActions.Invoking(() => PatchPreview.Applied(null!, new TextPatch("a", "b"), "c", 0)).Should().ThrowExactly<ArgumentNullException>();
     }
 }

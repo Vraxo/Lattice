@@ -7,8 +7,8 @@ public sealed class CalculatorToolTests
     [Fact]
     public void DescriptorIdentifiesCalculator()
     {
-        Assert.Equal(new ToolId("calculator"), _tool.Descriptor.Id);
-        Assert.Equal(ToolSideEffect.ReadOnly, _tool.Descriptor.SideEffect);
+        _tool.Descriptor.Id.Should().Be(new ToolId("calculator"));
+        _tool.Descriptor.SideEffect.Should().Be(ToolSideEffect.ReadOnly);
     }
 
     [Fact]
@@ -20,8 +20,8 @@ public sealed class CalculatorToolTests
             new ArgumentEntry("right", ArgumentValue.FromInteger(3)),
         ]);
         ToolResult result = _tool.Execute(arguments);
-        Assert.True(result.IsSuccess);
-        Assert.Equal(5, result.Output!.AsInteger());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsInteger().Should().Be(5);
     }
 
     [Fact]
@@ -29,8 +29,8 @@ public sealed class CalculatorToolTests
     {
         ArgumentBag arguments = ArgumentBag.From([new ArgumentEntry("left", ArgumentValue.FromInteger(2))]);
         ToolResult result = _tool.Execute(arguments);
-        Assert.False(result.IsSuccess);
-        Assert.Equal("calculator.right", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("calculator.right");
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public sealed class CalculatorToolTests
             new ArgumentEntry("right", ArgumentValue.FromInteger(3)),
         ]);
         ToolResult result = _tool.Execute(arguments);
-        Assert.False(result.IsSuccess);
-        Assert.Equal("calculator.left", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("calculator.left");
     }
 }

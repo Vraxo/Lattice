@@ -12,9 +12,9 @@ public sealed class KnowledgeLookupTests
     {
         KnowledgeLookup lookup = CreateLookup();
         ConceptLookup result = lookup.FindById("concept.water");
-        Assert.True(result.IsFound);
-        Assert.Equal("concept.water", result.Concept!.Id);
-        Assert.Equal("example.physics", result.PackageId);
+        result.IsFound.Should().BeTrue();
+        result.Concept!.Id.Should().Be("concept.water");
+        result.PackageId.Should().Be("example.physics");
     }
 
     [Fact]
@@ -22,8 +22,8 @@ public sealed class KnowledgeLookupTests
     {
         KnowledgeLookup lookup = CreateLookup();
         ConceptLookup result = lookup.FindById("concept.missing");
-        Assert.Equal(KnowledgeMatchKind.NotFound, result.Kind);
-        Assert.Equal("example.physics", result.PackageId);
+        result.Kind.Should().Be(KnowledgeMatchKind.NotFound);
+        result.PackageId.Should().Be("example.physics");
     }
 
     [Fact]
@@ -31,8 +31,8 @@ public sealed class KnowledgeLookupTests
     {
         KnowledgeLookup lookup = CreateLookup();
         ConceptLookup result = lookup.FindByAlias("h2o");
-        Assert.True(result.IsFound);
-        Assert.Equal("concept.water", result.Concept!.Id);
+        result.IsFound.Should().BeTrue();
+        result.Concept!.Id.Should().Be("concept.water");
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public sealed class KnowledgeLookupTests
     {
         KnowledgeLookup lookup = CreateLookup();
         ConceptLookup result = lookup.FindByAlias("unobtainium");
-        Assert.Equal(KnowledgeMatchKind.NotFound, result.Kind);
+        result.Kind.Should().Be(KnowledgeMatchKind.NotFound);
     }
 
     [Fact]
@@ -56,16 +56,16 @@ public sealed class KnowledgeLookupTests
                 new KnowledgeConcept("concept.ice", "ice", ["shared"]),
             ]));
         ConceptLookup result = lookup.FindByAlias("shared");
-        Assert.Equal(KnowledgeMatchKind.Ambiguous, result.Kind);
-        Assert.Equal(2, result.Candidates.Length);
-        Assert.Equal("example.physics", result.PackageId);
+        result.Kind.Should().Be(KnowledgeMatchKind.Ambiguous);
+        result.Candidates.Length.Should().Be(2);
+        result.PackageId.Should().Be("example.physics");
     }
 
     [Fact]
     public void FindByIdRejectsEmptyId()
     {
         KnowledgeLookup lookup = CreateLookup();
-        Assert.Throws<ArgumentException>(() => lookup.FindById(string.Empty));
+        FluentActions.Invoking(() => lookup.FindById(string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     private static KnowledgePackage CreatePackage()

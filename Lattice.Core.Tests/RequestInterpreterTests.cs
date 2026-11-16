@@ -20,27 +20,27 @@ public sealed class RequestInterpreterTests
     public void MatchesSinglePatternWithSlot()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("what is the capital of France");
-        Assert.Equal(IntentMatchKind.Matched, result.Kind);
-        Assert.Equal(RequestIntentKind.Question, result.Intent);
-        Assert.Equal("topic", result.Match!.Slot!.Name);
-        Assert.Equal("the capital of France", result.Match.Slot.Value);
+        result.Kind.Should().Be(IntentMatchKind.Matched);
+        result.Intent.Should().Be(RequestIntentKind.Question);
+        result.Match!.Slot!.Name.Should().Be("topic");
+        result.Match.Slot.Value.Should().Be("the capital of France");
     }
 
     [Fact]
     public void MatchingIsCaseInsensitive()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("WHAT IS gravity");
-        Assert.Equal(IntentMatchKind.Matched, result.Kind);
-        Assert.Equal(RequestIntentKind.Question, result.Intent);
+        result.Kind.Should().Be(IntentMatchKind.Matched);
+        result.Intent.Should().Be(RequestIntentKind.Question);
     }
 
     [Fact]
     public void MoreSpecificPatternWins()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("find symbol Calculator");
-        Assert.Equal(IntentMatchKind.Matched, result.Kind);
-        Assert.Equal("find.symbol-named", result.Match!.PatternId);
-        Assert.Equal("Calculator", result.Match.Slot!.Value);
+        result.Kind.Should().Be(IntentMatchKind.Matched);
+        result.Match!.PatternId.Should().Be("find.symbol-named");
+        result.Match.Slot!.Value.Should().Be("Calculator");
     }
 
     [Fact]
@@ -49,39 +49,39 @@ public sealed class RequestInterpreterTests
         RequestInterpreter interpreter = CreateInterpreter();
         RequestInterpretation first = interpreter.Interpret("explain gravity");
         RequestInterpretation second = interpreter.Interpret("why gravity");
-        Assert.Equal(RequestIntentKind.Explanation, first.Intent);
-        Assert.Equal(RequestIntentKind.Explanation, second.Intent);
-        Assert.NotEqual(first.Match!.PatternId, second.Match!.PatternId);
+        first.Intent.Should().Be(RequestIntentKind.Explanation);
+        second.Intent.Should().Be(RequestIntentKind.Explanation);
+        second.Match!.PatternId.Should().NotBe(first.Match!.PatternId);
     }
 
     [Fact]
     public void TieProducesAmbiguousWithCandidates()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("show README.md");
-        Assert.Equal(IntentMatchKind.Ambiguous, result.Kind);
-        Assert.Equal(RequestIntentKind.Unknown, result.Intent);
-        Assert.Equal(2, result.Candidates.Length);
-        Assert.Null(result.Match);
+        result.Kind.Should().Be(IntentMatchKind.Ambiguous);
+        result.Intent.Should().Be(RequestIntentKind.Unknown);
+        result.Candidates.Length.Should().Be(2);
+        result.Match.Should().BeNull();
     }
 
     [Fact]
     public void UnknownInputIsNotGivenAConfidentIntent()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("hello there");
-        Assert.Equal(IntentMatchKind.Unknown, result.Kind);
-        Assert.Equal(RequestIntentKind.Unknown, result.Intent);
-        Assert.Null(result.Match);
-        Assert.NotNull(result.Diagnostic);
+        result.Kind.Should().Be(IntentMatchKind.Unknown);
+        result.Intent.Should().Be(RequestIntentKind.Unknown);
+        result.Match.Should().BeNull();
+        result.Diagnostic.Should().BeNotNull();
     }
 
     [Fact]
     public void SlotWithNoRemainingTokensReportsMissingValue()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("what is");
-        Assert.Equal(IntentMatchKind.MissingValue, result.Kind);
-        Assert.Equal(RequestIntentKind.Question, result.Intent);
-        Assert.Equal("topic", result.MissingSlotName);
-        Assert.Null(result.Match!.Slot);
+        result.Kind.Should().Be(IntentMatchKind.MissingValue);
+        result.Intent.Should().Be(RequestIntentKind.Question);
+        result.MissingSlotName.Should().Be("topic");
+        result.Match!.Slot.Should().BeNull();
     }
 
     [Fact]
@@ -94,8 +94,8 @@ public sealed class RequestInterpreterTests
             new IntentPattern("explain.exact", RequestIntentKind.Explanation, ["explain"], null),
         ]));
         RequestInterpretation result = interpreter.Interpret("explain");
-        Assert.Equal(IntentMatchKind.Matched, result.Kind);
-        Assert.Equal("explain.exact", result.Match!.PatternId);
+        result.Kind.Should().Be(IntentMatchKind.Matched);
+        result.Match!.PatternId.Should().Be("explain.exact");
     }
 
     [Fact]
@@ -107,8 +107,8 @@ public sealed class RequestInterpreterTests
             new IntentPattern("b", RequestIntentKind.Explanation, ["what"], "subject"),
         ]));
         RequestInterpretation result = interpreter.Interpret("what");
-        Assert.Equal(IntentMatchKind.Ambiguous, result.Kind);
-        Assert.Equal(2, result.Candidates.Length);
+        result.Kind.Should().Be(IntentMatchKind.Ambiguous);
+        result.Candidates.Length.Should().Be(2);
     }
 
     [Fact]
@@ -118,15 +118,15 @@ public sealed class RequestInterpreterTests
         [
             new IntentPattern("exact", RequestIntentKind.Explanation, ["explain"], null),
         ]));
-        Assert.Equal(IntentMatchKind.Matched, interpreter.Interpret("explain").Kind);
-        Assert.Equal(IntentMatchKind.Unknown, interpreter.Interpret("explain more").Kind);
+        interpreter.Interpret("explain").Kind.Should().Be(IntentMatchKind.Matched);
+        interpreter.Interpret("explain more").Kind.Should().Be(IntentMatchKind.Unknown);
     }
 
     [Fact]
     public void EmptyInputIsUnknown()
     {
         RequestInterpretation result = CreateInterpreter().Interpret("   ");
-        Assert.Equal(IntentMatchKind.Unknown, result.Kind);
+        result.Kind.Should().Be(IntentMatchKind.Unknown);
     }
 
     [Fact]
@@ -134,9 +134,9 @@ public sealed class RequestInterpreterTests
     {
         const string input = "what is gravity";
         RequestInterpretation result = CreateInterpreter().Interpret(input);
-        Assert.Equal(input, result.Text);
-        Assert.Equal(0, result.Span.Start);
-        Assert.Equal(input.Length, result.Span.Length);
+        result.Text.Should().Be(input);
+        result.Span.Start.Should().Be(0);
+        result.Span.Length.Should().Be(input.Length);
     }
 
     [Theory]
@@ -155,12 +155,12 @@ public sealed class RequestInterpreterTests
     {
         RequestInterpretation result = CreateProductionInterpreter().Interpret(input);
 
-        Assert.Equal(IntentMatchKind.Matched, result.Kind);
-        Assert.Equal(RequestIntentKind.FindSymbol, result.Intent);
-        Assert.Equal(input, result.Text);
-        Assert.Equal(expectedPatternId, result.Match!.PatternId);
-        Assert.Equal("symbol", result.Match.Slot!.Name);
-        Assert.Equal(expectedSymbol, result.Match.Slot.Value);
+        result.Kind.Should().Be(IntentMatchKind.Matched);
+        result.Intent.Should().Be(RequestIntentKind.FindSymbol);
+        result.Text.Should().Be(input);
+        result.Match!.PatternId.Should().Be(expectedPatternId);
+        result.Match.Slot!.Name.Should().Be("symbol");
+        result.Match.Slot.Value.Should().Be(expectedSymbol);
     }
 
     [Theory]
@@ -180,12 +180,12 @@ public sealed class RequestInterpreterTests
     {
         RequestInterpretation result = CreateProductionInterpreter().Interpret(input);
 
-        Assert.Equal(IntentMatchKind.Matched, result.Kind);
-        Assert.Equal(RequestIntentKind.InspectPath, result.Intent);
-        Assert.Equal(input, result.Text);
-        Assert.Equal(expectedPatternId, result.Match!.PatternId);
-        Assert.Equal("path", result.Match.Slot!.Name);
-        Assert.Equal(expectedPath, result.Match.Slot.Value);
+        result.Kind.Should().Be(IntentMatchKind.Matched);
+        result.Intent.Should().Be(RequestIntentKind.InspectPath);
+        result.Text.Should().Be(input);
+        result.Match!.PatternId.Should().Be(expectedPatternId);
+        result.Match.Slot!.Name.Should().Be("path");
+        result.Match.Slot.Value.Should().Be(expectedPath);
     }
 
     [Theory]
@@ -201,10 +201,10 @@ public sealed class RequestInterpreterTests
     {
         RequestInterpretation result = CreateProductionInterpreter().Interpret(input);
 
-        Assert.Equal(IntentMatchKind.MissingValue, result.Kind);
-        Assert.Equal(expectedIntent, result.Intent);
-        Assert.Equal(expectedSlot, result.MissingSlotName);
-        Assert.Equal(input, result.Text);
+        result.Kind.Should().Be(IntentMatchKind.MissingValue);
+        result.Intent.Should().Be(expectedIntent);
+        result.MissingSlotName.Should().Be(expectedSlot);
+        result.Text.Should().Be(input);
     }
 
     [Fact]
@@ -218,9 +218,9 @@ public sealed class RequestInterpreterTests
 
         RequestInterpretation result = interpreter.Interpret("Locate WorkspaceRoot here.");
 
-        Assert.Equal(IntentMatchKind.Ambiguous, result.Kind);
-        Assert.Equal(2, result.Candidates.Length);
-        Assert.Null(result.Match);
+        result.Kind.Should().Be(IntentMatchKind.Ambiguous);
+        result.Candidates.Length.Should().Be(2);
+        result.Match.Should().BeNull();
     }
 
     [Theory]
@@ -231,16 +231,16 @@ public sealed class RequestInterpreterTests
     {
         RequestInterpretation result = CreateProductionInterpreter().Interpret(input);
 
-        Assert.Equal(IntentMatchKind.Unknown, result.Kind);
-        Assert.Null(result.Match);
-        Assert.Equal(input, result.Text);
+        result.Kind.Should().Be(IntentMatchKind.Unknown);
+        result.Match.Should().BeNull();
+        result.Text.Should().Be(input);
     }
 
     private static RequestInterpreter CreateProductionInterpreter()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "config", "nlp", "patterns.json");
         Result<IntentPatternCatalog> parsed = IntentPatternCatalogParser.Parse(File.ReadAllText(path));
-        Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+        parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         return new RequestInterpreter(parsed.Value);
     }
 }

@@ -20,8 +20,8 @@ public sealed class WorkspaceFileLocatorTests
     [InlineData("C:\\Temp\\Program.cs", false)]
     public void IsBareFileNameRejectsPathsSeparatorsAndNavigationSegments(string candidate, bool expected)
     {
-        Assert.Equal(expected, WorkspaceFileLocator.IsBareFileName(candidate));
-        Assert.False(WorkspaceFileLocator.IsBareFileName("bad\0name.cs"));
+        WorkspaceFileLocator.IsBareFileName(candidate).Should().Be(expected);
+        WorkspaceFileLocator.IsBareFileName("bad\0name.cs").Should().BeFalse();
     }
 
     [Fact]
@@ -36,21 +36,19 @@ public sealed class WorkspaceFileLocatorTests
         WorkspaceFileLocator locator = new(new WorkspaceRoot(workspace.Path));
 
         Result<WorkspaceFileLookupResult> lookup = locator.FindByFileName("program.CS");
-        Assert.True(lookup.IsSuccess);
-        Assert.Equal(2, lookup.Value.TotalMatches);
-        Assert.False(lookup.Value.HasMoreMatches);
-        Assert.Equal<IEnumerable<string>>(
-            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
-            lookup.Value.SafeRelativePaths);
+        lookup.IsSuccess.Should().BeTrue();
+        lookup.Value.TotalMatches.Should().Be(2);
+        lookup.Value.HasMoreMatches.Should().BeFalse();
+        lookup.Value.SafeRelativePaths.Should().Equal(["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"]);
 
         Result<string> noRootMatch = locator.TryFindSingleRootFile("Program.cs");
-        Assert.True(noRootMatch.IsSuccess);
-        Assert.Equal(string.Empty, noRootMatch.Value);
+        noRootMatch.IsSuccess.Should().BeTrue();
+        noRootMatch.Value.Should().Be(string.Empty);
 
         workspace.WriteFile("README.md", "# Root");
         Result<string> singleRootMatch = locator.TryFindSingleRootFile("readme.md");
-        Assert.True(singleRootMatch.IsSuccess);
-        Assert.Equal("README.md", singleRootMatch.Value);
+        singleRootMatch.IsSuccess.Should().BeTrue();
+        singleRootMatch.Value.Should().Be("README.md");
     }
 
     [Fact]
@@ -63,17 +61,15 @@ public sealed class WorkspaceFileLocatorTests
         WorkspaceFileLocator locator = new(new WorkspaceRoot(workspace.Path));
 
         Result<WorkspaceFileLookupResult> lookup = locator.FindByFileName("program");
-        Assert.True(lookup.IsSuccess);
-        Assert.Equal(2, lookup.Value.TotalMatches);
-        Assert.Equal<IEnumerable<string>>(
-            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
-            lookup.Value.SafeRelativePaths);
+        lookup.IsSuccess.Should().BeTrue();
+        lookup.Value.TotalMatches.Should().Be(2);
+        lookup.Value.SafeRelativePaths.Should().Equal(["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"]);
 
         workspace.WriteFile("tools/program", "exact extensionless filename");
         Result<WorkspaceFileLookupResult> exact = locator.FindByFileName("program");
-        Assert.True(exact.IsSuccess);
-        Assert.Equal(1, exact.Value.TotalMatches);
-        Assert.Equal<IEnumerable<string>>(["tools/program"], exact.Value.SafeRelativePaths);
+        exact.IsSuccess.Should().BeTrue();
+        exact.Value.TotalMatches.Should().Be(1);
+        exact.Value.SafeRelativePaths.Should().Equal(["tools/program"]);
     }
 
     [Fact]
@@ -94,15 +90,13 @@ public sealed class WorkspaceFileLocatorTests
         WorkspaceFileLocator locator = new(new WorkspaceRoot(workspace.Path));
 
         Result<WorkspaceFileLookupResult> programLookup = locator.FindByFileName("Program.cs");
-        Assert.True(programLookup.IsSuccess);
-        Assert.Equal<IEnumerable<string>>(["src/App/Program.cs"], programLookup.Value.SafeRelativePaths);
+        programLookup.IsSuccess.Should().BeTrue();
+        programLookup.Value.SafeRelativePaths.Should().Equal(["src/App/Program.cs"]);
 
         Result<WorkspaceFileLookupResult> binaryLookup = locator.FindByFileName("Data.dat");
-        Assert.True(binaryLookup.IsSuccess);
-        Assert.Equal(2, binaryLookup.Value.TotalMatches);
-        Assert.Equal<IEnumerable<string>>(
-            ["tools/BinaryTool/Data.dat", "tools/HugeTool/Data.dat"],
-            binaryLookup.Value.SafeRelativePaths);
+        binaryLookup.IsSuccess.Should().BeTrue();
+        binaryLookup.Value.TotalMatches.Should().Be(2);
+        binaryLookup.Value.SafeRelativePaths.Should().Equal(["tools/BinaryTool/Data.dat", "tools/HugeTool/Data.dat"]);
     }
 
     [Fact]
@@ -120,13 +114,11 @@ public sealed class WorkspaceFileLocatorTests
             maxCountedMatches: 5);
 
         Result<WorkspaceFileLookupResult> result = bounded.FindByFileName("Program.cs");
-        Assert.True(result.IsSuccess);
-        Assert.Equal(5, result.Value.TotalMatches);
-        Assert.True(result.Value.HasMoreMatches);
-        Assert.Equal(2, result.Value.OmittedFromReturnedCount);
-        Assert.Equal<IEnumerable<string>>(
-            ["Proj01/Program.cs", "Proj02/Program.cs", "Proj03/Program.cs"],
-            result.Value.SafeRelativePaths);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalMatches.Should().Be(5);
+        result.Value.HasMoreMatches.Should().BeTrue();
+        result.Value.OmittedFromReturnedCount.Should().Be(2);
+        result.Value.SafeRelativePaths.Should().Equal(["Proj01/Program.cs", "Proj02/Program.cs", "Proj03/Program.cs"]);
     }
 
     [SymlinkFact]
@@ -144,13 +136,13 @@ public sealed class WorkspaceFileLocatorTests
         WorkspaceFileLocator locator = new(new WorkspaceRoot(workspace.Path));
 
         Result<WorkspaceFileLookupResult> secretLookup = locator.FindByFileName("Secret.cs");
-        Assert.True(secretLookup.IsSuccess);
-        Assert.Equal<IEnumerable<string>>(["src/Secret.cs"], secretLookup.Value.SafeRelativePaths);
+        secretLookup.IsSuccess.Should().BeTrue();
+        secretLookup.Value.SafeRelativePaths.Should().Equal(["src/Secret.cs"]);
 
         Result<WorkspaceFileLookupResult> nestedLookup = locator.FindByFileName("NestedSecret.cs");
-        Assert.True(nestedLookup.IsSuccess);
-        Assert.Equal(0, nestedLookup.Value.TotalMatches);
-        Assert.Empty(nestedLookup.Value.SafeRelativePaths);
+        nestedLookup.IsSuccess.Should().BeTrue();
+        nestedLookup.Value.TotalMatches.Should().Be(0);
+        nestedLookup.Value.SafeRelativePaths.Should().BeEmpty();
     }
 
     [Fact]
@@ -169,9 +161,9 @@ public sealed class WorkspaceFileLocatorTests
             WorkspaceFileLocator locator = new(new WorkspaceRoot(workspace.Path));
             Result<WorkspaceFileLookupResult> lookup = locator.FindByFileName("Escaped.cs");
 
-            Assert.True(lookup.IsSuccess);
-            Assert.Equal(0, lookup.Value.TotalMatches);
-            Assert.Empty(lookup.Value.SafeRelativePaths);
+            lookup.IsSuccess.Should().BeTrue();
+            lookup.Value.TotalMatches.Should().Be(0);
+            lookup.Value.SafeRelativePaths.Should().BeEmpty();
         }
         finally
         {
@@ -211,6 +203,6 @@ public sealed class WorkspaceFileLocatorTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}" ?? string.Empty);
     }
 }

@@ -11,8 +11,8 @@ public sealed class WorkspaceFileLookupOutcomeTests
 
         WorkspaceFileLookupOutcome outcome = locator.ResolveByFileName("program.CS");
 
-        WorkspaceFileFound found = Assert.IsType<WorkspaceFileFound>(outcome.Value);
-        Assert.Equal("src/Program.cs", found.RelativePath);
+        WorkspaceFileFound found = outcome.Value.Should().BeOfType<WorkspaceFileFound>().Which;
+        found.RelativePath.Should().Be("src/Program.cs");
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public sealed class WorkspaceFileLookupOutcomeTests
 
         WorkspaceFileLookupOutcome outcome = locator.ResolveByFileName("Absent.cs");
 
-        Assert.Equal("Absent.cs", Assert.IsType<WorkspaceFileMissing>(outcome.Value).RequestedFileName);
+        outcome.Value.Should().BeOfType<WorkspaceFileMissing>().Which.RequestedFileName.Should().Be("Absent.cs");
     }
 
     [Fact]
@@ -36,10 +36,10 @@ public sealed class WorkspaceFileLookupOutcomeTests
 
         WorkspaceFileLookupOutcome outcome = locator.ResolveByFileName("Program.cs");
 
-        WorkspaceFileLookupResult matches = Assert.IsType<WorkspaceFileAmbiguous>(outcome.Value).Matches;
-        Assert.Equal(2, matches.TotalMatches);
-        Assert.Single(matches.SafeRelativePaths);
-        Assert.Equal(1, matches.OmittedFromReturnedCount);
+        WorkspaceFileLookupResult matches = outcome.Value.Should().BeOfType<WorkspaceFileAmbiguous>().Which.Matches;
+        matches.TotalMatches.Should().Be(2);
+        matches.SafeRelativePaths.Should().ContainSingle();
+        matches.OmittedFromReturnedCount.Should().Be(1);
     }
 
     [Theory]
@@ -54,9 +54,9 @@ public sealed class WorkspaceFileLookupOutcomeTests
 
         WorkspaceFileLookupOutcome outcome = locator.ResolveByFileName(requestedName);
 
-        WorkspaceFileLookupResult matches = Assert.IsType<WorkspaceFileLookupIncomplete>(outcome.Value).Matches;
-        Assert.Equal(expectedMatches, matches.TotalMatches);
-        Assert.True(matches.HasMoreMatches);
+        WorkspaceFileLookupResult matches = outcome.Value.Should().BeOfType<WorkspaceFileLookupIncomplete>().Which.Matches;
+        matches.TotalMatches.Should().Be(expectedMatches);
+        matches.HasMoreMatches.Should().BeTrue();
     }
 
     [Fact]
@@ -67,8 +67,7 @@ public sealed class WorkspaceFileLookupOutcomeTests
 
         WorkspaceFileLookupOutcome outcome = locator.ResolveByFileName("../Program.cs");
 
-        Assert.Equal(FileToolErrorCodes.QueryInvalid,
-            Assert.IsType<WorkspaceFileLookupFailed>(outcome.Value).Error.Code);
+        outcome.Value.Should().BeOfType<WorkspaceFileLookupFailed>().Which.Error.Code.Should().Be(FileToolErrorCodes.QueryInvalid);
     }
 
     [Fact]
@@ -79,6 +78,6 @@ public sealed class WorkspaceFileLookupOutcomeTests
         using CancellationTokenSource cancellation = new();
         cancellation.Cancel();
 
-        Assert.Throws<OperationCanceledException>(() => locator.ResolveByFileName("Program.cs", cancellation.Token));
+        FluentActions.Invoking(() => locator.ResolveByFileName("Program.cs", cancellation.Token)).Should().ThrowExactly<OperationCanceledException>();
     }
 }

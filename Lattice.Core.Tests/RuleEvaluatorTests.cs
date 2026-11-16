@@ -8,16 +8,16 @@ public sealed class RuleEvaluatorTests
     public void EvaluatesTheExamplePackage()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "knowledge", "example.physics", "package.json");
-        Assert.True(File.Exists(path), $"Example package not found at {path}.");
+        File.Exists(path).Should().BeTrue("{0}", $"Example package not found at {path}." ?? string.Empty);
         Result<KnowledgePackage> parsed = KnowledgePackageParser.Parse(File.ReadAllText(path));
-        Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+        parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         ImmutableArray<Derivation> derivations = RuleEvaluator.Evaluate(parsed.Value.Rules, parsed.Value.Facts);
-        Derivation derivation = Assert.Single(derivations);
-        Assert.Equal("rule.water.boils", derivation.RuleId);
-        Assert.Equal("concept.water", derivation.Conclusion.Subject);
-        Assert.Equal("state", derivation.Conclusion.Predicate);
-        Assert.Equal("boiling", derivation.Conclusion.Value);
-        Assert.Equal(2, derivation.PremiseFactIds.Length);
+        Derivation derivation = derivations.Should().ContainSingle().Which;
+        derivation.RuleId.Should().Be("rule.water.boils");
+        derivation.Conclusion.Subject.Should().Be("concept.water");
+        derivation.Conclusion.Predicate.Should().Be("state");
+        derivation.Conclusion.Value.Should().Be("boiling");
+        derivation.PremiseFactIds.Length.Should().Be(2);
     }
 
     [Fact]
@@ -26,10 +26,10 @@ public sealed class RuleEvaluatorTests
         KnowledgeRule[] rules = [Rule("rule.a", "p", "v", "q", "w")];
         KnowledgeFact[] facts = [Fact("fact.a", "p", "v")];
         ImmutableArray<Derivation> derivations = RuleEvaluator.Evaluate(rules, facts);
-        Derivation derivation = Assert.Single(derivations);
-        Assert.Equal("q", derivation.Conclusion.Predicate);
-        Assert.Equal("w", derivation.Conclusion.Value);
-        Assert.Equal(new[] { "fact.a" }, derivation.PremiseFactIds);
+        Derivation derivation = derivations.Should().ContainSingle().Which;
+        derivation.Conclusion.Predicate.Should().Be("q");
+        derivation.Conclusion.Value.Should().Be("w");
+        derivation.PremiseFactIds.Should().Equal(new[] { "fact.a" });
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class RuleEvaluatorTests
     {
         KnowledgeRule[] rules = [Rule("rule.a", "p", "v", "q", "w")];
         KnowledgeFact[] facts = [Fact("fact.a", "p", "different")];
-        Assert.Empty(RuleEvaluator.Evaluate(rules, facts));
+        RuleEvaluator.Evaluate(rules, facts).Should().BeEmpty();
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class RuleEvaluatorTests
             Fact("fact.a", "p", "v"),
             Fact("fact.existing", "q", "w"),
         ];
-        Assert.Empty(RuleEvaluator.Evaluate(rules, facts));
+        RuleEvaluator.Evaluate(rules, facts).Should().BeEmpty();
     }
 
     [Fact]
@@ -62,10 +62,10 @@ public sealed class RuleEvaluatorTests
         ];
         KnowledgeFact[] facts = [Fact("fact.a", "p", "v")];
         ImmutableArray<Derivation> derivations = RuleEvaluator.Evaluate(rules, facts);
-        Assert.Equal(2, derivations.Length);
-        Assert.Equal("rule.a", derivations[0].RuleId);
-        Assert.Equal("rule.b", derivations[1].RuleId);
-        Assert.Equal("r", derivations[1].Conclusion.Predicate);
+        derivations.Length.Should().Be(2);
+        derivations[0].RuleId.Should().Be("rule.a");
+        derivations[1].RuleId.Should().Be("rule.b");
+        derivations[1].Conclusion.Predicate.Should().Be("r");
     }
 
     [Fact]
@@ -79,8 +79,8 @@ public sealed class RuleEvaluatorTests
         ];
         KnowledgeFact[] facts = [Fact("fact.a", "p", "v")];
         ImmutableArray<Derivation> derivations = RuleEvaluator.Evaluate(rules, facts);
-        Assert.Single(derivations);
-        Assert.Equal("rule.a", derivations[0].RuleId);
+        derivations.Should().ContainSingle();
+        derivations[0].RuleId.Should().Be("rule.a");
     }
 
     [Fact]
@@ -95,9 +95,8 @@ public sealed class RuleEvaluatorTests
         ImmutableArray<Derivation> first = RuleEvaluator.Evaluate(rules, facts);
         ImmutableArray<Derivation> second = RuleEvaluator.Evaluate(rules, facts);
 
-        // Compare element-wise: Assert.Equal on two ImmutableArray<T> values binds to the
-        // generic overload and uses ImmutableArray's reference-based struct equality.
-        Assert.True(first.SequenceEqual(second));
+        // Compare elements in order rather than ImmutableArray backing-storage identity.
+        second.Should().Equal(first);
     }
 
     private static KnowledgeRule Rule(

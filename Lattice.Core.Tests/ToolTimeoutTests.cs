@@ -11,15 +11,15 @@ public sealed class ToolTimeoutTests
             ToolRegistry registry = new([tool]);
             AgentLoop loop = new(registry, ToolPermissionPolicy.ReadOnlyOnly);
             Result<IControlledStatement> parsed = ControlledLanguageParser.Parse("action cancellation-aware");
-            Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+            parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
 
             AgentTurnResult result = loop.Run(Session.Empty(SessionId.New()), parsed.Value);
 
-            Assert.Equal(TurnOutcome.ToolTimedOut, result.Outcome);
-            Assert.Equal(ToolErrorCodes.TimedOut, result.Invocation!.Result.Error!.Code);
-            Assert.True(tool.WasExecuted);
-            Assert.True(tool.CancellationObserved);
-            Assert.Contains("timeout", result.Response, StringComparison.OrdinalIgnoreCase);
+            result.Outcome.Should().Be(TurnOutcome.ToolTimedOut);
+            result.Invocation!.Result.Error!.Code.Should().Be(ToolErrorCodes.TimedOut);
+            tool.WasExecuted.Should().BeTrue();
+            tool.CancellationObserved.Should().BeTrue();
+            result.Response.Should().ContainEquivalentOf("timeout");
         }
     }
 
@@ -39,8 +39,8 @@ public sealed class ToolTimeoutTests
         source.Cancel();
         ToolInvocation invocation = await execution.WaitAsync(TimeSpan.FromSeconds(2));
 
-        Assert.True(started, "Tool did not start.");
-        Assert.Equal(ToolErrorCodes.Cancelled, invocation.Result.Error!.Code);
-        Assert.True(tool.CancellationObserved);
+        started.Should().BeTrue("{0}", "Tool did not start." ?? string.Empty);
+        invocation.Result.Error!.Code.Should().Be(ToolErrorCodes.Cancelled);
+        tool.CancellationObserved.Should().BeTrue();
     }
 }

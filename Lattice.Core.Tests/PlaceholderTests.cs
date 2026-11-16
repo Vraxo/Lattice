@@ -5,6 +5,6 @@ public sealed class PlaceholderTests
     [Fact]
     public void TestProjectRuns()
     {
-        Assert.True(true);
+        true.Should().BeTrue();
     }
 }

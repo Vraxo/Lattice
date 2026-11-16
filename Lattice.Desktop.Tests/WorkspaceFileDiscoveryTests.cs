@@ -18,11 +18,11 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me readme.md.";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.FileInspected, entry.Kind);
-        Assert.Equal("# Root README\n", entry.FileContents);
-        Assert.True(string.Equals("README.md", entry.InspectedRelativePath, StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain("/", entry.InspectedRelativePath!, StringComparison.Ordinal);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        entry.FileContents.Should().Be("# Root README\n");
+        string.Equals("README.md", entry.InspectedRelativePath, StringComparison.OrdinalIgnoreCase).Should().BeTrue();
+        entry.InspectedRelativePath!.Should().NotContain("/");
     }
 
     [Theory]
@@ -43,11 +43,11 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = message;
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.FileInspected, entry.Kind);
-        Assert.Equal(expectedRelativePath, entry.InspectedRelativePath);
-        Assert.Contains($"Here is '{expectedRelativePath}'", entry.Summary, StringComparison.Ordinal);
-        Assert.NotNull(entry.FileContents);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        entry.InspectedRelativePath.Should().Be(expectedRelativePath);
+        entry.Summary.Should().Contain($"Here is '{expectedRelativePath}'");
+        entry.FileContents.Should().BeNotNull();
     }
 
     [Fact]
@@ -61,21 +61,21 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me program";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry ambiguous = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.AmbiguousInput, ambiguous.Kind);
-        Assert.Equal(2, ambiguous.TotalCandidateCount);
-        Assert.Contains("CherryCode.Terminal/Program.cs", ambiguous.Summary, StringComparison.Ordinal);
-        Assert.Contains("CherryCode/Program.cs", ambiguous.Summary, StringComparison.Ordinal);
-        Assert.Null(ambiguous.FileContents);
+        DesktopTurnEntry ambiguous = session.Entries.Should().ContainSingle().Which;
+        ambiguous.Kind.Should().Be(DesktopTurnKind.AmbiguousInput);
+        ambiguous.TotalCandidateCount.Should().Be(2);
+        ambiguous.Summary.Should().Contain("CherryCode.Terminal/Program.cs");
+        ambiguous.Summary.Should().Contain("CherryCode/Program.cs");
+        ambiguous.FileContents.Should().BeNull();
 
         session.MessageInput = "2";
         await session.SendMessageAsync();
 
-        Assert.Equal(2, session.Entries.Count);
+        session.Entries.Count.Should().Be(2);
         DesktopTurnEntry opened = session.Entries[1];
-        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
-        Assert.Equal("CherryCode/Program.cs", opened.InspectedRelativePath);
-        Assert.Equal("// app entry\n", opened.FileContents);
+        opened.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        opened.InspectedRelativePath.Should().Be("CherryCode/Program.cs");
+        opened.FileContents.Should().Be("// app entry\n");
     }
 
     [Fact]
@@ -88,10 +88,10 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me program";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry opened = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
-        Assert.Equal("src/Program.cs", opened.InspectedRelativePath);
-        Assert.Equal("class Program { }\n", opened.FileContents);
+        DesktopTurnEntry opened = session.Entries.Should().ContainSingle().Which;
+        opened.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        opened.InspectedRelativePath.Should().Be("src/Program.cs");
+        opened.FileContents.Should().Be("class Program { }\n");
     }
 
     [Fact]
@@ -107,27 +107,25 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me Program.cs.";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry ambiguous = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.AmbiguousInput, ambiguous.Kind);
-        Assert.Null(ambiguous.FileContents);
-        Assert.Null(ambiguous.InspectedRelativePath);
-        Assert.Equal(2, ambiguous.TotalCandidateCount);
-        Assert.Equal<IEnumerable<string>>(
-            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
-            ambiguous.SafeCandidatePaths);
-        Assert.Contains("Lattice.Cli/Program.cs", ambiguous.Summary, StringComparison.Ordinal);
-        Assert.Contains("Lattice.Desktop/Program.cs", ambiguous.Summary, StringComparison.Ordinal);
-        Assert.Contains("Which file would you like me to open?", ambiguous.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry ambiguous = session.Entries.Should().ContainSingle().Which;
+        ambiguous.Kind.Should().Be(DesktopTurnKind.AmbiguousInput);
+        ambiguous.FileContents.Should().BeNull();
+        ambiguous.InspectedRelativePath.Should().BeNull();
+        ambiguous.TotalCandidateCount.Should().Be(2);
+        ambiguous.SafeCandidatePaths.Should().Equal(["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"]);
+        ambiguous.Summary.Should().Contain("Lattice.Cli/Program.cs");
+        ambiguous.Summary.Should().Contain("Lattice.Desktop/Program.cs");
+        ambiguous.Summary.Should().Contain("Which file would you like me to open?");
 
         // User replies directly with a displayed relative path (without needing "Show me ").
         session.MessageInput = "Lattice.Desktop/Program.cs";
         await session.SendMessageAsync();
 
-        Assert.Equal(2, session.Entries.Count);
+        session.Entries.Count.Should().Be(2);
         DesktopTurnEntry opened = session.Entries[1];
-        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
-        Assert.Equal("Lattice.Desktop/Program.cs", opened.InspectedRelativePath);
-        Assert.Equal(desktopProgram, opened.FileContents);
+        opened.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        opened.InspectedRelativePath.Should().Be("Lattice.Desktop/Program.cs");
+        opened.FileContents.Should().Be(desktopProgram);
     }
 
     [Fact]
@@ -140,11 +138,11 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me Lattice.Cli/Program.cs.";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry missingExplicit = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.MissingFile, missingExplicit.Kind);
-        Assert.Equal("Lattice.Cli/Program.cs", missingExplicit.InspectedRelativePath);
-        Assert.Null(missingExplicit.FileContents);
-        Assert.Contains("'Lattice.Cli/Program.cs' was not found", missingExplicit.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry missingExplicit = session.Entries.Should().ContainSingle().Which;
+        missingExplicit.Kind.Should().Be(DesktopTurnKind.MissingFile);
+        missingExplicit.InspectedRelativePath.Should().Be("Lattice.Cli/Program.cs");
+        missingExplicit.FileContents.Should().BeNull();
+        missingExplicit.Summary.Should().Contain("'Lattice.Cli/Program.cs' was not found");
     }
 
     [Fact]
@@ -157,10 +155,10 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me MissingWidget.cs.";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry missing = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.MissingFile, missing.Kind);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, missing.ErrorCode);
-        Assert.Contains("couldn't find a file named 'MissingWidget.cs' anywhere in the connected workspace", missing.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry missing = session.Entries.Should().ContainSingle().Which;
+        missing.Kind.Should().Be(DesktopTurnKind.MissingFile);
+        missing.ErrorCode.Should().Be(FileToolErrorCodes.PathNotFound);
+        missing.Summary.Should().Contain("couldn't find a file named 'MissingWidget.cs' anywhere in the connected workspace");
     }
 
     [Fact]
@@ -176,22 +174,22 @@ public sealed class WorkspaceFileDiscoveryTests
         session.MessageInput = "Show me Program.cs";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry turn = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.AmbiguousInput, turn.Kind);
-        Assert.Equal(14, turn.TotalCandidateCount);
-        Assert.Equal(DesktopRequestProcessor.DefaultMaxDisplayedCandidatePaths, turn.SafeCandidatePaths.Length);
-        Assert.Equal(4, turn.OmittedCandidateCount);
-        Assert.Contains("14 files named 'Program.cs'", turn.Summary, StringComparison.Ordinal);
-        Assert.Contains("4 more omitted", turn.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry turn = session.Entries.Should().ContainSingle().Which;
+        turn.Kind.Should().Be(DesktopTurnKind.AmbiguousInput);
+        turn.TotalCandidateCount.Should().Be(14);
+        turn.SafeCandidatePaths.Length.Should().Be(DesktopRequestProcessor.DefaultMaxDisplayedCandidatePaths);
+        turn.OmittedCandidateCount.Should().Be(4);
+        turn.Summary.Should().Contain("14 files named 'Program.cs'");
+        turn.Summary.Should().Contain("4 more omitted");
 
         // Selecting candidate #13 (which was omitted from the first 10 displayed) still opens it cleanly.
         session.MessageInput = "Services/Service13/Program.cs";
         await session.SendMessageAsync();
 
         DesktopTurnEntry opened = session.Entries[1];
-        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
-        Assert.Equal("Services/Service13/Program.cs", opened.InspectedRelativePath);
-        Assert.Equal("// service 13\n", opened.FileContents);
+        opened.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        opened.InspectedRelativePath.Should().Be("Services/Service13/Program.cs");
+        opened.FileContents.Should().Be("// service 13\n");
     }
 
     [Fact]
@@ -212,10 +210,10 @@ public sealed class WorkspaceFileDiscoveryTests
             session.MessageInput = "Show me SecretConfig.cs";
             await session.SendMessageAsync();
 
-            DesktopTurnEntry entry = Assert.Single(session.Entries);
-            Assert.Equal(DesktopTurnKind.MissingFile, entry.Kind);
-            Assert.Null(entry.FileContents);
-            Assert.DoesNotContain("OUTSIDE_SECRET", entry.Summary, StringComparison.Ordinal);
+            DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+            entry.Kind.Should().Be(DesktopTurnKind.MissingFile);
+            entry.FileContents.Should().BeNull();
+            entry.Summary.Should().NotContain("OUTSIDE_SECRET");
         }
         finally
         {
@@ -244,25 +242,23 @@ public sealed class WorkspaceFileDiscoveryTests
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         var exchanges = component.FindAll("#turn-history > li.chat-exchange");
-        Assert.Single(exchanges);
-        Assert.Equal("AmbiguousInput", exchanges[0].GetAttribute("data-turn-kind"));
-        Assert.Empty(exchanges[0].QuerySelectorAll(".file-viewer"));
+        exchanges.Should().ContainSingle();
+        exchanges[0].GetAttribute("data-turn-kind").Should().Be("AmbiguousInput");
+        exchanges[0].QuerySelectorAll(".file-viewer").Should().BeEmpty();
 
         string[] renderedCandidates = [.. exchanges[0]
             .QuerySelectorAll(".candidate-path")
             .Select(node => node.TextContent)];
-        Assert.Equal<IEnumerable<string>>(
-            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"],
-            renderedCandidates);
+        renderedCandidates.Should().Equal(["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs"]);
 
         await component.Find("#message-input").InputAsync("Lattice.Desktop/Program.cs");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         exchanges = component.FindAll("#turn-history > li.chat-exchange");
-        Assert.Equal(2, exchanges.Count);
-        Assert.Equal("FileInspected", exchanges[1].GetAttribute("data-turn-kind"));
-        Assert.Equal("Lattice.Desktop/Program.cs", exchanges[1].QuerySelector(".file-path")!.TextContent);
-        Assert.Contains("// desktop entry", exchanges[1].QuerySelector(".file-contents")!.TextContent, StringComparison.Ordinal);
+        exchanges.Count.Should().Be(2);
+        exchanges[1].GetAttribute("data-turn-kind").Should().Be("FileInspected");
+        exchanges[1].QuerySelector(".file-path")!.TextContent.Should().Be("Lattice.Desktop/Program.cs");
+        exchanges[1].QuerySelector(".file-contents")!.TextContent.Should().Contain("// desktop entry");
     }
 
     [Fact]
@@ -281,15 +277,13 @@ public sealed class WorkspaceFileDiscoveryTests
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         var exchanges = component.FindAll("#turn-history > li.chat-exchange");
-        Assert.Single(exchanges);
-        Assert.Equal("AmbiguousInput", exchanges[0].GetAttribute("data-turn-kind"));
-        Assert.Empty(exchanges[0].QuerySelectorAll(".file-viewer"));
+        exchanges.Should().ContainSingle();
+        exchanges[0].GetAttribute("data-turn-kind").Should().Be("AmbiguousInput");
+        exchanges[0].QuerySelectorAll(".file-viewer").Should().BeEmpty();
         string[] programCandidates = [.. exchanges[0]
             .QuerySelectorAll(".candidate-path")
             .Select(node => node.TextContent)];
-        Assert.Equal<IEnumerable<string>>(
-            ["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs", "tests/evaluation/m9_3/baseline/Program.cs"],
-            programCandidates);
+        programCandidates.Should().Equal(["Lattice.Cli/Program.cs", "Lattice.Desktop/Program.cs", "tests/evaluation/m9_3/baseline/Program.cs"]);
 
         // 2. Replying with a displayed relative path opens that exact file.
         await component.Find("#message-input").InputAsync("Lattice.Desktop/Program.cs");
@@ -304,13 +298,13 @@ public sealed class WorkspaceFileDiscoveryTests
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         exchanges = component.FindAll("#turn-history > li.chat-exchange");
-        Assert.Equal(4, exchanges.Count);
-        Assert.Equal("FileInspected", exchanges[1].GetAttribute("data-turn-kind"));
-        Assert.Equal("Lattice.Desktop/Program.cs", exchanges[1].QuerySelector(".file-path")!.TextContent);
-        Assert.Equal("FileInspected", exchanges[2].GetAttribute("data-turn-kind"));
-        Assert.Equal("Lattice/WorkspaceRoot.cs", exchanges[2].QuerySelector(".file-path")!.TextContent);
-        Assert.Equal("FileInspected", exchanges[3].GetAttribute("data-turn-kind"));
-        Assert.Equal("README.md", exchanges[3].QuerySelector(".file-path")!.TextContent);
+        exchanges.Count.Should().Be(4);
+        exchanges[1].GetAttribute("data-turn-kind").Should().Be("FileInspected");
+        exchanges[1].QuerySelector(".file-path")!.TextContent.Should().Be("Lattice.Desktop/Program.cs");
+        exchanges[2].GetAttribute("data-turn-kind").Should().Be("FileInspected");
+        exchanges[2].QuerySelector(".file-path")!.TextContent.Should().Be("Lattice/WorkspaceRoot.cs");
+        exchanges[3].GetAttribute("data-turn-kind").Should().Be("FileInspected");
+        exchanges[3].QuerySelector(".file-path")!.TextContent.Should().Be("README.md");
     }
 
     private static string LocateLatticeRepositoryRoot()
@@ -336,7 +330,7 @@ public sealed class WorkspaceFileDiscoveryTests
             WorkspacePathInput = workspacePath,
         };
         await session.ConnectAsync();
-        Assert.True(session.IsConnected);
+        session.IsConnected.Should().BeTrue();
         return session;
     }
 
@@ -369,6 +363,6 @@ public sealed class WorkspaceFileDiscoveryTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}" ?? string.Empty);
     }
 }

@@ -15,9 +15,9 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, "hello", string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Contains("exited with code 0", invocation.Result.Output!.AsString(), StringComparison.Ordinal);
-        Assert.Contains("hello", invocation.Result.Output.AsString(), StringComparison.Ordinal);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsString().Should().Contain("exited with code 0");
+        invocation.Result.Output.AsString().Should().Contain("hello");
     }
 
     [Fact]
@@ -26,8 +26,8 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, string.Empty, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.Equal("greeter", runner.LastExecutable);
-        Assert.Equal(["--polite"], runner.LastArguments);
+        runner.LastExecutable.Should().Be("greeter");
+        runner.LastArguments.Should().Equal(["--polite"]);
     }
 
     [Fact]
@@ -38,9 +38,9 @@ public sealed class GuardedCommandToolTests : IDisposable
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
 
         // The command ran; its exit code is information, not a tool malfunction.
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Contains("exited with code 1", invocation.Result.Output!.AsString(), StringComparison.Ordinal);
-        Assert.Contains("err", invocation.Result.Output.AsString(), StringComparison.Ordinal);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsString().Should().Contain("exited with code 1");
+        invocation.Result.Output.AsString().Should().Contain("err");
     }
 
     [Fact]
@@ -49,8 +49,8 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(-1, string.Empty, string.Empty, timedOut: true));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(CommandErrorCodes.CommandTimedOut, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(CommandErrorCodes.CommandTimedOut);
     }
 
     [Fact]
@@ -59,9 +59,9 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, string.Empty, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "rm-rf", ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(CommandErrorCodes.CommandNotAllowed, invocation.Result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(CommandErrorCodes.CommandNotAllowed);
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -70,9 +70,9 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, string.Empty, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.permission.denied");
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public sealed class GuardedCommandToolTests : IDisposable
             tool,
             ArgumentBag.Empty,
             ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.argument.missing", invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.argument.missing");
     }
 
     [Fact]
@@ -93,8 +93,8 @@ public sealed class GuardedCommandToolTests : IDisposable
     {
         GuardedCommandTool tool = Create(tool: new ThrowingProcessRunner());
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(CommandErrorCodes.CommandFailedToStart, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(CommandErrorCodes.CommandFailedToStart);
     }
 
     [Fact]
@@ -103,8 +103,8 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, string.Empty, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner, timeout: TimeSpan.FromSeconds(5));
         Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.Equal(TimeSpan.FromSeconds(5), runner.LastTimeout);
-        Assert.Equal(TimeSpan.FromSeconds(5), tool.Descriptor.Limits.Timeout);
+        runner.LastTimeout.Should().Be(TimeSpan.FromSeconds(5));
+        tool.Descriptor.Limits.Timeout.Should().Be(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, string.Empty, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(workspace, runner);
         ToolExecutor.Execute(tool, Name("greet"), ToolPermissionPolicy.AllowAll);
-        Assert.Equal(workspace.Path, runner.LastWorkingDirectory);
+        runner.LastWorkingDirectory.Should().Be(workspace.Path);
     }
 
     [Fact]
@@ -124,9 +124,9 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, huge, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Contains("output truncated", invocation.Result.Output!.AsString(), StringComparison.Ordinal);
-        Assert.True(invocation.Result.Output.AsString().Length < huge.Length);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsString().Should().Contain("output truncated");
+        (invocation.Result.Output.AsString().Length < huge.Length).Should().BeTrue();
     }
 
     [Fact]
@@ -136,15 +136,15 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(1, stdout, string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.True(invocation.Result.IsSuccess);
+        invocation.Result.IsSuccess.Should().BeTrue();
         string output = invocation.Result.Output!.AsString();
 
         // Raw output is preserved...
-        Assert.Contains("Build FAILED.", output, StringComparison.Ordinal);
+        output.Should().Contain("Build FAILED.");
 
         // ...and a structured view is appended.
-        Assert.Contains("diagnostics:", output, StringComparison.Ordinal);
-        Assert.Contains("CS0246", output, StringComparison.Ordinal);
+        output.Should().Contain("diagnostics:");
+        output.Should().Contain("CS0246");
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public sealed class GuardedCommandToolTests : IDisposable
         FakeProcessRunner runner = new(new ProcessOutcome(0, "Build succeeded.", string.Empty, timedOut: false));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.DoesNotContain("diagnostics:", invocation.Result.Output!.AsString(), StringComparison.Ordinal);
+        invocation.Result.Output!.AsString().Should().NotContain("diagnostics:");
     }
 
     [Fact]
@@ -168,9 +168,9 @@ public sealed class GuardedCommandToolTests : IDisposable
             Name("greet"),
             ToolPermissionPolicy.AllowAll,
             source.Token);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(ToolErrorCodes.Cancelled, invocation.Result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(ToolErrorCodes.Cancelled);
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -180,8 +180,8 @@ public sealed class GuardedCommandToolTests : IDisposable
             new ProcessOutcome(-1, string.Empty, string.Empty, timedOut: false, cancelled: true));
         GuardedCommandTool tool = Create(tool: runner);
         ToolInvocation invocation = Run(tool, "greet", ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(ToolErrorCodes.Cancelled, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(ToolErrorCodes.Cancelled);
     }
 
     private GuardedCommandTool Create(

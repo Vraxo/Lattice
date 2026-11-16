@@ -7,23 +7,23 @@ public sealed class IdentifierTests
     {
         SessionId first = SessionId.New();
         SessionId second = SessionId.New();
-        Assert.NotEqual(Guid.Empty, first.Value);
-        Assert.NotEqual(first, second);
+        first.Value.Should().NotBe(Guid.Empty);
+        second.Should().NotBe(first);
     }
 
     [Fact]
     public void IdentifiersWithSameValueAreEqual()
     {
         Guid value = Guid.NewGuid();
-        Assert.Equal(new FactId(value), new FactId(value));
-        Assert.Equal(new GoalId(value), new GoalId(value));
-        Assert.Equal(new ActionId(value), new ActionId(value));
+        new FactId(value).Should().Be(new FactId(value));
+        new GoalId(value).Should().Be(new GoalId(value));
+        new ActionId(value).Should().Be(new ActionId(value));
     }
 
     [Fact]
     public void SameBackingValueInDifferentIdentifierTypesAreNotEqual()
     {
         Guid value = Guid.NewGuid();
-        Assert.NotEqual<object>(new SessionId(value), new FactId(value));
+        ((object)new FactId(value)).Should().NotBe(new SessionId(value));
     }
 }

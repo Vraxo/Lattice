@@ -17,9 +17,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse(Nested);
         Result<MarkdownSection> section = document.FindSection("A");
-        Assert.True(section.IsSuccess);
-        Assert.Equal(1, section.Value.ContentRange.Start);
-        Assert.Equal(8, section.Value.ContentRange.End);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.ContentRange.Start.Should().Be(1);
+        section.Value.ContentRange.End.Should().Be(8);
     }
 
     [Fact]
@@ -27,9 +27,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse(Nested);
         Result<MarkdownSection> section = document.FindSection("B");
-        Assert.True(section.IsSuccess);
-        Assert.Equal(3, section.Value.ContentRange.Start);
-        Assert.Equal(6, section.Value.ContentRange.End);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.ContentRange.Start.Should().Be(3);
+        section.Value.ContentRange.End.Should().Be(6);
     }
 
     [Fact]
@@ -39,8 +39,8 @@ public sealed class MarkdownDocumentSectionTests
         Result<MarkdownSection> section = document.FindSection("B");
 
         // C is deeper than B, so it belongs to B's content range rather than ending it.
-        Assert.True(section.IsSuccess);
-        Assert.Equal(6, section.Value.ContentRange.End);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.ContentRange.End.Should().Be(6);
     }
 
     [Fact]
@@ -48,9 +48,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse(Nested);
         Result<MarkdownSection> section = document.FindSection("C");
-        Assert.True(section.IsSuccess);
-        Assert.Equal(5, section.Value.ContentRange.Start);
-        Assert.Equal(6, section.Value.ContentRange.End);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.ContentRange.Start.Should().Be(5);
+        section.Value.ContentRange.End.Should().Be(6);
     }
 
     [Fact]
@@ -58,9 +58,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# A\nbody\n");
         Result<MarkdownSection> section = document.FindSection("A");
-        Assert.True(section.IsSuccess);
-        Assert.Equal(0, section.Value.Heading.LineIndex);
-        Assert.Equal(1, section.Value.ContentRange.Start);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.Heading.LineIndex.Should().Be(0);
+        section.Value.ContentRange.Start.Should().Be(1);
     }
 
     [Fact]
@@ -68,9 +68,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# A\nbody\n");
         Result<MarkdownSection> section = document.FindSection("A");
-        Assert.True(section.IsSuccess);
-        Assert.Equal(0, section.Value.FullRange.Start);
-        Assert.Equal(2, section.Value.FullRange.End);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.FullRange.Start.Should().Be(0);
+        section.Value.FullRange.End.Should().Be(2);
     }
 
     [Fact]
@@ -78,8 +78,8 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# A\n# B\n");
         Result<MarkdownSection> section = document.FindSection("A");
-        Assert.True(section.IsSuccess);
-        Assert.True(section.Value.ContentRange.IsEmpty);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.ContentRange.IsEmpty.Should().BeTrue();
     }
 
     [Fact]
@@ -87,8 +87,8 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# A\n");
         Result<MarkdownSection> section = document.FindSection("Missing");
-        Assert.False(section.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.TargetNotFound, section.Error!.Code);
+        section.IsSuccess.Should().BeFalse();
+        section.Error!.Code.Should().Be(DocumentErrorCodes.TargetNotFound);
     }
 
     [Fact]
@@ -96,8 +96,8 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# Same\n# Same\n");
         Result<MarkdownSection> section = document.FindSection("Same");
-        Assert.False(section.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.TargetAmbiguous, section.Error!.Code);
+        section.IsSuccess.Should().BeFalse();
+        section.Error!.Code.Should().Be(DocumentErrorCodes.TargetAmbiguous);
     }
 
     [Fact]
@@ -105,9 +105,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# Same\n## Same\n");
         Result<MarkdownSection> section = document.FindSection("Same", level: 2);
-        Assert.True(section.IsSuccess);
-        Assert.Equal(2, section.Value.Heading.Level);
-        Assert.Equal(1, section.Value.Heading.LineIndex);
+        section.IsSuccess.Should().BeTrue();
+        section.Value.Heading.Level.Should().Be(2);
+        section.Value.Heading.LineIndex.Should().Be(1);
     }
 
     [Fact]
@@ -115,8 +115,8 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# Same\n## Same\n");
         Result<MarkdownSection> section = document.FindSection("Same");
-        Assert.False(section.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.TargetAmbiguous, section.Error!.Code);
+        section.IsSuccess.Should().BeFalse();
+        section.Error!.Code.Should().Be(DocumentErrorCodes.TargetAmbiguous);
     }
 
     [Fact]
@@ -124,17 +124,17 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("# A\n");
         Result<MarkdownSection> section = document.FindSection("A", level: 7);
-        Assert.False(section.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.HeadingLevelInvalid, section.Error!.Code);
+        section.IsSuccess.Should().BeFalse();
+        section.Error!.Code.Should().Be(DocumentErrorCodes.HeadingLevelInvalid);
     }
 
     [Fact]
     public void HeadingMatchIsExactAndCaseSensitive()
     {
         MarkdownDocument document = MarkdownDocument.Parse("# Section\n");
-        Assert.Equal(DocumentErrorCodes.TargetNotFound, document.FindSection("section").Error!.Code);
-        Assert.Equal(DocumentErrorCodes.TargetNotFound, document.FindSection("Section ").Error!.Code);
-        Assert.True(document.FindSection("Section").IsSuccess);
+        document.FindSection("section").Error!.Code.Should().Be(DocumentErrorCodes.TargetNotFound);
+        document.FindSection("Section ").Error!.Code.Should().Be(DocumentErrorCodes.TargetNotFound);
+        document.FindSection("Section").IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -142,8 +142,8 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse("```\n# Hidden\n```\n");
         Result<MarkdownSection> section = document.FindSection("Hidden");
-        Assert.False(section.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.TargetNotFound, section.Error!.Code);
+        section.IsSuccess.Should().BeFalse();
+        section.Error!.Code.Should().Be(DocumentErrorCodes.TargetNotFound);
     }
 
     [Fact]
@@ -151,9 +151,9 @@ public sealed class MarkdownDocumentSectionTests
     {
         MarkdownDocument document = MarkdownDocument.Parse(Nested);
         Result<MarkdownSection> section = document.FindSection("B");
-        Assert.True(section.IsSuccess);
+        section.IsSuccess.Should().BeTrue();
         Result<string> content = document.Text.GetText(section.Value.ContentRange);
-        Assert.True(content.IsSuccess);
-        Assert.Equal("b-content\n### C\nc-content\n", content.Value);
+        content.IsSuccess.Should().BeTrue();
+        content.Value.Should().Be("b-content\n### C\nc-content\n");
     }
 }

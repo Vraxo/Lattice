@@ -5,38 +5,38 @@ public sealed class ToolPermissionPolicyTests
     [Fact]
     public void ReadOnlyOnlyAllowsReadOnly()
     {
-        Assert.True(ToolPermissionPolicy.ReadOnlyOnly.IsAllowed(ToolSideEffect.ReadOnly));
+        ToolPermissionPolicy.ReadOnlyOnly.IsAllowed(ToolSideEffect.ReadOnly).Should().BeTrue();
     }
 
     [Fact]
     public void ReadOnlyOnlyDeniesLocalWrite()
     {
-        Assert.False(ToolPermissionPolicy.ReadOnlyOnly.IsAllowed(ToolSideEffect.LocalWrite));
+        ToolPermissionPolicy.ReadOnlyOnly.IsAllowed(ToolSideEffect.LocalWrite).Should().BeFalse();
     }
 
     [Fact]
     public void ReadOnlyOnlyDeniesCommandExecution()
     {
-        Assert.False(ToolPermissionPolicy.ReadOnlyOnly.IsAllowed(ToolSideEffect.CommandExecution));
+        ToolPermissionPolicy.ReadOnlyOnly.IsAllowed(ToolSideEffect.CommandExecution).Should().BeFalse();
     }
 
     [Fact]
     public void AllowAllAllowsEverySideEffect()
     {
         ToolPermissionPolicy policy = ToolPermissionPolicy.AllowAll;
-        Assert.True(policy.IsAllowed(ToolSideEffect.ReadOnly));
-        Assert.True(policy.IsAllowed(ToolSideEffect.LocalWrite));
-        Assert.True(policy.IsAllowed(ToolSideEffect.CommandExecution));
-        Assert.True(policy.IsAllowed(ToolSideEffect.ExternalSideEffect));
+        policy.IsAllowed(ToolSideEffect.ReadOnly).Should().BeTrue();
+        policy.IsAllowed(ToolSideEffect.LocalWrite).Should().BeTrue();
+        policy.IsAllowed(ToolSideEffect.CommandExecution).Should().BeTrue();
+        policy.IsAllowed(ToolSideEffect.ExternalSideEffect).Should().BeTrue();
     }
 
     [Fact]
     public void GrantAllowsOnlyListedSideEffects()
     {
         ToolPermissionPolicy policy = ToolPermissionPolicy.Grant([ToolSideEffect.LocalWrite]);
-        Assert.True(policy.IsAllowed(ToolSideEffect.LocalWrite));
-        Assert.False(policy.IsAllowed(ToolSideEffect.ReadOnly));
-        Assert.False(policy.IsAllowed(ToolSideEffect.ExternalSideEffect));
+        policy.IsAllowed(ToolSideEffect.LocalWrite).Should().BeTrue();
+        policy.IsAllowed(ToolSideEffect.ReadOnly).Should().BeFalse();
+        policy.IsAllowed(ToolSideEffect.ExternalSideEffect).Should().BeFalse();
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class ToolPermissionPolicyTests
     {
         ToolPermissionPolicy first = ToolPermissionPolicy.Grant([ToolSideEffect.ReadOnly, ToolSideEffect.LocalWrite]);
         ToolPermissionPolicy second = ToolPermissionPolicy.Grant([ToolSideEffect.ReadOnly, ToolSideEffect.LocalWrite]);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class ToolPermissionPolicyTests
     {
         ToolPermissionPolicy first = ToolPermissionPolicy.Grant([ToolSideEffect.ReadOnly]);
         ToolPermissionPolicy second = ToolPermissionPolicy.Grant([ToolSideEffect.LocalWrite]);
-        Assert.NotEqual(first, second);
+        second.Should().NotBe(first);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class ToolPermissionPolicyTests
     {
         ToolPermissionPolicy first = ToolPermissionPolicy.Grant([ToolSideEffect.LocalWrite, ToolSideEffect.ReadOnly]);
         ToolPermissionPolicy second = ToolPermissionPolicy.Grant([ToolSideEffect.ReadOnly, ToolSideEffect.LocalWrite]);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -68,6 +68,6 @@ public sealed class ToolPermissionPolicyTests
     {
         ToolPermissionPolicy duplicated = ToolPermissionPolicy.Grant([ToolSideEffect.ReadOnly, ToolSideEffect.ReadOnly]);
         ToolPermissionPolicy single = ToolPermissionPolicy.Grant([ToolSideEffect.ReadOnly]);
-        Assert.Equal(duplicated, single);
+        single.Should().Be(duplicated);
     }
 }

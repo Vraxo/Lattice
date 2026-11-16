@@ -12,14 +12,14 @@ public sealed partial class CharcoalThemeStylesheetTests
         string css = File.ReadAllText(cssPath);
 
         // Required neutral charcoal token family
-        Assert.Contains("--bg-app: #232323;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--bg-panel: #2b2b2b;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--bg-inset: #1c1c1c;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--bg-user-turn: #353535;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--text-primary: #ebebeb;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--text-muted: #a3a3a3;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--focus-ring: #bdbdbd;", css, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("@media (prefers-reduced-motion: reduce)", css, StringComparison.Ordinal);
+        css.Should().ContainEquivalentOf("--bg-app: #232323;");
+        css.Should().ContainEquivalentOf("--bg-panel: #2b2b2b;");
+        css.Should().ContainEquivalentOf("--bg-inset: #1c1c1c;");
+        css.Should().ContainEquivalentOf("--bg-user-turn: #353535;");
+        css.Should().ContainEquivalentOf("--text-primary: #ebebeb;");
+        css.Should().ContainEquivalentOf("--text-muted: #a3a3a3;");
+        css.Should().ContainEquivalentOf("--focus-ring: #bdbdbd;");
+        css.Should().Contain("@media (prefers-reduced-motion: reduce)");
 
         // Former blue-black/saturated-blue shades must not reappear.
         string[] legacyBlueShades =
@@ -37,7 +37,7 @@ public sealed partial class CharcoalThemeStylesheetTests
         ];
         foreach (string shade in legacyBlueShades)
         {
-            Assert.DoesNotContain(shade, css, StringComparison.OrdinalIgnoreCase);
+            css.Should().NotContainEquivalentOf(shade);
         }
 
         // Verify neutral surface & border hex tokens have zero blue channel dominance (B <= R + 2 and B <= G + 2).
@@ -66,17 +66,15 @@ public sealed partial class CharcoalThemeStylesheetTests
         foreach (string token in neutralTokens)
         {
             (int r, int g, int b) = ExtractRgbToken(css, token);
-            Assert.True(
-                Math.Abs(r - g) <= 2 && Math.Abs(g - b) <= 2 && Math.Abs(r - b) <= 2,
-                $"Expected '{token}' to be neutral gray, but got RGB({r}, {g}, {b}).");
+            (Math.Abs(r - g) <= 2 && Math.Abs(g - b) <= 2 && Math.Abs(r - b) <= 2).Should().BeTrue("{0}", $"Expected '{token}' to be neutral gray, but got RGB({r}, {g}, {b})." ?? string.Empty);
         }
 
         // Verify WCAG AA (>= 4.5:1) contrast for primary and muted text against main and panel surfaces.
-        Assert.True(ContrastRatio(ExtractRgbToken(css, "--text-primary"), ExtractRgbToken(css, "--bg-app")) >= 10.0);
-        Assert.True(ContrastRatio(ExtractRgbToken(css, "--text-primary"), ExtractRgbToken(css, "--bg-panel")) >= 9.0);
-        Assert.True(ContrastRatio(ExtractRgbToken(css, "--text-muted"), ExtractRgbToken(css, "--bg-app")) >= 4.5);
-        Assert.True(ContrastRatio(ExtractRgbToken(css, "--text-muted"), ExtractRgbToken(css, "--bg-panel")) >= 4.5);
-        Assert.True(ContrastRatio(ExtractRgbToken(css, "--text-path"), ExtractRgbToken(css, "--bg-inset")) >= 9.0);
+        (ContrastRatio(ExtractRgbToken(css, "--text-primary"), ExtractRgbToken(css, "--bg-app")) >= 10.0).Should().BeTrue();
+        (ContrastRatio(ExtractRgbToken(css, "--text-primary"), ExtractRgbToken(css, "--bg-panel")) >= 9.0).Should().BeTrue();
+        (ContrastRatio(ExtractRgbToken(css, "--text-muted"), ExtractRgbToken(css, "--bg-app")) >= 4.5).Should().BeTrue();
+        (ContrastRatio(ExtractRgbToken(css, "--text-muted"), ExtractRgbToken(css, "--bg-panel")) >= 4.5).Should().BeTrue();
+        (ContrastRatio(ExtractRgbToken(css, "--text-path"), ExtractRgbToken(css, "--bg-inset")) >= 9.0).Should().BeTrue();
     }
 
     private static (int R, int G, int B) ExtractRgbToken(string css, string tokenName)

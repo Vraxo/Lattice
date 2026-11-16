@@ -5,13 +5,13 @@ public sealed class ErrorTests
     [Fact]
     public void RejectsEmptyCode()
     {
-        Assert.Throws<ArgumentException>(() => new Error(string.Empty, "message"));
+        FluentActions.Invoking(() => new Error(string.Empty, "message")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void RejectsEmptyMessage()
     {
-        Assert.Throws<ArgumentException>(() => new Error("code", string.Empty));
+        FluentActions.Invoking(() => new Error("code", string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -19,13 +19,13 @@ public sealed class ErrorTests
     {
         Error first = new("code", "message");
         Error second = new("code", "message");
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
     public void ToStringIncludesCodeAndMessage()
     {
         Error error = new("code", "message");
-        Assert.Equal("code: message", error.ToString());
+        error.ToString().Should().Be("code: message");
     }
 }

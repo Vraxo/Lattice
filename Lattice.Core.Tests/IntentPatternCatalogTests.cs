@@ -6,37 +6,37 @@ public sealed class IntentPatternCatalogTests
     public void ParsesThePatternsFile()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "config", "nlp", "patterns.json");
-        Assert.True(File.Exists(path), $"Patterns file not found at {path}.");
+        File.Exists(path).Should().BeTrue("{0}", $"Patterns file not found at {path}." ?? string.Empty);
         Result<IntentPatternCatalog> result = IntentPatternCatalogParser.Parse(File.ReadAllText(path));
-        Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.NotEmpty(result.Value.Patterns);
+        result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
+        result.Value.Patterns.Should().BeNotEmpty();
     }
 
     [Fact]
     public void RejectsMalformedJson()
     {
-        Assert.Equal("nlp.invalid-patterns", Failure("{ not json").Code);
+        Failure("{ not json").Code.Should().Be("nlp.invalid-patterns");
     }
 
     [Fact]
     public void RejectsUnknownField()
     {
         Error error = Failure("{\"patternVersion\":\"1.0\",\"extra\":1,\"patterns\":[]}");
-        Assert.Contains("document.extra: unknown field.", error.Message);
+        error.Message.Should().Contain("document.extra: unknown field.");
     }
 
     [Fact]
     public void RejectsUnsupportedMajorVersion()
     {
         Error error = Failure("{\"patternVersion\":\"2.0\",\"patterns\":[]}");
-        Assert.Contains("unsupported major version 2", error.Message);
+        error.Message.Should().Contain("unsupported major version 2");
     }
 
     [Fact]
     public void RejectsUnknownIntent()
     {
         Error error = Failure("{\"patternVersion\":\"1.0\",\"patterns\":[{\"id\":\"a\",\"intent\":\"nope\",\"template\":\"x\"}]}");
-        Assert.Contains("unknown intent 'nope'", error.Message);
+        error.Message.Should().Contain("unknown intent 'nope'");
     }
 
     [Fact]
@@ -46,14 +46,14 @@ public sealed class IntentPatternCatalogTests
             "{\"patternVersion\":\"1.0\",\"patterns\":[" +
             "{\"id\":\"a\",\"intent\":\"question\",\"template\":\"x\"}," +
             "{\"id\":\"a\",\"intent\":\"question\",\"template\":\"y\"}]}");
-        Assert.Contains("duplicate pattern id 'a'", error.Message);
+        error.Message.Should().Contain("duplicate pattern id 'a'");
     }
 
     [Fact]
     public void RejectsInvalidTemplate()
     {
         Error error = Failure("{\"patternVersion\":\"1.0\",\"patterns\":[{\"id\":\"a\",\"intent\":\"question\",\"template\":\"{x}\"}]}");
-        Assert.Contains("patterns[0].template", error.Message);
+        error.Message.Should().Contain("patterns[0].template");
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class IntentPatternCatalogTests
             new IntentPattern("a", RequestIntentKind.Question, ["x"], null),
             new IntentPattern("a", RequestIntentKind.Question, ["y"], null),
         ];
-        Assert.Throws<ArgumentException>(() => new IntentPatternCatalog(patterns));
+        FluentActions.Invoking(() => new IntentPatternCatalog(patterns)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -78,12 +78,12 @@ public sealed class IntentPatternCatalogTests
         Result<IntentPatternCatalog> v10 = IntentPatternCatalogParser.Parse(v10Json);
         Result<IntentPatternCatalog> v11 = IntentPatternCatalogParser.Parse(v11Json);
 
-        Assert.True(v10.IsSuccess, v10.Error?.Message);
-        Assert.True(v11.IsSuccess, v11.Error?.Message);
-        IntentPattern pattern = Assert.Single(v11.Value.Patterns);
-        Assert.Equal<IEnumerable<string>>(["where", "does"], pattern.Literals);
-        Assert.Equal("symbol", pattern.SlotName);
-        Assert.Equal<IEnumerable<string>>(["appear"], pattern.SuffixLiterals);
+        v10.IsSuccess.Should().BeTrue("{0}", v10.Error?.Message ?? string.Empty);
+        v11.IsSuccess.Should().BeTrue("{0}", v11.Error?.Message ?? string.Empty);
+        IntentPattern pattern = v11.Value.Patterns.Should().ContainSingle().Which;
+        pattern.Literals.Should().Equal(["where", "does"]);
+        pattern.SlotName.Should().Be("symbol");
+        pattern.SuffixLiterals.Should().Equal(["appear"]);
     }
 
     [Theory]
@@ -94,14 +94,14 @@ public sealed class IntentPatternCatalogTests
     {
         Error error = Failure(
             $"{{\"patternVersion\":\"1.1\",\"patterns\":[{{\"id\":\"bad\",\"intent\":\"find-symbol\",\"template\":\"{template}\"}}]}}");
-        Assert.Equal("nlp.invalid-patterns", error.Code);
-        Assert.Contains("patterns[0].template", error.Message);
+        error.Code.Should().Be("nlp.invalid-patterns");
+        error.Message.Should().Contain("patterns[0].template");
     }
 
     private static Error Failure(string json)
     {
         Result<IntentPatternCatalog> result = IntentPatternCatalogParser.Parse(json);
-        Assert.False(result.IsSuccess);
+        result.IsSuccess.Should().BeFalse();
         return result.Error!;
     }
 }

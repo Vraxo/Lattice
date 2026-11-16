@@ -5,7 +5,7 @@ public sealed class MessageTests
     [Fact]
     public void RejectsEmptyText()
     {
-        Assert.Throws<ArgumentException>(() => new Message(MessageRole.User, string.Empty));
+        FluentActions.Invoking(() => new Message(MessageRole.User, string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -13,7 +13,7 @@ public sealed class MessageTests
     {
         Message first = new(MessageRole.Assistant, "hi");
         Message second = new(MessageRole.Assistant, "hi");
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -21,6 +21,6 @@ public sealed class MessageTests
     {
         Message user = new(MessageRole.User, "hi");
         Message assistant = new(MessageRole.Assistant, "hi");
-        Assert.NotEqual(user, assistant);
+        assistant.Should().NotBe(user);
     }
 }

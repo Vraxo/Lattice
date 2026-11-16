@@ -8,7 +8,7 @@ public sealed class FactTests
         FactId id = FactId.New();
         Fact userFact = new(id, "Water boils at 100C.", "user:turn-1", FactStatus.UserAsserted);
         Fact packageFact = new(id, "Water boils at 100C.", "package:physics", FactStatus.Retrieved);
-        Assert.NotEqual(userFact, packageFact);
+        packageFact.Should().NotBe(userFact);
     }
 
     [Fact]
@@ -17,7 +17,7 @@ public sealed class FactTests
         FactId id = FactId.New();
         Fact asserted = new(id, "Water boils at 100C.", "user:turn-1", FactStatus.UserAsserted);
         Fact assumed = new(id, "Water boils at 100C.", "user:turn-1", FactStatus.Assumed);
-        Assert.NotEqual(asserted, assumed);
+        assumed.Should().NotBe(asserted);
     }
 
     [Fact]
@@ -26,20 +26,18 @@ public sealed class FactTests
         FactId id = FactId.New();
         Fact first = new(id, "Water boils at 100C.", "user:turn-1", FactStatus.UserAsserted);
         Fact second = new(id, "Water boils at 100C.", "user:turn-1", FactStatus.UserAsserted);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
     public void RejectsEmptyContent()
     {
-        Assert.Throws<ArgumentException>(
-            () => new Fact(FactId.New(), string.Empty, "user:turn-1", FactStatus.UserAsserted));
+        FluentActions.Invoking(() => new Fact(FactId.New(), string.Empty, "user:turn-1", FactStatus.UserAsserted)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void RejectsEmptySource()
     {
-        Assert.Throws<ArgumentException>(
-            () => new Fact(FactId.New(), "content", string.Empty, FactStatus.UserAsserted));
+        FluentActions.Invoking(() => new Fact(FactId.New(), "content", string.Empty, FactStatus.UserAsserted)).Should().ThrowExactly<ArgumentException>();
     }
 }

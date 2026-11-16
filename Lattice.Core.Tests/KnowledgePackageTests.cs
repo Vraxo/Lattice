@@ -7,7 +7,7 @@ public sealed class KnowledgePackageTests
     {
         KnowledgePackage first = Create();
         KnowledgePackage second = Create();
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -19,7 +19,7 @@ public sealed class KnowledgePackageTests
             "test.pkg",
             "Test Package",
             facts: [new KnowledgeFact("fact.b", "concept.a", "p", "other")]);
-        Assert.NotEqual(first, second);
+        second.Should().NotBe(first);
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public sealed class KnowledgePackageTests
     {
         KnowledgeConcept first = new("concept.a", "a", ["alias"]);
         KnowledgeConcept second = new("concept.a", "a", ["alias"]);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     private static KnowledgePackage Create()

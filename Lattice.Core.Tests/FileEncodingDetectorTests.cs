@@ -11,41 +11,41 @@ public sealed class FileEncodingDetectorTests
     [Fact]
     public void PlainUtf8IsDetectedAsUtf8NoBom()
     {
-        Assert.Equal(FileEncodingKind.Utf8NoBom, FileEncodingDetector.Detect(Encoding.UTF8.GetBytes("plain\n")));
+        FileEncodingDetector.Detect(Encoding.UTF8.GetBytes("plain\n")).Should().Be(FileEncodingKind.Utf8NoBom);
     }
 
     [Fact]
     public void EmptyBytesAreDetectedAsUtf8NoBom()
     {
-        Assert.Equal(FileEncodingKind.Utf8NoBom, FileEncodingDetector.Detect([]));
+        FileEncodingDetector.Detect([]).Should().Be(FileEncodingKind.Utf8NoBom);
     }
 
     [Fact]
     public void Utf8BomIsDetected()
     {
         byte[] bytes = [0xEF, 0xBB, 0xBF, .. Encoding.UTF8.GetBytes("plain\n")];
-        Assert.Equal(FileEncodingKind.Utf8WithBom, FileEncodingDetector.Detect(bytes));
+        FileEncodingDetector.Detect(bytes).Should().Be(FileEncodingKind.Utf8WithBom);
     }
 
     [Fact]
     public void Utf16LeIsDetected()
     {
         byte[] bytes = [0xFF, 0xFE, .. Encoding.Unicode.GetBytes("wide\n")];
-        Assert.Equal(FileEncodingKind.Utf16Le, FileEncodingDetector.Detect(bytes));
+        FileEncodingDetector.Detect(bytes).Should().Be(FileEncodingKind.Utf16Le);
     }
 
     [Fact]
     public void Utf16BeIsDetected()
     {
         byte[] bytes = [0xFE, 0xFF, .. Encoding.BigEndianUnicode.GetBytes("wide\n")];
-        Assert.Equal(FileEncodingKind.Utf16Be, FileEncodingDetector.Detect(bytes));
+        FileEncodingDetector.Detect(bytes).Should().Be(FileEncodingKind.Utf16Be);
     }
 
     [Fact]
     public void Utf32LeIsDetectedBeforeUtf16LeBecauseTheirMarksOverlap()
     {
         byte[] bytes = [0xFF, 0xFE, 0x00, 0x00, .. Encoding.UTF32.GetBytes("wide\n")];
-        Assert.Equal(FileEncodingKind.Utf32Le, FileEncodingDetector.Detect(bytes));
+        FileEncodingDetector.Detect(bytes).Should().Be(FileEncodingKind.Utf32Le);
     }
 
     [Fact]
@@ -53,12 +53,12 @@ public sealed class FileEncodingDetectorTests
     {
         UTF32Encoding utf32Be = new(bigEndian: true, byteOrderMark: false);
         byte[] bytes = [0x00, 0x00, 0xFE, 0xFF, .. utf32Be.GetBytes("wide\n")];
-        Assert.Equal(FileEncodingKind.Utf32Be, FileEncodingDetector.Detect(bytes));
+        FileEncodingDetector.Detect(bytes).Should().Be(FileEncodingKind.Utf32Be);
     }
 
     [Fact]
     public void InvalidUtf8IsDetectedAsUnknown()
     {
-        Assert.Equal(FileEncodingKind.Unknown, FileEncodingDetector.Detect([0xC3, 0x28]));
+        FileEncodingDetector.Detect([0xC3, 0x28]).Should().Be(FileEncodingKind.Unknown);
     }
 }

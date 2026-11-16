@@ -21,18 +21,18 @@ public sealed class ConversationalRepliesTests
         await ConnectAsync(component, workspace.Path);
         await SendAsync(component, "Where is OrderService used in this project?");
 
-        var exchange = Assert.Single(component.FindAll("#turn-history > li.chat-exchange"));
-        Assert.Equal("Where is OrderService used in this project?", exchange.QuerySelector(".user-body")!.TextContent);
+        var exchange = component.FindAll("#turn-history > li.chat-exchange").Should().ContainSingle().Which;
+        exchange.QuerySelector(".user-body")!.TextContent.Should().Be("Where is OrderService used in this project?");
 
         string summary = exchange.QuerySelector(".turn-summary")!.TextContent;
-        Assert.Equal("I found 4 matching occurrences of 'OrderService' across 3 files.", summary);
-        Assert.Contains("Literal source-text matches", exchange.QuerySelector(".search-mode-note")!.TextContent, StringComparison.Ordinal);
+        summary.Should().Be("I found 4 matching occurrences of 'OrderService' across 3 files.");
+        exchange.QuerySelector(".search-mode-note")!.TextContent.Should().Contain("Literal source-text matches");
 
         string[] locations = [.. exchange.QuerySelectorAll(".evidence-location").Select(node => node.TextContent)];
-        Assert.Contains("README.md:1", locations);
-        Assert.Contains("src/Alpha.cs:1", locations);
-        Assert.Contains("src/Alpha.cs:3", locations);
-        Assert.Contains("src/Beta.cs:3", locations);
+        locations.Should().Contain("README.md:1");
+        locations.Should().Contain("src/Alpha.cs:1");
+        locations.Should().Contain("src/Alpha.cs:3");
+        locations.Should().Contain("src/Beta.cs:3");
     }
 
     [Fact]
@@ -57,18 +57,18 @@ public sealed class ConversationalRepliesTests
         await SendAsync(component, "Show me ../escape.txt.");
 
         var exchanges = component.FindAll("#turn-history > li.chat-exchange");
-        Assert.Equal(6, exchanges.Count);
+        exchanges.Count.Should().Be(6);
 
-        Assert.Equal("Here is 'src/Item.cs' (3 lines).", exchanges[0].QuerySelector(".turn-summary")!.TextContent);
-        Assert.Equal("src/Item.cs", exchanges[0].QuerySelector(".file-path")!.TextContent);
+        exchanges[0].QuerySelector(".turn-summary")!.TextContent.Should().Be("Here is 'src/Item.cs' (3 lines).");
+        exchanges[0].QuerySelector(".file-path")!.TextContent.Should().Be("src/Item.cs");
 
         foreach (var exchange in exchanges)
         {
             string assistantText = exchange.QuerySelector("[data-message-role='assistant']")!.TextContent;
-            Assert.DoesNotContain("files.path.", assistantText, StringComparison.Ordinal);
-            Assert.DoesNotContain("files.file.", assistantText, StringComparison.Ordinal);
-            Assert.DoesNotContain("inspect <", assistantText, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("find symbol <", assistantText, StringComparison.OrdinalIgnoreCase);
+            assistantText.Should().NotContain("files.path.");
+            assistantText.Should().NotContain("files.file.");
+            assistantText.Should().NotContainEquivalentOf("inspect <");
+            assistantText.Should().NotContainEquivalentOf("find symbol <");
         }
     }
 
@@ -88,26 +88,26 @@ public sealed class ConversationalRepliesTests
         await SendAsync(component, "Why does WorkspaceRoot exist?");
 
         var exchanges = component.FindAll("#turn-history > li.chat-exchange");
-        Assert.Equal(3, exchanges.Count);
+        exchanges.Count.Should().Be(3);
 
-        Assert.Equal("Can you rewrite README.md to add installation steps?", exchanges[0].QuerySelector(".user-body")!.TextContent);
+        exchanges[0].QuerySelector(".user-body")!.TextContent.Should().Be("Can you rewrite README.md to add installation steps?");
         string unsupportedReply = exchanges[0].QuerySelector(".turn-summary")!.TextContent;
-        Assert.DoesNotContain("Unsupported request", unsupportedReply, StringComparison.Ordinal);
-        Assert.DoesNotContain("Supported forms", unsupportedReply, StringComparison.Ordinal);
-        Assert.Contains("Show me README.md", unsupportedReply, StringComparison.Ordinal);
-        Assert.Empty(exchanges[0].QuerySelectorAll(".file-viewer, .evidence-box"));
+        unsupportedReply.Should().NotContain("Unsupported request");
+        unsupportedReply.Should().NotContain("Supported forms");
+        unsupportedReply.Should().Contain("Show me README.md");
+        exchanges[0].QuerySelectorAll(".file-viewer, .evidence-box").Should().BeEmpty();
 
-        Assert.Equal("show README.md", exchanges[1].QuerySelector(".user-body")!.TextContent);
+        exchanges[1].QuerySelector(".user-body")!.TextContent.Should().Be("show README.md");
         string ambiguousReply = exchanges[1].QuerySelector(".turn-summary")!.TextContent;
-        Assert.Contains("Did you want me to open the file 'README.md'?", ambiguousReply, StringComparison.Ordinal);
-        Assert.DoesNotContain("show.inspect", ambiguousReply, StringComparison.Ordinal);
-        Assert.DoesNotContain("show.explain", ambiguousReply, StringComparison.Ordinal);
-        Assert.Empty(exchanges[1].QuerySelectorAll(".file-viewer, .evidence-box"));
+        ambiguousReply.Should().Contain("Did you want me to open the file 'README.md'?");
+        ambiguousReply.Should().NotContain("show.inspect");
+        ambiguousReply.Should().NotContain("show.explain");
+        exchanges[1].QuerySelectorAll(".file-viewer, .evidence-box").Should().BeEmpty();
 
         string explanationReply = exchanges[2].QuerySelector(".turn-summary")!.TextContent;
-        Assert.DoesNotContain("Inspected", explanationReply, StringComparison.Ordinal);
-        Assert.DoesNotContain("I found", explanationReply, StringComparison.Ordinal);
-        Assert.Empty(exchanges[2].QuerySelectorAll(".file-viewer, .evidence-box"));
+        explanationReply.Should().NotContain("Inspected");
+        explanationReply.Should().NotContain("I found");
+        exchanges[2].QuerySelectorAll(".file-viewer, .evidence-box").Should().BeEmpty();
     }
 
     private static async Task ConnectAsync(IRenderedComponent<App> component, string path)

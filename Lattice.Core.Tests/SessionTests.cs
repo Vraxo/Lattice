@@ -6,11 +6,11 @@ public sealed class SessionTests
     public void EmptySessionHasNoContent()
     {
         Session session = Session.Empty(SessionId.New());
-        Assert.Empty(session.Messages);
-        Assert.Empty(session.Facts);
-        Assert.Empty(session.Goals);
-        Assert.Empty(session.Observations);
-        Assert.Empty(session.ToolInvocations);
+        session.Messages.Should().BeEmpty();
+        session.Facts.Should().BeEmpty();
+        session.Goals.Should().BeEmpty();
+        session.Observations.Should().BeEmpty();
+        session.ToolInvocations.Should().BeEmpty();
     }
 
     [Fact]
@@ -18,10 +18,10 @@ public sealed class SessionTests
     {
         Session session = Session.Empty(SessionId.New());
         Session updated = session.AddUserAssertion("The sky is blue.", "user:turn-1");
-        Fact fact = Assert.Single(updated.Facts);
-        Assert.Equal("The sky is blue.", fact.Content);
-        Assert.Equal("user:turn-1", fact.Source);
-        Assert.Equal(FactStatus.UserAsserted, fact.Status);
+        Fact fact = updated.Facts.Should().ContainSingle().Which;
+        fact.Content.Should().Be("The sky is blue.");
+        fact.Source.Should().Be("user:turn-1");
+        fact.Status.Should().Be(FactStatus.UserAsserted);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class SessionTests
     {
         Session session = Session.Empty(SessionId.New());
         session.AddUserAssertion("The sky is blue.", "user:turn-1");
-        Assert.Empty(session.Facts);
+        session.Facts.Should().BeEmpty();
     }
 
     [Fact]
@@ -37,9 +37,9 @@ public sealed class SessionTests
     {
         Session session = Session.Empty(SessionId.New());
         Session updated = session.AddToolObservation("exit code 0", "tool:dotnet-test");
-        Observation observation = Assert.Single(updated.Observations);
-        Assert.Equal("exit code 0", observation.Content);
-        Assert.Equal("tool:dotnet-test", observation.Source);
+        Observation observation = updated.Observations.Should().ContainSingle().Which;
+        observation.Content.Should().Be("exit code 0");
+        observation.Source.Should().Be("tool:dotnet-test");
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class SessionTests
     {
         Session session = Session.Empty(SessionId.New());
         Session updated = session.AddToolObservation("exit code 0", "tool:dotnet-test");
-        Assert.Empty(updated.Facts);
+        updated.Facts.Should().BeEmpty();
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class SessionTests
     {
         Session session = Session.Empty(SessionId.New());
         session.AddToolObservation("exit code 0", "tool:dotnet-test");
-        Assert.Empty(session.Observations);
+        session.Observations.Should().BeEmpty();
     }
 
     [Fact]
@@ -63,9 +63,9 @@ public sealed class SessionTests
     {
         Session session = Session.Empty(SessionId.New());
         Session updated = session.AddMessage(new Message(MessageRole.User, "hello"));
-        Message message = Assert.Single(updated.Messages);
-        Assert.Equal(MessageRole.User, message.Role);
-        Assert.Equal("hello", message.Text);
+        Message message = updated.Messages.Should().ContainSingle().Which;
+        message.Role.Should().Be(MessageRole.User);
+        message.Text.Should().Be("hello");
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class SessionTests
         Session session = Session.Empty(SessionId.New());
         Goal goal = new(GoalId.New(), "Do it.", "It is done.", GoalStatus.Incomplete);
         Session updated = session.AddGoal(goal);
-        Assert.Equal(goal, Assert.Single(updated.Goals));
+        updated.Goals.Should().ContainSingle().Which.Should().Be(goal);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class SessionTests
             ArgumentBag.Empty,
             ToolResult.Success(ArgumentValue.FromInteger(3)));
         Session updated = session.AddToolInvocation(invocation);
-        Assert.Equal(invocation, Assert.Single(updated.ToolInvocations));
+        updated.ToolInvocations.Should().ContainSingle().Which.Should().Be(invocation);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class SessionTests
             ArgumentBag.Empty,
             ToolResult.Success(ArgumentValue.FromInteger(3)));
         session.AddToolInvocation(invocation);
-        Assert.Empty(session.ToolInvocations);
+        session.ToolInvocations.Should().BeEmpty();
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public sealed class SessionTests
             id,
             messages: [.. first.Messages],
             facts: [.. first.Facts]);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -124,6 +124,6 @@ public sealed class SessionTests
         SessionId id = SessionId.New();
         Session first = new(id, facts: [new Fact(FactId.New(), "a", "s", FactStatus.UserAsserted)]);
         Session second = new(id, facts: [new Fact(FactId.New(), "b", "s", FactStatus.UserAsserted)]);
-        Assert.NotEqual(first, second);
+        second.Should().NotBe(first);
     }
 }

@@ -9,9 +9,9 @@ public sealed class CapabilityDiscoveryTests
     {
         ToolCatalog catalog = Catalog(Descriptor("calculator", "Adds two integers."));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("calculator"));
-        CapabilityCandidate candidate = Assert.Single(candidates);
-        Assert.Equal("calculator", candidate.Proposal.ToolId.Value);
-        Assert.Contains("id", candidate.MatchedOn);
+        CapabilityCandidate candidate = candidates.Should().ContainSingle().Which;
+        candidate.Proposal.ToolId.Value.Should().Be("calculator");
+        candidate.MatchedOn.Should().Contain("id");
     }
 
     [Fact]
@@ -19,7 +19,7 @@ public sealed class CapabilityDiscoveryTests
     {
         ToolCatalog catalog = Catalog(Descriptor("calculator", "Adds two integers."));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("CALCULATOR"));
-        Assert.Single(candidates);
+        candidates.Should().ContainSingle();
     }
 
     [Fact]
@@ -27,8 +27,8 @@ public sealed class CapabilityDiscoveryTests
     {
         ToolCatalog catalog = Catalog(Descriptor("calculator", "Adds two integers.", aliases: ["add"]));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("add"));
-        CapabilityCandidate candidate = Assert.Single(candidates);
-        Assert.Contains("alias", candidate.MatchedOn);
+        CapabilityCandidate candidate = candidates.Should().ContainSingle().Which;
+        candidate.MatchedOn.Should().Contain("alias");
     }
 
     [Fact]
@@ -36,8 +36,8 @@ public sealed class CapabilityDiscoveryTests
     {
         ToolCatalog catalog = Catalog(Descriptor("files.search", "Searches file contents.", tags: ["find-symbol"]));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("find-symbol"));
-        CapabilityCandidate candidate = Assert.Single(candidates);
-        Assert.Contains("tag", candidate.MatchedOn);
+        CapabilityCandidate candidate = candidates.Should().ContainSingle().Which;
+        candidate.MatchedOn.Should().Contain("tag");
     }
 
     [Fact]
@@ -45,8 +45,8 @@ public sealed class CapabilityDiscoveryTests
     {
         ToolCatalog catalog = Catalog(Descriptor("files.read", "Reads a UTF-8 text file inside the workspace."));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("reads"));
-        CapabilityCandidate candidate = Assert.Single(candidates);
-        Assert.Contains("description", candidate.MatchedOn);
+        CapabilityCandidate candidate = candidates.Should().ContainSingle().Which;
+        candidate.MatchedOn.Should().Contain("description");
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public sealed class CapabilityDiscoveryTests
             Descriptor("calculator", "Adds two integers."),
             Descriptor("clock", "Reports the current time."));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("calculator"));
-        Assert.Single(candidates);
+        candidates.Should().ContainSingle();
     }
 
     [Fact]
@@ -66,8 +66,8 @@ public sealed class CapabilityDiscoveryTests
             Descriptor("a", "Does a thing.", tags: ["shared"]),
             Descriptor("b", "Does another thing.", tags: ["shared"]));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("shared"));
-        Assert.Equal(2, candidates.Length);
-        Assert.All(candidates, c => Assert.Equal(2, c.Score));
+        candidates.Length.Should().Be(2);
+        candidates.Should().AllSatisfy(c => c.Score.Should().Be(2));
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class CapabilityDiscoveryTests
     {
         ToolCatalog catalog = Catalog(Descriptor("calculator", "Adds two integers."));
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("unrelated"));
-        Assert.Empty(candidates);
+        candidates.Should().BeEmpty();
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public sealed class CapabilityDiscoveryTests
 
         // "search" matches the id (3) and a description word (1) for one tool, and a tag (2)
         // plus a description word (1) for the other. Only the higher total survives.
-        Assert.All(candidates, c => Assert.Equal(candidates[0].Score, c.Score));
+        candidates.Should().AllSatisfy(c => c.Score.Should().Be(candidates[0].Score));
     }
 
     [Fact]
@@ -97,21 +97,21 @@ public sealed class CapabilityDiscoveryTests
         ToolCatalog catalog = Catalog(Descriptor("calculator", "Adds two integers."));
         ArgumentBag arguments = ArgumentBag.From([new ArgumentEntry("left", ArgumentValue.FromInteger(1))]);
         ImmutableArray<CapabilityCandidate> candidates = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("calculator", arguments));
-        CapabilityCandidate candidate = Assert.Single(candidates);
-        Assert.Equal(arguments, candidate.Proposal.Arguments);
+        CapabilityCandidate candidate = candidates.Should().ContainSingle().Which;
+        candidate.Proposal.Arguments.Should().Be(arguments);
     }
 
     [Fact]
     public void EmptyOperationIsRejected()
     {
-        Assert.Throws<ArgumentException>(() => new CapabilityRequest("  "));
+        FluentActions.Invoking(() => new CapabilityRequest("  ")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void RequestWithoutArgumentsDefaultsToEmpty()
     {
         CapabilityRequest request = new("calculator");
-        Assert.Empty(request.Arguments.Entries);
+        request.Arguments.Entries.Should().BeEmpty();
     }
 
     [Fact]
@@ -123,9 +123,8 @@ public sealed class CapabilityDiscoveryTests
         ImmutableArray<CapabilityCandidate> first = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("shared"));
         ImmutableArray<CapabilityCandidate> second = CapabilityDiscovery.Discover(catalog, new CapabilityRequest("shared"));
 
-        // Compare element-wise: Assert.Equal on two ImmutableArray<T> values binds to the
-        // generic overload and uses ImmutableArray's reference-based struct equality.
-        Assert.True(first.SequenceEqual(second));
+        // Compare elements in order rather than ImmutableArray backing-storage identity.
+        second.Should().Equal(first);
     }
 
     private static ToolCatalog Catalog(params ToolDescriptor[] descriptors)

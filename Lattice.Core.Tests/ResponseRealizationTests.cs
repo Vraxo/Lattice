@@ -42,8 +42,8 @@ public sealed class ResponseRealizationTests
         JsonElement entry = document.RootElement;
         ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
         Result<string> realized = template.Realize(Slots(entry.GetProperty("slots")));
-        Assert.True(realized.IsSuccess, $"{id}: {realized.Error?.Message}");
-        Assert.Equal(entry.GetProperty("expect").GetString(), realized.Value);
+        realized.IsSuccess.Should().BeTrue("{0}", $"{id}: {realized.Error?.Message}" ?? string.Empty);
+        realized.Value.Should().Be(entry.GetProperty("expect").GetString());
     }
 
     [Theory]
@@ -54,9 +54,9 @@ public sealed class ResponseRealizationTests
         JsonElement entry = document.RootElement;
         ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
         Result<string> realized = template.Realize(Slots(entry.GetProperty("slots")));
-        Assert.False(realized.IsSuccess, $"{id}: expected a rejection but realization succeeded.");
-        Assert.Equal(ResponseErrorCodes.MissingSlot, realized.Error!.Code);
-        Assert.Contains($"'{missing}'", realized.Error.Message, StringComparison.Ordinal);
+        realized.IsSuccess.Should().BeFalse("{0}", $"{id}: expected a rejection but realization succeeded." ?? string.Empty);
+        realized.Error!.Code.Should().Be(ResponseErrorCodes.MissingSlot);
+        realized.Error.Message.Should().Contain($"'{missing}'");
     }
 
     [Fact]
@@ -66,8 +66,8 @@ public sealed class ResponseRealizationTests
         {
             ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
             string text = template.Realize(Slots(entry.GetProperty("slots"))).Value;
-            Assert.DoesNotContain('{', text);
-            Assert.DoesNotContain('}', text);
+            text.Should().NotContain('{'.ToString());
+            text.Should().NotContain('}'.ToString());
         }
     }
 
@@ -80,23 +80,22 @@ public sealed class ResponseRealizationTests
             covered.Add(entry.GetProperty("template").GetString()!);
         }
 
-        Assert.All(ResponseTemplates.All, template => Assert.Contains(template.Id, covered));
+        ResponseTemplates.All.Should().AllSatisfy(template => covered.Should().Contain(template.Id));
     }
 
     [Fact]
     public void EveryTemplateIdIsUnique()
     {
         IEnumerable<string> ids = ResponseTemplates.All.Select(template => template.Id);
-        Assert.Equal(ids.Count(), ids.Distinct(StringComparer.Ordinal).Count());
+        ids.Distinct(StringComparer.Ordinal).Count().Should().Be(ids.Count());
     }
 
     [Fact]
     public void SlotNamesAreDiscoveredFromTheTemplate()
     {
-        Assert.True(
-            ResponseTemplates.FindSymbolAnswered.SlotNames
+        ResponseTemplates.FindSymbolAnswered.SlotNames
                 .OrderBy(name => name, StringComparer.Ordinal)
-                .SequenceEqual(["files", "lines", "symbol"]));
+                .SequenceEqual(["files", "lines", "symbol"]).Should().BeTrue();
     }
 
     [Fact]
@@ -104,28 +103,28 @@ public sealed class ResponseRealizationTests
     {
         Result<string> realized = ResponseTemplates.FindSymbolNotFound.Realize(
             new Dictionary<string, string>(StringComparer.Ordinal) { ["symbol"] = "a{b}" });
-        Assert.True(realized.IsSuccess, realized.Error?.Message);
-        Assert.Equal("No occurrences of 'a{b}' were found in the workspace.", realized.Value);
+        realized.IsSuccess.Should().BeTrue("{0}", realized.Error?.Message ?? string.Empty);
+        realized.Value.Should().Be("No occurrences of 'a{b}' were found in the workspace.");
     }
 
     [Fact]
     public void MalformedSlotInATemplateIsRejectedAtConstruction()
     {
-        Assert.Throws<ArgumentException>(() => new ResponseTemplate("bad", "missing {brace"));
+        FluentActions.Invoking(() => new ResponseTemplate("bad", "missing {brace")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void PluralUsesSingularOnlyForExactlyOne()
     {
-        Assert.Equal("0 files", EnglishPlural.Of(0, "file", "files"));
-        Assert.Equal("1 file", EnglishPlural.Of(1, "file", "files"));
-        Assert.Equal("2 files", EnglishPlural.Of(2, "file", "files"));
+        EnglishPlural.Of(0, "file", "files").Should().Be("0 files");
+        EnglishPlural.Of(1, "file", "files").Should().Be("1 file");
+        EnglishPlural.Of(2, "file", "files").Should().Be("2 files");
     }
 
     [Fact]
     public void PluralRejectsNegativeCounts()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => EnglishPlural.Of(-1, "file", "files"));
+        FluentActions.Invoking(() => EnglishPlural.Of(-1, "file", "files")).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     private static JsonElement Load()
@@ -136,7 +135,7 @@ public sealed class ResponseRealizationTests
 
     private static ResponseTemplate Template(string id)
     {
-        return Assert.Single(ResponseTemplates.All, template => template.Id == id);
+        return ResponseTemplates.All.Should().ContainSingle(template => template.Id == id).Which;
     }
 
     private static Dictionary<string, string> Slots(JsonElement element)

@@ -24,11 +24,11 @@ public sealed class MarkdownEditToolTests : IDisposable
         MarkdownEditTool tool = Create();
         string hash = HashOfSection(Document, "Alpha");
         ToolInvocation invocation = Run(tool, "doc.md", "Alpha", "new alpha\n", hash);
-        Assert.True(invocation.Result.IsSuccess);
+        invocation.Result.IsSuccess.Should().BeTrue();
         string updated = File.ReadAllText(path);
-        Assert.Contains("## Alpha\n", updated, StringComparison.Ordinal);
-        Assert.Contains("new alpha\n", updated, StringComparison.Ordinal);
-        Assert.DoesNotContain("alpha body", updated, StringComparison.Ordinal);
+        updated.Should().Contain("## Alpha\n");
+        updated.Should().Contain("new alpha\n");
+        updated.Should().NotContain("alpha body");
     }
 
     [Fact]
@@ -39,8 +39,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         string hash = HashOfSection(Document, "Alpha");
         Run(tool, "doc.md", "Alpha", "replacement\n", hash);
         string updated = File.ReadAllText(path);
-        Assert.StartsWith("# Title\nintro\n## Alpha\n", updated, StringComparison.Ordinal);
-        Assert.EndsWith("## Beta\nbeta body\n", updated, StringComparison.Ordinal);
+        updated.Should().StartWith("# Title\nintro\n## Alpha\n");
+        updated.Should().EndWith("## Beta\nbeta body\n");
     }
 
     [Fact]
@@ -49,9 +49,9 @@ public sealed class MarkdownEditToolTests : IDisposable
         string path = _workspace.WriteFile("doc.md", Document);
         MarkdownEditTool tool = Create();
         ToolInvocation invocation = Run(tool, "doc.md", "Alpha", "new\n", "deadbeef");
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.StaleContent, invocation.Result.Error!.Code);
-        Assert.Equal(Document, File.ReadAllText(path));
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(DocumentErrorCodes.StaleContent);
+        File.ReadAllText(path).Should().Be(Document);
     }
 
     [Fact]
@@ -64,8 +64,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         // Edit a different section first, then apply the Alpha edit with its original hash.
         Run(tool, "doc.md", "Beta", "changed beta\n", HashOfSection(Document, "Beta"));
         ToolInvocation invocation = Run(tool, "doc.md", "Alpha", "new alpha\n", hash);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Contains("new alpha", File.ReadAllText(path), StringComparison.Ordinal);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        File.ReadAllText(path).Should().Contain("new alpha");
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         _workspace.WriteFile("doc.md", Document);
         MarkdownEditTool tool = Create();
         ToolInvocation invocation = Run(tool, "doc.md", "Missing", "x\n", "anyhash");
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.TargetNotFound, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(DocumentErrorCodes.TargetNotFound);
     }
 
     [Fact]
@@ -85,8 +85,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         MarkdownEditTool tool = Create();
         string hash = ContentHash.Of(string.Empty);
         ToolInvocation invocation = Run(tool, "doc.md", "Same", string.Empty, hash);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.TargetAmbiguous, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(DocumentErrorCodes.TargetAmbiguous);
     }
 
     [Fact]
@@ -96,8 +96,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         MarkdownEditTool tool = Create();
         string hash = ContentHash.Of("body\n");
         ToolInvocation invocation = Run(tool, "doc.md", "Same", "new\n", hash, level: 2);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Contains("# Same\n## Same\nnew\n", File.ReadAllText(path), StringComparison.Ordinal);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        File.ReadAllText(path).Should().Contain("# Same\n## Same\nnew\n");
     }
 
     [Fact]
@@ -106,8 +106,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         _workspace.WriteFile("doc.md", Document);
         MarkdownEditTool tool = Create();
         ToolInvocation invocation = Run(tool, "doc.md", "Alpha", "x\n", string.Empty);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.ExpectedHashMissing, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(DocumentErrorCodes.ExpectedHashMissing);
     }
 
     [Fact]
@@ -115,8 +115,8 @@ public sealed class MarkdownEditToolTests : IDisposable
     {
         MarkdownEditTool tool = Create();
         ToolInvocation invocation = Run(tool, "../outside.md", "A", "x\n", "hash");
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -124,8 +124,8 @@ public sealed class MarkdownEditToolTests : IDisposable
     {
         MarkdownEditTool tool = Create();
         ToolInvocation invocation = Run(tool, "nope.md", "A", "x\n", "hash");
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.PathNotFound);
     }
 
     [Fact]
@@ -138,9 +138,9 @@ public sealed class MarkdownEditToolTests : IDisposable
             tool,
             Arguments("doc.md", "Alpha", "x\n", hash, null),
             ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
-        Assert.Equal(Document, File.ReadAllText(path));
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.permission.denied");
+        File.ReadAllText(path).Should().Be(Document);
     }
 
     [Fact]
@@ -151,8 +151,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         string hash = HashOfSection(Document, "Alpha");
         Run(tool, "doc.md", "Alpha", "new\n", hash);
         string backup = path + WriteFileTool.BackupSuffix;
-        Assert.True(File.Exists(backup));
-        Assert.Equal(Document, File.ReadAllText(backup));
+        File.Exists(backup).Should().BeTrue();
+        File.ReadAllText(backup).Should().Be(Document);
     }
 
     [Fact]
@@ -163,8 +163,8 @@ public sealed class MarkdownEditToolTests : IDisposable
         string hash = HashOfSection(Document, "Alpha");
         ToolInvocation invocation = Run(tool, "doc.md", "Alpha", "new\n", hash);
         string output = invocation.Result.Output!.AsString();
-        Assert.Contains("-alpha body", output, StringComparison.Ordinal);
-        Assert.Contains("+new", output, StringComparison.Ordinal);
+        output.Should().Contain("-alpha body");
+        output.Should().Contain("+new");
     }
 
     [Fact]
@@ -183,10 +183,10 @@ public sealed class MarkdownEditToolTests : IDisposable
         string path = _workspace.WriteFile("doc.md", source);
         MarkdownEditTool tool = Create();
         ToolInvocation invocation = Run(tool, "doc.md", "B", "new\n", ContentHash.Of("old\n"));
-        Assert.True(invocation.Result.IsSuccess);
+        invocation.Result.IsSuccess.Should().BeTrue();
         string updated = File.ReadAllText(path);
-        Assert.Contains(listBlock, updated, StringComparison.Ordinal);
-        Assert.EndsWith("# B\nnew\n", updated, StringComparison.Ordinal);
+        updated.Should().Contain(listBlock);
+        updated.Should().EndWith("# B\nnew\n");
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class MarkdownEditToolTests : IDisposable
         MarkdownEditTool tool = Create();
         string hash = ContentHash.Of("old\r\n");
         Run(tool, "doc.md", "A", "new\r\n", hash);
-        Assert.Equal("# A\r\nnew\r\n# B\r\nkeep\r\n", File.ReadAllText(path));
+        File.ReadAllText(path).Should().Be("# A\r\nnew\r\n# B\r\nkeep\r\n");
     }
 
     private MarkdownEditTool Create()
@@ -209,9 +209,9 @@ public sealed class MarkdownEditToolTests : IDisposable
     {
         MarkdownDocument document = MarkdownDocument.Parse(source);
         Result<MarkdownSection> section = document.FindSection(heading);
-        Assert.True(section.IsSuccess);
+        section.IsSuccess.Should().BeTrue();
         Result<string> content = document.Text.GetText(section.Value.ContentRange);
-        Assert.True(content.IsSuccess);
+        content.IsSuccess.Should().BeTrue();
         return ContentHash.Of(content.Value);
     }
 

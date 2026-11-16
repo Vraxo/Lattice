@@ -11,8 +11,8 @@ public sealed class ListDirectoryToolTests
         workspace.CreateDirectory("sub");
         ListDirectoryTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, ".");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a.txt\nb.txt\nsub/", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("a.txt\nb.txt\nsub/");
     }
 
     [Fact]
@@ -22,8 +22,8 @@ public sealed class ListDirectoryToolTests
         workspace.WriteFile("sub/inner.txt", "x");
         ListDirectoryTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "sub");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("inner.txt", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("inner.txt");
     }
 
     [Fact]
@@ -32,8 +32,8 @@ public sealed class ListDirectoryToolTests
         using TempWorkspace workspace = new();
         ListDirectoryTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "nope");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.PathNotFound);
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public sealed class ListDirectoryToolTests
         workspace.WriteFile("a.txt", "a");
         ListDirectoryTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "a.txt");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.NotADirectory, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.NotADirectory);
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public sealed class ListDirectoryToolTests
         using TempWorkspace workspace = new();
         ListDirectoryTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "../");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -63,8 +63,8 @@ public sealed class ListDirectoryToolTests
         using TempWorkspace workspace = new();
         ListDirectoryTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, ".");
-        Assert.True(result.IsSuccess);
-        Assert.Equal(string.Empty, result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be(string.Empty);
     }
 
     private static ToolResult Execute(ListDirectoryTool tool, string path)

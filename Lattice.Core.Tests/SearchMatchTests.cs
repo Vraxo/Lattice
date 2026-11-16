@@ -6,24 +6,24 @@ public sealed class SearchMatchTests
     public void RoundTripsThroughToString()
     {
         SearchMatch match = new("a/b.txt", 3, "some text");
-        Assert.True(SearchMatch.TryParse(match.ToString(), out SearchMatch? parsed));
-        Assert.Equal(match, parsed);
+        SearchMatch.TryParse(match.ToString(), out SearchMatch? parsed).Should().BeTrue();
+        parsed.Should().Be(match);
     }
 
     [Fact]
     public void ParsesPathWithDirectories()
     {
-        Assert.True(SearchMatch.TryParse("src/deep/file.cs:12: content", out SearchMatch? match));
-        Assert.Equal("src/deep/file.cs", match.RelativePath);
-        Assert.Equal(12, match.LineNumber);
-        Assert.Equal("content", match.LineText);
+        SearchMatch.TryParse("src/deep/file.cs:12: content", out SearchMatch? match).Should().BeTrue();
+        match.RelativePath.Should().Be("src/deep/file.cs");
+        match.LineNumber.Should().Be(12);
+        match.LineText.Should().Be("content");
     }
 
     [Fact]
     public void ParsesEmptyLineText()
     {
-        Assert.True(SearchMatch.TryParse("a.txt:1: ", out SearchMatch? match));
-        Assert.Equal(string.Empty, match.LineText);
+        SearchMatch.TryParse("a.txt:1: ", out SearchMatch? match).Should().BeTrue();
+        match.LineText.Should().Be(string.Empty);
     }
 
     [Theory]
@@ -34,12 +34,12 @@ public sealed class SearchMatchTests
     [InlineData("a.txt:1:no space after colon")]
     public void RejectsMalformedLines(string? line)
     {
-        Assert.False(SearchMatch.TryParse(line, out _));
+        SearchMatch.TryParse(line, out _).Should().BeFalse();
     }
 
     [Fact]
     public void RejectsNonPositiveLineNumber()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SearchMatch("a.txt", 0, "x"));
+        FluentActions.Invoking(() => new SearchMatch("a.txt", 0, "x")).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 }

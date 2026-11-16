@@ -11,8 +11,8 @@ public sealed class CSharpSyntaxToolTests
             new CSharpSyntaxTool(),
             Source("class C { }"),
             ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Equal("valid", invocation.Result.Output!.AsString());
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsString().Should().Be("valid");
     }
 
     [Fact]
@@ -22,10 +22,10 @@ public sealed class CSharpSyntaxToolTests
             new CSharpSyntaxTool(),
             Source("class C {"),
             ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.True(invocation.Result.IsSuccess);
+        invocation.Result.IsSuccess.Should().BeTrue();
         string output = invocation.Result.Output!.AsString();
-        Assert.StartsWith("invalid", output, StringComparison.Ordinal);
-        Assert.Contains("error", output);
+        output.Should().StartWith("invalid");
+        output.Should().Contain("error");
     }
 
     [Fact]
@@ -35,8 +35,8 @@ public sealed class CSharpSyntaxToolTests
             new CSharpSyntaxTool(),
             ArgumentBag.Empty,
             ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.argument.missing", invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.argument.missing");
     }
 
     [Fact]
@@ -50,14 +50,14 @@ public sealed class CSharpSyntaxToolTests
             new CSharpSyntaxTool(),
             arguments,
             ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.argument.type", invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.argument.type");
     }
 
     [Fact]
     public void ToolIsReadOnlySoNoWritePermissionIsNeeded()
     {
-        Assert.Equal(ToolSideEffect.ReadOnly, new CSharpSyntaxTool().Descriptor.SideEffect);
+        new CSharpSyntaxTool().Descriptor.SideEffect.Should().Be(ToolSideEffect.ReadOnly);
     }
 
     private static ArgumentBag Source(string source)

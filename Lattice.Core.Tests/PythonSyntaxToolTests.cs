@@ -16,28 +16,28 @@ public sealed class PythonSyntaxToolTests
         PythonSyntaxTool tool = CreateTool(runner);
         ToolRegistry registry = new([tool]);
 
-        CapabilityCandidate candidate = Assert.Single(CapabilityDiscovery.Discover(
+        CapabilityCandidate candidate = CapabilityDiscovery.Discover(
             registry.ToCatalog(),
-            new CapabilityRequest("python-ast", Source("print('source is data')"))));
-        Assert.Equal(PythonSyntaxTool.Id, candidate.Proposal.ToolId);
-        Assert.True(registry.TryResolve(candidate.Proposal.ToolId, out ITool? registered));
+            new CapabilityRequest("python-ast", Source("print('source is data')"))).Should().ContainSingle().Which;
+        candidate.Proposal.ToolId.Should().Be(PythonSyntaxTool.Id);
+        registry.TryResolve(candidate.Proposal.ToolId, out ITool? registered).Should().BeTrue();
 
         ToolInvocation invocation = ToolExecutor.Execute(
             registered!,
             candidate.Proposal.Arguments,
             ToolPermissionPolicy.AllowAll);
 
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Equal("valid (Python 3.13.2)", invocation.Result.Output!.AsString());
-        Assert.Equal("python3", runner.LastExecutable);
-        Assert.Equal("-I", runner.LastArguments[0]);
-        Assert.Equal("-S", runner.LastArguments[1]);
-        Assert.Equal("-c", runner.LastArguments[2]);
-        Assert.Equal("print('source is data')", System.Text.Encoding.UTF8.GetString(
-            Convert.FromBase64String(runner.LastArguments[4])));
-        Assert.Equal(ToolSideEffect.CommandExecution, tool.Descriptor.SideEffect);
-        Assert.Contains("python", tool.Descriptor.Tags);
-        Assert.Contains("syntax", tool.Descriptor.Tags);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsString().Should().Be("valid (Python 3.13.2)");
+        runner.LastExecutable.Should().Be("python3");
+        runner.LastArguments[0].Should().Be("-I");
+        runner.LastArguments[1].Should().Be("-S");
+        runner.LastArguments[2].Should().Be("-c");
+        System.Text.Encoding.UTF8.GetString(
+            Convert.FromBase64String(runner.LastArguments[4])).Should().Be("print('source is data')");
+        tool.Descriptor.SideEffect.Should().Be(ToolSideEffect.CommandExecution);
+        tool.Descriptor.Tags.Should().Contain("python");
+        tool.Descriptor.Tags.Should().Contain("syntax");
     }
 
     [Fact]
@@ -53,10 +53,8 @@ public sealed class PythonSyntaxToolTests
             Source("if True:\n  pass\nelse\n  pass"),
             ToolPermissionPolicy.AllowAll);
 
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Equal(
-            $"invalid (Python 3.12.1){Environment.NewLine}SyntaxError at 3:5: expected ':'",
-            invocation.Result.Output!.AsString());
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsString().Should().Be($"invalid (Python 3.12.1){Environment.NewLine}SyntaxError at 3:5: expected ':'");
     }
 
     [Fact]
@@ -72,9 +70,9 @@ public sealed class PythonSyntaxToolTests
             Source("pass"),
             ToolPermissionPolicy.ReadOnlyOnly);
 
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.permission.denied");
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -82,10 +80,10 @@ public sealed class PythonSyntaxToolTests
     {
         ToolRegistry registry = new([new CalculatorTool()]);
 
-        Assert.False(registry.TryResolve(PythonSyntaxTool.Id, out _));
-        Assert.Empty(CapabilityDiscovery.Discover(
+        registry.TryResolve(PythonSyntaxTool.Id, out _).Should().BeFalse();
+        CapabilityDiscovery.Discover(
             registry.ToCatalog(),
-            new CapabilityRequest("python.syntax")));
+            new CapabilityRequest("python.syntax")).Should().BeEmpty();
     }
 
     [Fact]
@@ -100,9 +98,9 @@ public sealed class PythonSyntaxToolTests
 
         ToolResult result = CreateTool(runner).Execute(Source(source));
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(PythonErrorCodes.SourceTooLarge, result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(PythonErrorCodes.SourceTooLarge);
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -118,9 +116,9 @@ public sealed class PythonSyntaxToolTests
             ArgumentBag.Empty,
             ToolPermissionPolicy.AllowAll);
 
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.argument.missing", invocation.Result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.argument.missing");
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -136,8 +134,8 @@ public sealed class PythonSyntaxToolTests
             Source("pass"),
             ToolPermissionPolicy.AllowAll);
 
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(PythonErrorCodes.ParserTimedOut, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(PythonErrorCodes.ParserTimedOut);
     }
 
     [Fact]
@@ -152,9 +150,9 @@ public sealed class PythonSyntaxToolTests
         string source = new((char)0xD800, 1);
         ToolResult result = CreateTool(runner).Execute(Source(source));
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(PythonErrorCodes.SourceEncodingInvalid, result.Error!.Code);
-        Assert.Null(runner.LastExecutable);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(PythonErrorCodes.SourceEncodingInvalid);
+        runner.LastExecutable.Should().BeNull();
     }
 
     [Fact]
@@ -167,8 +165,8 @@ public sealed class PythonSyntaxToolTests
             Source("pass"),
             ToolPermissionPolicy.AllowAll);
 
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(PythonErrorCodes.InvalidParserResponse, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(PythonErrorCodes.InvalidParserResponse);
     }
 
     private static PythonSyntaxTool CreateTool(FakeProcessRunner runner)

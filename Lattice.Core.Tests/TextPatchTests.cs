@@ -5,25 +5,25 @@ public sealed class TextPatchTests
     [Fact]
     public void RejectsEmptyFind()
     {
-        Assert.Throws<ArgumentException>(() => new TextPatch(string.Empty, "x"));
+        FluentActions.Invoking(() => new TextPatch(string.Empty, "x")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void RejectsNullReplace()
     {
-        Assert.Throws<ArgumentNullException>(() => new TextPatch("a", null!));
+        FluentActions.Invoking(() => new TextPatch("a", null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void AllowsEmptyReplaceForDeletion()
     {
         TextPatch patch = new("remove me", string.Empty);
-        Assert.Equal(string.Empty, patch.Replace);
+        patch.Replace.Should().Be(string.Empty);
     }
 
     [Fact]
     public void PatchesWithSameContentAreEqual()
     {
-        Assert.Equal(new TextPatch("a", "b"), new TextPatch("a", "b"));
+        new TextPatch("a", "b").Should().Be(new TextPatch("a", "b"));
     }
 }

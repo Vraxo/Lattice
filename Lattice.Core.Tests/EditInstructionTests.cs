@@ -14,9 +14,9 @@ public sealed class EditInstructionTests
             EditOperationKind.ReplaceSection,
             EditTarget.Section("Alpha"),
             PreservationConstraint.RestrictToTarget | PreservationConstraint.PreserveUntouchedContent);
-        Assert.Equal(EditInstructionStatus.Executable, instruction.Status);
-        Assert.True(instruction.IsExecutable);
-        Assert.True(instruction.RequireExecutable().IsSuccess);
+        instruction.Status.Should().Be(EditInstructionStatus.Executable);
+        instruction.IsExecutable.Should().BeTrue();
+        instruction.RequireExecutable().IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -26,8 +26,8 @@ public sealed class EditInstructionTests
             EditOperationKind.Shorten,
             EditTarget.Section("Alpha"),
             PreservationConstraint.PreserveMeaning);
-        Assert.Equal(EditInstructionStatus.Unsupported, instruction.Status);
-        Assert.False(instruction.IsExecutable);
+        instruction.Status.Should().Be(EditInstructionStatus.Unsupported);
+        instruction.IsExecutable.Should().BeFalse();
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class EditInstructionTests
             EditOperationKind.ChangeTone,
             EditTarget.Section("Alpha"),
             PreservationConstraint.PreserveMeaning);
-        Assert.False(instruction.IsExecutable);
+        instruction.IsExecutable.Should().BeFalse();
     }
 
     [Fact]
@@ -47,8 +47,8 @@ public sealed class EditInstructionTests
             EditOperationKind.Shorten,
             EditTarget.Section("Alpha"));
         Result result = instruction.RequireExecutable();
-        Assert.False(result.IsSuccess);
-        Assert.Equal(EditErrorCodes.OperationUnsupported, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(EditErrorCodes.OperationUnsupported);
     }
 
     [Fact]
@@ -60,9 +60,9 @@ public sealed class EditInstructionTests
             PreservationConstraint.PreserveMeaning
                 | PreservationConstraint.RestrictToTarget
                 | PreservationConstraint.PreserveUntouchedContent);
-        Assert.True(instruction.Constraints.HasFlag(PreservationConstraint.PreserveMeaning));
-        Assert.True(instruction.Constraints.HasFlag(PreservationConstraint.RestrictToTarget));
-        Assert.True(instruction.Constraints.HasFlag(PreservationConstraint.PreserveUntouchedContent));
+        instruction.Constraints.HasFlag(PreservationConstraint.PreserveMeaning).Should().BeTrue();
+        instruction.Constraints.HasFlag(PreservationConstraint.RestrictToTarget).Should().BeTrue();
+        instruction.Constraints.HasFlag(PreservationConstraint.PreserveUntouchedContent).Should().BeTrue();
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class EditInstructionTests
         EditInstruction instruction = EditInstruction.Create(
             EditOperationKind.ReplaceSection,
             EditTarget.Section("Alpha"));
-        Assert.Equal(PreservationConstraint.None, instruction.Constraints);
+        instruction.Constraints.Should().Be(PreservationConstraint.None);
     }
 
     [Fact]
@@ -81,8 +81,8 @@ public sealed class EditInstructionTests
             EditOperationKind.ReplaceSection,
             EditTarget.Section("Alpha"),
             parameters: new Dictionary<string, string>(StringComparer.Ordinal) { ["level"] = "2" });
-        Assert.Equal("2", instruction.Parameters["level"]);
-        Assert.False(instruction.Parameters.ContainsKey("Level"));
+        instruction.Parameters["level"].Should().Be("2");
+        instruction.Parameters.ContainsKey("Level").Should().BeFalse();
     }
 
     [Fact]
@@ -94,22 +94,22 @@ public sealed class EditInstructionTests
             EditTarget.Section("Alpha"),
             parameters: source);
         source["level"] = "3";
-        Assert.Equal("2", instruction.Parameters["level"]);
+        instruction.Parameters["level"].Should().Be("2");
     }
 
     [Fact]
     public void TargetsDistinguishKindAndReference()
     {
-        Assert.Equal(EditTargetKind.Section, EditTarget.Section("A").Kind);
-        Assert.Equal(EditTargetKind.Path, EditTarget.Path("a.md").Kind);
-        Assert.Equal(EditTargetKind.Document, EditTarget.Document("a.md").Kind);
-        Assert.NotEqual(EditTarget.Section("A"), EditTarget.Section("B"));
+        EditTarget.Section("A").Kind.Should().Be(EditTargetKind.Section);
+        EditTarget.Path("a.md").Kind.Should().Be(EditTargetKind.Path);
+        EditTarget.Document("a.md").Kind.Should().Be(EditTargetKind.Document);
+        EditTarget.Section("B").Should().NotBe(EditTarget.Section("A"));
     }
 
     [Fact]
     public void EmptyTargetReferenceIsRejected()
     {
-        Assert.Throws<ArgumentException>(() => EditTarget.Section("  "));
+        FluentActions.Invoking(() => EditTarget.Section("  ")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -127,8 +127,8 @@ public sealed class EditInstructionTests
             EditTarget.Section("A"),
             PreservationConstraint.RestrictToTarget,
             new Dictionary<string, string>(StringComparer.Ordinal) { ["note"] = "x", ["level"] = "2" });
-        Assert.Equal(a, b);
-        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+        b.Should().Be(a);
+        b.GetHashCode().Should().Be(a.GetHashCode());
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public sealed class EditInstructionTests
             EditOperationKind.ReplaceSection,
             EditTarget.Section("A"),
             parameters: new Dictionary<string, string>(StringComparer.Ordinal) { ["level"] = "3" });
-        Assert.NotEqual(a, b);
+        b.Should().NotBe(a);
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public sealed class EditInstructionTests
     {
         EditInstruction a = EditInstruction.Create(EditOperationKind.ReplaceSection, EditTarget.Section("A"));
         EditInstruction b = EditInstruction.Create(EditOperationKind.ReplaceSection, EditTarget.Section("A"));
-        Assert.Equal(a, b);
-        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+        b.Should().Be(a);
+        b.GetHashCode().Should().Be(a.GetHashCode());
     }
 }

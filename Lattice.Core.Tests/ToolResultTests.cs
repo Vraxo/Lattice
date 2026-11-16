@@ -6,9 +6,9 @@ public sealed class ToolResultTests
     public void SuccessExposesOutputAndNoError()
     {
         ToolResult result = ToolResult.Success(ArgumentValue.FromInteger(3));
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Error);
-        Assert.Equal(ArgumentValue.FromInteger(3), result.Output);
+        result.IsSuccess.Should().BeTrue();
+        result.Error.Should().BeNull();
+        result.Output.Should().Be(ArgumentValue.FromInteger(3));
     }
 
     [Fact]
@@ -16,28 +16,26 @@ public sealed class ToolResultTests
     {
         Error error = new("tool.failure", "failed");
         ToolResult result = ToolResult.Failure(error);
-        Assert.False(result.IsSuccess);
-        Assert.Same(error, result.Error);
-        Assert.Null(result.Output);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().BeSameAs(error);
+        result.Output.Should().BeNull();
     }
 
     [Fact]
     public void SuccessRejectsNullOutput()
     {
-        Assert.Throws<ArgumentNullException>(() => ToolResult.Success(null!));
+        FluentActions.Invoking(() => ToolResult.Success(null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void FailureRejectsNullError()
     {
-        Assert.Throws<ArgumentNullException>(() => ToolResult.Failure(null!));
+        FluentActions.Invoking(() => ToolResult.Failure(null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void ResultsWithSameComponentsAreEqual()
     {
-        Assert.Equal(
-            ToolResult.Success(ArgumentValue.FromInteger(1)),
-            ToolResult.Success(ArgumentValue.FromInteger(1)));
+        ToolResult.Success(ArgumentValue.FromInteger(1)).Should().Be(ToolResult.Success(ArgumentValue.FromInteger(1)));
     }
 }

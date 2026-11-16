@@ -5,13 +5,13 @@ public sealed class ObservationTests
     [Fact]
     public void RejectsEmptyContent()
     {
-        Assert.Throws<ArgumentException>(() => new Observation(string.Empty, "tool:x"));
+        FluentActions.Invoking(() => new Observation(string.Empty, "tool:x")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void RejectsEmptySource()
     {
-        Assert.Throws<ArgumentException>(() => new Observation("content", string.Empty));
+        FluentActions.Invoking(() => new Observation("content", string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -19,6 +19,6 @@ public sealed class ObservationTests
     {
         Observation first = new("exit code 0", "tool:x");
         Observation second = new("exit code 0", "tool:x");
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 }

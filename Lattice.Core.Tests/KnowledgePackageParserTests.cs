@@ -14,59 +14,59 @@ public sealed class KnowledgePackageParserTests
     public void ParsesTheExamplePackage()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "knowledge", "example.physics", "package.json");
-        Assert.True(File.Exists(path), $"Example package not found at {path}.");
+        File.Exists(path).Should().BeTrue("{0}", $"Example package not found at {path}." ?? string.Empty);
         Result<KnowledgePackage> result = KnowledgePackageParser.Parse(File.ReadAllText(path));
-        Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal("example.physics", result.Value.Id);
-        Assert.Equal(2, result.Value.Concepts.Length);
-        Assert.Equal(4, result.Value.Facts.Length);
-        Assert.Single(result.Value.Rules);
+        result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
+        result.Value.Id.Should().Be("example.physics");
+        result.Value.Concepts.Length.Should().Be(2);
+        result.Value.Facts.Length.Should().Be(4);
+        result.Value.Rules.Should().ContainSingle();
     }
 
     [Fact]
     public void ParsesValidPackage()
     {
         Result<KnowledgePackage> result = KnowledgePackageParser.Parse(ValidPackage);
-        Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(new SchemaVersion(1, 0), result.Value.SchemaVersion);
-        Assert.Equal("test.pkg", result.Value.Id);
-        Assert.Single(result.Value.Concepts);
-        Assert.Single(result.Value.Facts);
-        Assert.Single(result.Value.Rules);
-        Assert.Equal("alias", Assert.Single(result.Value.Concepts[0].Aliases));
+        result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
+        result.Value.SchemaVersion.Should().Be(new SchemaVersion(1, 0));
+        result.Value.Id.Should().Be("test.pkg");
+        result.Value.Concepts.Should().ContainSingle();
+        result.Value.Facts.Should().ContainSingle();
+        result.Value.Rules.Should().ContainSingle();
+        result.Value.Concepts[0].Aliases.Should().ContainSingle().Which.Should().Be("alias");
     }
 
     [Fact]
     public void RejectsEmptyInput()
     {
-        Assert.Equal("knowledge.invalid", Failure(string.Empty).Code);
+        Failure(string.Empty).Code.Should().Be("knowledge.invalid");
     }
 
     [Fact]
     public void RejectsMalformedJson()
     {
-        Assert.Equal("knowledge.invalid", Failure("{ not json").Code);
+        Failure("{ not json").Code.Should().Be("knowledge.invalid");
     }
 
     [Fact]
     public void RejectsNonObjectRoot()
     {
         Error error = Failure("[]");
-        Assert.Contains("root must be a JSON object", error.Message);
+        error.Message.Should().Contain("root must be a JSON object");
     }
 
     [Fact]
     public void RejectsUnknownField()
     {
         Error error = Failure(WithTopLevel("\"extra\":1,"));
-        Assert.Contains("document.extra: unknown field.", error.Message);
+        error.Message.Should().Contain("document.extra: unknown field.");
     }
 
     [Fact]
     public void RejectsUnsupportedMajorVersion()
     {
         Error error = Failure(ValidPackage.Replace("\"schemaVersion\":\"1.0\"", "\"schemaVersion\":\"2.0\""));
-        Assert.Contains("unsupported major version 2", error.Message);
+        error.Message.Should().Contain("unsupported major version 2");
     }
 
     [Fact]
@@ -74,36 +74,36 @@ public sealed class KnowledgePackageParserTests
     {
         Result<KnowledgePackage> result = KnowledgePackageParser.Parse(
             ValidPackage.Replace("\"schemaVersion\":\"1.0\"", "\"schemaVersion\":\"1.5\""));
-        Assert.True(result.IsSuccess, result.Error?.Message);
-        Assert.Equal(new SchemaVersion(1, 5), result.Value.SchemaVersion);
+        result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
+        result.Value.SchemaVersion.Should().Be(new SchemaVersion(1, 5));
     }
 
     [Fact]
     public void RejectsMissingRequiredField()
     {
         Error error = Failure(ValidPackage.Replace("\"name\":\"Test Package\",", string.Empty));
-        Assert.Contains("document.name: missing required field.", error.Message);
+        error.Message.Should().Contain("document.name: missing required field.");
     }
 
     [Fact]
     public void RejectsInvalidIdentifier()
     {
         Error error = Failure(ValidPackage.Replace("\"id\":\"test.pkg\"", "\"id\":\"Test.Pkg\""));
-        Assert.Contains("document.id: 'Test.Pkg' is not a valid identifier.", error.Message);
+        error.Message.Should().Contain("document.id: 'Test.Pkg' is not a valid identifier.");
     }
 
     [Fact]
     public void RejectsDuplicateEntityIdAcrossKinds()
     {
         Error error = Failure(ValidPackage.Replace("\"id\":\"fact.a\"", "\"id\":\"concept.a\""));
-        Assert.Contains("duplicate entity id 'concept.a'", error.Message);
+        error.Message.Should().Contain("duplicate entity id 'concept.a'");
     }
 
     [Fact]
     public void RejectsUnknownSubjectReference()
     {
         Error error = Failure(ValidPackage.Replace("\"subject\":\"concept.a\"", "\"subject\":\"concept.missing\""));
-        Assert.Contains("unknown concept 'concept.missing'", error.Message);
+        error.Message.Should().Contain("unknown concept 'concept.missing'");
     }
 
     [Fact]
@@ -112,21 +112,21 @@ public sealed class KnowledgePackageParserTests
         Error error = Failure(ValidPackage.Replace(
             "\"premises\":[{\"subject\":\"concept.a\",\"predicate\":\"p\",\"value\":\"v\"}]",
             "\"premises\":[]"));
-        Assert.Contains("rules[0].premises", error.Message);
+        error.Message.Should().Contain("rules[0].premises");
     }
 
     [Fact]
     public void ReportsMultipleProblems()
     {
         Error error = Failure(WithTopLevel("\"extra\":1,").Replace("\"name\":\"Test Package\",", string.Empty));
-        Assert.Contains("document.extra: unknown field.", error.Message);
-        Assert.Contains("document.name: missing required field.", error.Message);
+        error.Message.Should().Contain("document.extra: unknown field.");
+        error.Message.Should().Contain("document.name: missing required field.");
     }
 
     private static Error Failure(string json)
     {
         Result<KnowledgePackage> result = KnowledgePackageParser.Parse(json);
-        Assert.False(result.IsSuccess);
+        result.IsSuccess.Should().BeFalse();
         return result.Error!;
     }
 

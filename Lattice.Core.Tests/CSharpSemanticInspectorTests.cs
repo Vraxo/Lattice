@@ -15,10 +15,10 @@ public sealed class CSharpSemanticInspectorTests
             }
             """;
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source);
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Value.IsValid);
-        Assert.Contains(result.Value.Declarations, d => d.Name == "Calculator" && d.Kind == "NamedType");
-        Assert.Contains(result.Value.Declarations, d => d.Name == "Add" && d.Kind == "Method");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue();
+        result.Value.Declarations.Where(d => d.Name == "Calculator" && d.Kind == "NamedType").Should().NotBeEmpty();
+        result.Value.Declarations.Where(d => d.Name == "Add" && d.Kind == "Method").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -26,9 +26,9 @@ public sealed class CSharpSemanticInspectorTests
     {
         const string source = "class C { int Alpha; int Beta; }";
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source, nameFilter: "Alpha");
-        Assert.True(result.IsSuccess);
-        Assert.All(result.Value.Declarations, d => Assert.Equal("Alpha", d.Name));
-        Assert.Contains(result.Value.Declarations, d => d.Name == "Alpha");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Declarations.Should().AllSatisfy(d => d.Name.Should().Be("Alpha"));
+        result.Value.Declarations.Where(d => d.Name == "Alpha").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -36,9 +36,9 @@ public sealed class CSharpSemanticInspectorTests
     {
         const string source = "class C { public int Value => 1; }";
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source, nameFilter: "Value");
-        Assert.True(result.IsSuccess);
-        SemanticSymbol symbol = Assert.Single(result.Value.Declarations);
-        Assert.Equal("int", symbol.TypeName);
+        result.IsSuccess.Should().BeTrue();
+        SemanticSymbol symbol = result.Value.Declarations.Should().ContainSingle().Which;
+        symbol.TypeName.Should().Be("int");
     }
 
     [Fact]
@@ -46,9 +46,9 @@ public sealed class CSharpSemanticInspectorTests
     {
         const string source = "class C { public string Name = \"x\"; }";
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source, nameFilter: "Name");
-        Assert.True(result.IsSuccess);
-        SemanticSymbol symbol = Assert.Single(result.Value.Declarations);
-        Assert.Equal("string", symbol.TypeName);
+        result.IsSuccess.Should().BeTrue();
+        SemanticSymbol symbol = result.Value.Declarations.Should().ContainSingle().Which;
+        symbol.TypeName.Should().Be("string");
     }
 
     [Fact]
@@ -56,9 +56,9 @@ public sealed class CSharpSemanticInspectorTests
     {
         const string source = "class C { void M() { MissingType x; } }";
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source);
-        Assert.True(result.IsSuccess);
-        Assert.False(result.Value.IsValid);
-        Assert.Contains(result.Value.Diagnostics, d => d.Id == "CS0246");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeFalse();
+        result.Value.Diagnostics.Where(d => d.Id == "CS0246").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -66,8 +66,8 @@ public sealed class CSharpSemanticInspectorTests
     {
         const string source = "class C { void M() { System.Console.WriteLine(\"hi\"); } }";
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source);
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Value.IsValid);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue();
     }
 
     [Fact]
@@ -81,8 +81,8 @@ public sealed class CSharpSemanticInspectorTests
             }
             """;
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source);
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Value.IsValid);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue();
     }
 
     [Fact]
@@ -90,10 +90,10 @@ public sealed class CSharpSemanticInspectorTests
     {
         const string source = "class C\n{\n    void M() { MissingType x; }\n}";
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(source);
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         SyntaxDiagnostic error = result.Value.Diagnostics.First(d => d.Id == "CS0246");
-        Assert.True(error.Line >= 1);
-        Assert.True(error.Column >= 1);
+        (error.Line >= 1).Should().BeTrue();
+        (error.Column >= 1).Should().BeTrue();
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public sealed class CSharpSemanticInspectorTests
     {
         // Cast disambiguates the null literal between the string and multi-file overloads.
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect((string)null!);
-        Assert.False(result.IsSuccess);
-        Assert.Equal(CSharpErrorCodes.SourceRequired, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(CSharpErrorCodes.SourceRequired);
     }
 
     [Fact]
@@ -111,6 +111,6 @@ public sealed class CSharpSemanticInspectorTests
         const string source = "class C { public int Value => 1; }";
         Result<SemanticInspection> first = CSharpSemanticInspector.Inspect(source);
         Result<SemanticInspection> second = CSharpSemanticInspector.Inspect(source);
-        Assert.Equal(first.Value, second.Value);
+        second.Value.Should().Be(first.Value);
     }
 }

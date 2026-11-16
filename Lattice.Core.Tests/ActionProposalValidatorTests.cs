@@ -18,7 +18,7 @@ public sealed class ActionProposalValidatorTests
         Result result = ActionProposalValidator.Validate(
             new InvokeToolProposal(CalculatorTool.Id, arguments),
             Catalog());
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -27,8 +27,8 @@ public sealed class ActionProposalValidatorTests
         Result result = ActionProposalValidator.Validate(
             new InvokeToolProposal(new ToolId("missing"), ArgumentBag.Empty),
             Catalog());
-        Assert.False(result.IsSuccess);
-        Assert.Equal("action.tool.unknown", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("action.tool.unknown");
     }
 
     [Fact]
@@ -37,8 +37,8 @@ public sealed class ActionProposalValidatorTests
         Result result = ActionProposalValidator.Validate(
             new InvokeToolProposal(CalculatorTool.Id, ArgumentBag.Empty),
             Catalog());
-        Assert.False(result.IsSuccess);
-        Assert.Equal("tool.argument.missing", result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be("tool.argument.missing");
     }
 
     [Fact]
@@ -46,30 +46,30 @@ public sealed class ActionProposalValidatorTests
     {
         AskUserProposal proposal = new(
             new ClarificationRequest(ClarificationKind.MissingValue, "What topic?"));
-        Assert.True(ActionProposalValidator.Validate(proposal, Catalog()).IsSuccess);
+        ActionProposalValidator.Validate(proposal, Catalog()).IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public void RespondPasses()
     {
-        Assert.True(ActionProposalValidator.Validate(new RespondProposal("done"), Catalog()).IsSuccess);
+        ActionProposalValidator.Validate(new RespondProposal("done"), Catalog()).IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public void ContinuePasses()
     {
-        Assert.True(ActionProposalValidator.Validate(new ContinueProposal("more to do"), Catalog()).IsSuccess);
+        ActionProposalValidator.Validate(new ContinueProposal("more to do"), Catalog()).IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public void FinishPasses()
     {
-        Assert.True(ActionProposalValidator.Validate(new FinishProposal("goal met"), Catalog()).IsSuccess);
+        ActionProposalValidator.Validate(new FinishProposal("goal met"), Catalog()).IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public void NullProposalThrows()
     {
-        Assert.Throws<ArgumentNullException>(() => ActionProposalValidator.Validate(null!, Catalog()));
+        FluentActions.Invoking(() => ActionProposalValidator.Validate(null!, Catalog())).Should().ThrowExactly<ArgumentNullException>();
     }
 }

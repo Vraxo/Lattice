@@ -5,7 +5,7 @@ public sealed class ToolParameterTests
     [Fact]
     public void RejectsEmptyName()
     {
-        Assert.Throws<ArgumentException>(() => new ToolParameter(string.Empty, ToolParameterType.String));
+        FluentActions.Invoking(() => new ToolParameter(string.Empty, ToolParameterType.String)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -13,6 +13,6 @@ public sealed class ToolParameterTests
     {
         ToolParameter first = new("a", ToolParameterType.Integer);
         ToolParameter second = new("a", ToolParameterType.Integer);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 }

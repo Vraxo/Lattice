@@ -7,8 +7,8 @@ public sealed class PolicySelectorCandidatesTests
     {
         RespondProposal proposal = new("only");
         ActionSelection selection = PolicySelector.Default.Select(Context(), [proposal]);
-        Assert.True(selection.IsSelected);
-        Assert.Equal(proposal, selection.Proposal);
+        selection.IsSelected.Should().BeTrue();
+        selection.Proposal.Should().Be(proposal);
     }
 
     [Fact]
@@ -20,9 +20,9 @@ public sealed class PolicySelectorCandidatesTests
             new RespondProposal("b"),
         ];
         ActionSelection selection = PolicySelector.Default.Select(Context(), candidates);
-        Assert.False(selection.IsSelected);
-        AskUserProposal ask = Assert.IsType<AskUserProposal>(selection.Proposal);
-        Assert.Equal(ClarificationKind.MultipleCandidates, ask.Request.Kind);
+        selection.IsSelected.Should().BeFalse();
+        AskUserProposal ask = selection.Proposal.Should().BeOfType<AskUserProposal>().Which;
+        ask.Request.Kind.Should().Be(ClarificationKind.MultipleCandidates);
     }
 
     [Fact]
@@ -30,15 +30,14 @@ public sealed class PolicySelectorCandidatesTests
     {
         ActionSelectionContext context = Context(goals: [GoalWith(GoalStatus.Incomplete)], interpretation: Matched());
         ActionSelection selection = PolicySelector.Default.Select(context, []);
-        Assert.True(selection.IsSelected);
-        Assert.IsType<ContinueProposal>(selection.Proposal);
+        selection.IsSelected.Should().BeTrue();
+        selection.Proposal.Should().BeOfType<ContinueProposal>();
     }
 
     [Fact]
     public void NullCandidatesThrows()
     {
-        Assert.Throws<ArgumentNullException>(
-            () => PolicySelector.Default.Select(Context(), null!));
+        FluentActions.Invoking(() => PolicySelector.Default.Select(Context(), null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     private static ActionSelectionContext Context(

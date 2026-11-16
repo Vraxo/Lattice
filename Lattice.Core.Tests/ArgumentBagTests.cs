@@ -5,7 +5,7 @@ public sealed class ArgumentBagTests
     [Fact]
     public void EmptyHasNoEntries()
     {
-        Assert.Empty(ArgumentBag.Empty.Entries);
+        ArgumentBag.Empty.Entries.Should().BeEmpty();
     }
 
     [Fact]
@@ -16,7 +16,7 @@ public sealed class ArgumentBagTests
             new ArgumentEntry("b", ArgumentValue.FromInteger(2)),
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
         ]);
-        Assert.Equal(["a", "b"], bag.Entries.Select(entry => entry.Name));
+        bag.Entries.Select(entry => entry.Name).Should().Equal(["a", "b"]);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class ArgumentBagTests
             new ArgumentEntry("b", ArgumentValue.FromInteger(2)),
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
         ]);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -43,27 +43,27 @@ public sealed class ArgumentBagTests
             new ArgumentEntry("a", ArgumentValue.FromInteger(1)),
             new ArgumentEntry("a", ArgumentValue.FromInteger(2)),
         ];
-        Assert.Throws<ArgumentException>(() => ArgumentBag.From(entries));
+        FluentActions.Invoking(() => ArgumentBag.From(entries)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void AddAppendsEntry()
     {
         ArgumentBag bag = ArgumentBag.Empty.Add(new ArgumentEntry("a", ArgumentValue.FromInteger(1)));
-        Assert.Single(bag.Entries);
+        bag.Entries.Should().ContainSingle();
     }
 
     [Fact]
     public void TryGetValueFindsExistingEntry()
     {
         ArgumentBag bag = ArgumentBag.From([new ArgumentEntry("a", ArgumentValue.FromInteger(1))]);
-        Assert.True(bag.TryGetValue("a", out ArgumentValue? value));
-        Assert.Equal(ArgumentValue.FromInteger(1), value);
+        bag.TryGetValue("a", out ArgumentValue? value).Should().BeTrue();
+        value.Should().Be(ArgumentValue.FromInteger(1));
     }
 
     [Fact]
     public void TryGetValueReturnsFalseForMissingEntry()
     {
-        Assert.False(ArgumentBag.Empty.TryGetValue("a", out _));
+        ArgumentBag.Empty.TryGetValue("a", out _).Should().BeFalse();
     }
 }

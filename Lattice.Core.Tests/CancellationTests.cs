@@ -13,9 +13,9 @@ public sealed class CancellationTests
             ArgumentBag.From([new ArgumentEntry("value", ArgumentValue.FromInteger(1))]),
             ToolPermissionPolicy.ReadOnlyOnly,
             source.Token);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(ToolErrorCodes.Cancelled, invocation.Result.Error!.Code);
-        Assert.False(tool.WasExecuted);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(ToolErrorCodes.Cancelled);
+        tool.WasExecuted.Should().BeFalse();
     }
 
     [Fact]
@@ -27,8 +27,8 @@ public sealed class CancellationTests
             ArgumentBag.From([new ArgumentEntry("value", ArgumentValue.FromInteger(1))]),
             ToolPermissionPolicy.ReadOnlyOnly,
             CancellationToken.None);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.True(tool.WasExecuted);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        tool.WasExecuted.Should().BeTrue();
     }
 
     [Fact]
@@ -44,8 +44,8 @@ public sealed class CancellationTests
             ArgumentBag.Empty,
             ToolPermissionPolicy.ReadOnlyOnly,
             source.Token);
-        Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
-        Assert.False(tool.WasExecuted);
+        invocation.Result.Error!.Code.Should().Be("tool.permission.denied");
+        tool.WasExecuted.Should().BeFalse();
     }
 
     [Fact]
@@ -55,16 +55,16 @@ public sealed class CancellationTests
             new ToolRegistry([new RecordingTool()]),
             ToolPermissionPolicy.ReadOnlyOnly);
         Result<IControlledStatement> parsed = ControlledLanguageParser.Parse("fact water | boils_at | 100C");
-        Assert.True(parsed.IsSuccess);
+        parsed.IsSuccess.Should().BeTrue();
         Session original = Session.Empty(SessionId.New());
         using CancellationTokenSource source = new();
         source.Cancel();
 
         AgentTurnResult result = loop.Run(original, parsed.Value, source.Token);
 
-        Assert.Equal(TurnOutcome.Cancelled, result.Outcome);
-        Assert.Same(original, result.Session);
-        Assert.Empty(result.Session.Facts);
+        result.Outcome.Should().Be(TurnOutcome.Cancelled);
+        result.Session.Should().BeSameAs(original);
+        result.Session.Facts.Should().BeEmpty();
     }
 
     [Fact]
@@ -74,10 +74,10 @@ public sealed class CancellationTests
             new ToolRegistry([new RecordingTool()]),
             ToolPermissionPolicy.ReadOnlyOnly);
         Result<IControlledStatement> parsed = ControlledLanguageParser.Parse("action recording | value=1");
-        Assert.True(parsed.IsSuccess);
+        parsed.IsSuccess.Should().BeTrue();
         using CancellationTokenSource source = new();
         source.Cancel();
         AgentTurnResult result = loop.Run(Session.Empty(SessionId.New()), parsed.Value, source.Token);
-        Assert.Equal(TurnOutcome.Cancelled, result.Outcome);
+        result.Outcome.Should().Be(TurnOutcome.Cancelled);
     }
 }

@@ -13,9 +13,9 @@ public sealed class CSharpSemanticInspectorMultiFileTests
             new CSharpSourceFile("consumer.cs", "namespace Demo; public sealed class Consumer { private Helper _h = new Helper(); }"),
         ];
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(files);
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Value.IsValid, Describe(result));
-        Assert.DoesNotContain(result.Value.Diagnostics, d => d.Id == "CS0246");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue("{0}", Describe(result) ?? string.Empty);
+        result.Value.Diagnostics.Where(d => d.Id == "CS0246").Should().BeEmpty();
     }
 
     [Fact]
@@ -27,9 +27,9 @@ public sealed class CSharpSemanticInspectorMultiFileTests
             new CSharpSourceFile("beta.cs", "class Beta { }"),
         ];
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(files);
-        Assert.True(result.IsSuccess);
-        Assert.Contains(result.Value.Declarations, d => d.Name == "Alpha" && d.Path == "alpha.cs");
-        Assert.Contains(result.Value.Declarations, d => d.Name == "Beta" && d.Path == "beta.cs");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Declarations.Where(d => d.Name == "Alpha" && d.Path == "alpha.cs").Should().NotBeEmpty();
+        result.Value.Declarations.Where(d => d.Name == "Beta" && d.Path == "beta.cs").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -41,10 +41,10 @@ public sealed class CSharpSemanticInspectorMultiFileTests
             new CSharpSourceFile("use.cs", "class Use { private Types _t = new Types(); }"),
         ];
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(files, nameFilter: "Count");
-        Assert.True(result.IsSuccess);
-        SemanticSymbol symbol = Assert.Single(result.Value.Declarations);
-        Assert.Equal("int", symbol.TypeName);
-        Assert.Equal("types.cs", symbol.Path);
+        result.IsSuccess.Should().BeTrue();
+        SemanticSymbol symbol = result.Value.Declarations.Should().ContainSingle().Which;
+        symbol.TypeName.Should().Be("int");
+        symbol.Path.Should().Be("types.cs");
     }
 
     [Fact]
@@ -56,17 +56,17 @@ public sealed class CSharpSemanticInspectorMultiFileTests
             new CSharpSourceFile("b.cs", "class B { private Missing _x = new Missing(); }"),
         ];
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(files);
-        Assert.True(result.IsSuccess);
-        Assert.False(result.Value.IsValid);
-        Assert.Contains(result.Value.Diagnostics, d => d.Id == "CS0246");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeFalse();
+        result.Value.Diagnostics.Where(d => d.Id == "CS0246").Should().NotBeEmpty();
     }
 
     [Fact]
     public void EmptyFileListFails()
     {
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect([]);
-        Assert.False(result.IsSuccess);
-        Assert.Equal(CSharpErrorCodes.SourceRequired, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(CSharpErrorCodes.SourceRequired);
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public sealed class CSharpSemanticInspectorMultiFileTests
     {
         CSharpSourceFile[] files = [new CSharpSourceFile("a.cs", "class A { }")];
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(files, referencePaths: []);
-        Assert.False(result.IsSuccess);
-        Assert.Equal(CSharpErrorCodes.ReferencesUnavailable, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(CSharpErrorCodes.ReferencesUnavailable);
     }
 
     [Fact]
@@ -85,8 +85,8 @@ public sealed class CSharpSemanticInspectorMultiFileTests
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(
             files,
             referencePaths: ["does-not-exist.dll"]);
-        Assert.False(result.IsSuccess);
-        Assert.Equal(CSharpErrorCodes.ReferencesUnavailable, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(CSharpErrorCodes.ReferencesUnavailable);
     }
 
     [Fact]
@@ -97,8 +97,8 @@ public sealed class CSharpSemanticInspectorMultiFileTests
         string coreLib = typeof(object).Assembly.Location;
         CSharpSourceFile[] files = [new CSharpSourceFile("a.cs", "class A { }")];
         Result<SemanticInspection> result = CSharpSemanticInspector.Inspect(files, referencePaths: [coreLib]);
-        Assert.True(result.IsSuccess);
-        Assert.True(result.Value.IsValid, Describe(result));
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsValid.Should().BeTrue("{0}", Describe(result) ?? string.Empty);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public sealed class CSharpSemanticInspectorMultiFileTests
         ];
         Result<SemanticInspection> first = CSharpSemanticInspector.Inspect(files);
         Result<SemanticInspection> second = CSharpSemanticInspector.Inspect(files);
-        Assert.Equal(first.Value, second.Value);
+        second.Value.Should().Be(first.Value);
     }
 
     private static string Describe(Result<SemanticInspection> result)

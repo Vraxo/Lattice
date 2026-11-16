@@ -8,7 +8,7 @@ public sealed class ClarificationGeneratorTests
         RequestInterpretation interpretation = RequestInterpretation.Matched(
             "what is gravity",
             new IntentMatch("question.what-is", RequestIntentKind.Question, new IntentSlot("topic", "gravity")));
-        Assert.Null(ClarificationGenerator.TryCreate(interpretation));
+        ClarificationGenerator.TryCreate(interpretation).Should().BeNull();
     }
 
     [Fact]
@@ -19,9 +19,9 @@ public sealed class ClarificationGeneratorTests
             new IntentMatch("question.what-is", RequestIntentKind.Question, null),
             "topic");
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        Assert.NotNull(request);
-        Assert.Equal(ClarificationKind.MissingValue, request.Kind);
-        Assert.Equal("What topic?", request.Question);
+        request.Should().BeNotNull();
+        request.Kind.Should().Be(ClarificationKind.MissingValue);
+        request.Question.Should().Be("What topic?");
     }
 
     [Fact]
@@ -34,10 +34,10 @@ public sealed class ClarificationGeneratorTests
                 new IntentMatch("show.explain", RequestIntentKind.Explanation, new IntentSlot("target", "README.md")),
             ]);
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        Assert.NotNull(request);
-        Assert.Equal(ClarificationKind.AmbiguousIntent, request.Kind);
-        Assert.Contains("an explanation", request.Question);
-        Assert.Contains("a file inspection", request.Question);
+        request.Should().BeNotNull();
+        request.Kind.Should().Be(ClarificationKind.AmbiguousIntent);
+        request.Question.Should().Contain("an explanation");
+        request.Question.Should().Contain("a file inspection");
     }
 
     [Fact]
@@ -50,9 +50,9 @@ public sealed class ClarificationGeneratorTests
                 new IntentMatch("b", RequestIntentKind.Explanation, new IntentSlot("target", "README.md")),
             ]);
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        Assert.NotNull(request);
-        Assert.Equal(ClarificationKind.AmbiguousIntent, request.Kind);
-        Assert.Contains("more specific", request.Question);
+        request.Should().BeNotNull();
+        request.Kind.Should().Be(ClarificationKind.AmbiguousIntent);
+        request.Question.Should().Contain("more specific");
     }
 
     [Fact]
@@ -60,9 +60,9 @@ public sealed class ClarificationGeneratorTests
     {
         RequestInterpretation interpretation = RequestInterpretation.Unknown("hello there", "No known pattern matched.");
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        Assert.NotNull(request);
-        Assert.Equal(ClarificationKind.UnknownIntent, request.Kind);
-        Assert.Contains("rephrase", request.Question);
+        request.Should().BeNotNull();
+        request.Kind.Should().Be(ClarificationKind.UnknownIntent);
+        request.Question.Should().Contain("rephrase");
     }
 
     [Fact]
@@ -76,6 +76,6 @@ public sealed class ClarificationGeneratorTests
             ]);
         ClarificationRequest? first = ClarificationGenerator.TryCreate(interpretation);
         ClarificationRequest? second = ClarificationGenerator.TryCreate(interpretation);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 }

@@ -7,10 +7,10 @@ public sealed class ControlledStatementInterpreterTests
     {
         Session session = Session.Empty(SessionId.New());
         InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, Parse("action calculator | left=2 | right=3"));
-        Assert.False(interpreted.IsResolved);
-        InvokeToolProposal candidate = Assert.IsType<InvokeToolProposal>(Assert.Single(interpreted.Candidates));
-        Assert.Equal("calculator", candidate.ToolId.Value);
-        Assert.Empty(interpreted.Session.ToolInvocations);
+        interpreted.IsResolved.Should().BeFalse();
+        InvokeToolProposal candidate = interpreted.Candidates.Should().ContainSingle().Which.Should().BeOfType<InvokeToolProposal>().Which;
+        candidate.ToolId.Value.Should().Be("calculator");
+        interpreted.Session.ToolInvocations.Should().BeEmpty();
     }
 
     [Fact]
@@ -18,10 +18,10 @@ public sealed class ControlledStatementInterpreterTests
     {
         Session session = Session.Empty(SessionId.New());
         InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, Parse("fact water | boils_at | 100C"));
-        Assert.True(interpreted.IsResolved);
-        Assert.Equal(TurnOutcome.FactRecorded, interpreted.ResolvedOutcome);
-        Assert.Single(interpreted.Session.Facts);
-        Assert.Empty(interpreted.Candidates);
+        interpreted.IsResolved.Should().BeTrue();
+        interpreted.ResolvedOutcome.Should().Be(TurnOutcome.FactRecorded);
+        interpreted.Session.Facts.Should().ContainSingle();
+        interpreted.Candidates.Should().BeEmpty();
     }
 
     [Fact]
@@ -29,9 +29,9 @@ public sealed class ControlledStatementInterpreterTests
     {
         Session session = Session.Empty(SessionId.New());
         InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, Parse("goal Do it. | It is done."));
-        Assert.True(interpreted.IsResolved);
-        Assert.Equal(TurnOutcome.GoalRecorded, interpreted.ResolvedOutcome);
-        Assert.Single(interpreted.Session.Goals);
+        interpreted.IsResolved.Should().BeTrue();
+        interpreted.ResolvedOutcome.Should().Be(TurnOutcome.GoalRecorded);
+        interpreted.Session.Goals.Should().ContainSingle();
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public sealed class ControlledStatementInterpreterTests
     {
         Session session = Session.Empty(SessionId.New());
         InterpretedStatement interpreted = ControlledStatementInterpreter.Interpret(session, Parse("constraint Be brief."));
-        Assert.True(interpreted.IsResolved);
-        Assert.Equal(TurnOutcome.ConstraintNotSupported, interpreted.ResolvedOutcome);
-        Assert.Equal(session, interpreted.Session);
+        interpreted.IsResolved.Should().BeTrue();
+        interpreted.ResolvedOutcome.Should().Be(TurnOutcome.ConstraintNotSupported);
+        interpreted.Session.Should().Be(session);
     }
 
     [Fact]
@@ -49,13 +49,13 @@ public sealed class ControlledStatementInterpreterTests
     {
         Session session = Session.Empty(SessionId.New());
         ControlledStatementInterpreter.Interpret(session, Parse("fact a | b | c"));
-        Assert.Empty(session.Facts);
+        session.Facts.Should().BeEmpty();
     }
 
     private static IControlledStatement Parse(string input)
     {
         Result<IControlledStatement> result = ControlledLanguageParser.Parse(input);
-        Assert.True(result.IsSuccess, result.Error?.Message);
+        result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
         return result.Value;
     }
 }

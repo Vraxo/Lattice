@@ -18,23 +18,17 @@ public sealed class DesktopFindSymbolTests
         session.RequestInput = "find symbol WidgetEngine";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.SearchResults, entry.Kind);
-        Assert.Equal("I found 2 matching occurrences of 'WidgetEngine' across 2 files.", entry.Summary);
-        Assert.Equal(2, entry.SafeEvidence.Length);
-        Assert.Contains(
-            entry.SafeEvidence,
-            item => item.RelativePath == "README.md"
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.SearchResults);
+        entry.Summary.Should().Be("I found 2 matching occurrences of 'WidgetEngine' across 2 files.");
+        entry.SafeEvidence.Length.Should().Be(2);
+        entry.SafeEvidence.Where(item => item.RelativePath == "README.md"
                 && item.StartLine == 2
-                && item.Snippet == "Uses WidgetEngine for tasks.");
-        Assert.Contains(
-            entry.SafeEvidence,
-            item => item.RelativePath == "src/WidgetEngine.cs"
+                && item.Snippet == "Uses WidgetEngine for tasks.").Should().NotBeEmpty();
+        entry.SafeEvidence.Where(item => item.RelativePath == "src/WidgetEngine.cs"
                 && item.StartLine == 3
-                && item.Snippet == "public sealed class WidgetEngine");
-        Assert.All(
-            entry.SafeEvidence,
-            item => Assert.True(session.ActiveWorkspace!.TryResolve(item.RelativePath, out _)));
+                && item.Snippet == "public sealed class WidgetEngine").Should().NotBeEmpty();
+        entry.SafeEvidence.Should().AllSatisfy(item => session.ActiveWorkspace!.TryResolve(item.RelativePath, out _).Should().BeTrue());
     }
 
     [Fact]
@@ -47,12 +41,12 @@ public sealed class DesktopFindSymbolTests
         session.RequestInput = "find symbol uniquetoken";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.SearchResults, entry.Kind);
-        Assert.Equal("I found 1 matching occurrence of 'uniquetoken' in 1 file.", entry.Summary);
-        EvidenceReference single = Assert.Single(entry.SafeEvidence);
-        Assert.Equal("src/UniqueToken.cs", single.RelativePath);
-        Assert.Equal(1, single.StartLine);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.SearchResults);
+        entry.Summary.Should().Be("I found 1 matching occurrence of 'uniquetoken' in 1 file.");
+        EvidenceReference single = entry.SafeEvidence.Should().ContainSingle().Which;
+        single.RelativePath.Should().Be("src/UniqueToken.cs");
+        single.StartLine.Should().Be(1);
     }
 
     [Fact]
@@ -65,10 +59,10 @@ public sealed class DesktopFindSymbolTests
         session.RequestInput = "find symbol AbsentSymbol";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.NoMatches, entry.Kind);
-        Assert.Empty(entry.SafeEvidence);
-        Assert.Contains("no literal source-text occurrences of 'AbsentSymbol'", entry.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.NoMatches);
+        entry.SafeEvidence.Should().BeEmpty();
+        entry.Summary.Should().Contain("no literal source-text occurrences of 'AbsentSymbol'");
     }
 
     [Fact]
@@ -96,11 +90,11 @@ public sealed class DesktopFindSymbolTests
             session.RequestInput = "find symbol TargetToken";
             await session.SubmitRequestAsync();
 
-            DesktopTurnEntry entry = Assert.Single(session.Entries);
-            Assert.Equal(DesktopTurnKind.SearchResults, entry.Kind);
-            EvidenceReference match = Assert.Single(entry.SafeEvidence);
-            Assert.Equal("src/Kept.cs", match.RelativePath);
-            Assert.Equal(2, match.StartLine);
+            DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+            entry.Kind.Should().Be(DesktopTurnKind.SearchResults);
+            EvidenceReference match = entry.SafeEvidence.Should().ContainSingle().Which;
+            match.RelativePath.Should().Be("src/Kept.cs");
+            match.StartLine.Should().Be(2);
         }
         finally
         {
@@ -128,10 +122,10 @@ public sealed class DesktopFindSymbolTests
         session.RequestInput = request;
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.UnsupportedInput, entry.Kind);
-        Assert.Empty(entry.SafeEvidence);
-        Assert.Null(entry.FileContents);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.UnsupportedInput);
+        entry.SafeEvidence.Should().BeEmpty();
+        entry.FileContents.Should().BeNull();
     }
 
     [Fact]
@@ -144,12 +138,12 @@ public sealed class DesktopFindSymbolTests
         session.RequestInput = "show README.md";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.AmbiguousInput, entry.Kind);
-        Assert.Contains("Did you want me to open the file 'README.md'?", entry.Summary, StringComparison.Ordinal);
-        Assert.DoesNotContain("show.inspect", entry.Summary, StringComparison.Ordinal);
-        Assert.Empty(entry.SafeEvidence);
-        Assert.Null(entry.FileContents);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.AmbiguousInput);
+        entry.Summary.Should().Contain("Did you want me to open the file 'README.md'?");
+        entry.Summary.Should().NotContain("show.inspect");
+        entry.SafeEvidence.Should().BeEmpty();
+        entry.FileContents.Should().BeNull();
     }
 
     [Fact]
@@ -163,8 +157,8 @@ public sealed class DesktopFindSymbolTests
         context.Services.AddSingleton<DesktopSession>();
         IRenderedComponent<App> component = context.Render<App>();
 
-        Assert.Contains("source-text", component.Find("#composer-hint").TextContent, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("not semantic", component.Find("#composer-hint").TextContent, StringComparison.OrdinalIgnoreCase);
+        component.Find("#composer-hint").TextContent.Should().ContainEquivalentOf("source-text");
+        component.Find("#composer-hint").TextContent.Should().ContainEquivalentOf("not semantic");
 
         await component.Find("#workspace-path").InputAsync(workspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
@@ -172,18 +166,12 @@ public sealed class DesktopFindSymbolTests
         await component.Find("#message-input").InputAsync("find symbol SharedSymbol");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Contains(
-            "source-text",
-            component.Find(".search-mode-note").TextContent,
-            StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(
-            "not semantic",
-            component.Find(".search-mode-note").TextContent,
-            StringComparison.OrdinalIgnoreCase);
+        component.Find(".search-mode-note").TextContent.Should().ContainEquivalentOf("source-text");
+        component.Find(".search-mode-note").TextContent.Should().ContainEquivalentOf("not semantic");
 
         var locations = component.FindAll(".evidence-location").Select(node => node.TextContent).ToArray();
-        Assert.Contains("src/Alpha.cs:2", locations);
-        Assert.Contains("docs/Guide.md:1", locations);
+        locations.Should().Contain("src/Alpha.cs:2");
+        locations.Should().Contain("docs/Guide.md:1");
     }
 
     private static async Task<DesktopSession> ConnectSessionAsync(string workspacePath)
@@ -193,7 +181,7 @@ public sealed class DesktopFindSymbolTests
             WorkspacePathInput = workspacePath,
         };
         await session.ConnectAsync();
-        Assert.True(session.IsConnected);
+        session.IsConnected.Should().BeTrue();
         return session;
     }
 
@@ -226,6 +214,6 @@ public sealed class DesktopFindSymbolTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}" ?? string.Empty);
     }
 }

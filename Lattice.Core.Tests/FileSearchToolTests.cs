@@ -9,8 +9,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("a.txt", "first\nneedle here\nlast");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a.txt:2: needle here", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("a.txt:2: needle here");
     }
 
     [Fact]
@@ -20,8 +20,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("a.txt", "Needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a.txt:1: Needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("a.txt:1: Needle");
     }
 
     [Fact]
@@ -31,8 +31,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("a.txt", "nothing here");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal(string.Empty, result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be(string.Empty);
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("bin/skip.txt", "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("keep.txt:1: needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("keep.txt:1: needle");
     }
 
     [Fact]
@@ -55,8 +55,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("skip/skip.txt", "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path), ["skip"]);
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("keep.txt:1: needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("keep.txt:1: needle");
     }
 
     [Fact]
@@ -67,8 +67,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("small.txt", "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("small.txt:1: needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("small.txt:1: needle");
     }
 
     [Fact]
@@ -79,8 +79,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("good.txt", "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("good.txt:1: needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("good.txt:1: needle");
     }
 
     [Fact]
@@ -90,8 +90,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("sub/dir/a.txt", "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("sub/dir/a.txt:1: needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("sub/dir/a.txt:1: needle");
     }
 
     [Fact]
@@ -102,8 +102,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("a.txt", contents);
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Contains("results truncated", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Contain("results truncated");
     }
 
     [Fact]
@@ -113,8 +113,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("a.txt", new string('x', FileSearchTool.MaxLineLength + 50) + "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "needle");
-        Assert.True(result.IsSuccess);
-        Assert.Contains("...", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Contain("...");
     }
 
     [Fact]
@@ -123,8 +123,8 @@ public sealed class FileSearchToolTests
         using TempWorkspace workspace = new();
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "   ");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.QueryEmpty, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.QueryEmpty);
     }
 
     [Fact]
@@ -133,8 +133,8 @@ public sealed class FileSearchToolTests
         using TempWorkspace workspace = new();
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = tool.Execute(ArgumentBag.Empty);
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.QueryEmpty, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.QueryEmpty);
     }
 
     [Fact]
@@ -143,8 +143,8 @@ public sealed class FileSearchToolTests
         using TempWorkspace workspace = new();
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = ExecuteWithPath(tool, "needle", "nope");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.PathNotFound);
     }
 
     [Fact]
@@ -153,8 +153,8 @@ public sealed class FileSearchToolTests
         using TempWorkspace workspace = new();
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = ExecuteWithPath(tool, "needle", "../");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -165,8 +165,8 @@ public sealed class FileSearchToolTests
         workspace.WriteFile("sub/inner.txt", "needle");
         FileSearchTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = ExecuteWithPath(tool, "needle", "sub");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("sub/inner.txt:1: needle", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("sub/inner.txt:1: needle");
     }
 
     private static ToolResult Execute(FileSearchTool tool, string query)
