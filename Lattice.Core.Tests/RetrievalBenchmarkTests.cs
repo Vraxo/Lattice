@@ -98,7 +98,7 @@ public sealed class RetrievalBenchmarkTests
         Metrics related = MeasureRanked(lookup, Entries().Where(e => e.QueryClass == "related-concept"));
         Math.Round(exact.Recall, 6).Should().Be(1.0);
         Math.Round(alias.Recall, 6).Should().Be(1.0);
-        (documentation.Recall > 0.0).Should().BeTrue("{0}", "Documentation recall should improve above the 0.0 baseline." ?? string.Empty);
+        (documentation.Recall > 0.0).Should().BeTrue("{0}", "Documentation recall should improve above the 0.0 baseline.");
 
         // related-concept stays unserved with this corpus: its queries connect through facts, not
         // concept text. Asserting >= 0 rather than == 0 keeps this test honest if the corpus later

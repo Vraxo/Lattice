@@ -29,12 +29,12 @@ public sealed class ControlledLanguageCorpusTests
         JsonElement root = expected.RootElement;
         if (root.TryGetProperty("error", out JsonElement error))
         {
-            result.IsSuccess.Should().BeFalse("{0}", $"{id}: expected an error but parsing succeeded." ?? string.Empty);
+            result.IsSuccess.Should().BeFalse("{0}", $"{id}: expected an error but parsing succeeded.");
             result.Error!.Code.Should().Be(error.GetProperty("kind").GetString());
             return;
         }
 
-        result.IsSuccess.Should().BeTrue("{0}", $"{id}: expected success but got '{result.Error?.Code}'." ?? string.Empty);
+        result.IsSuccess.Should().BeTrue("{0}", $"{id}: expected success but got '{result.Error?.Code}'.");
         Signature(result.Value).Should().Be(SignatureFromJson(root.GetProperty("statement")));
     }
 

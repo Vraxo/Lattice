@@ -184,7 +184,7 @@ public sealed class WorkspaceEncodingTests : IDisposable
     private void AssertUnchanged(string relative, byte[] before)
     {
         byte[] after = File.ReadAllBytes(PathOf(relative));
-        before.SequenceEqual(after).Should().BeTrue("{0}", "The file's bytes changed even though the edit was refused." ?? string.Empty);
+        before.SequenceEqual(after).Should().BeTrue("{0}", "The file's bytes changed even though the edit was refused.");
     }
 
     private ToolInvocation Read(string relative)

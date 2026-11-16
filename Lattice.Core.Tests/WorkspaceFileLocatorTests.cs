@@ -203,6 +203,6 @@ public sealed class WorkspaceFileLocatorTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}" ?? string.Empty);
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}");
     }
 }

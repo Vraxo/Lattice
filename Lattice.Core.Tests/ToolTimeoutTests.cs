@@ -39,7 +39,7 @@ public sealed class ToolTimeoutTests
         source.Cancel();
         ToolInvocation invocation = await execution.WaitAsync(TimeSpan.FromSeconds(2));
 
-        started.Should().BeTrue("{0}", "Tool did not start." ?? string.Empty);
+        started.Should().BeTrue("{0}", "Tool did not start.");
         invocation.Result.Error!.Code.Should().Be(ToolErrorCodes.Cancelled);
         tool.CancellationObserved.Should().BeTrue();
     }

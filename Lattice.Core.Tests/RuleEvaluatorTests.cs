@@ -8,7 +8,7 @@ public sealed class RuleEvaluatorTests
     public void EvaluatesTheExamplePackage()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "knowledge", "example.physics", "package.json");
-        File.Exists(path).Should().BeTrue("{0}", $"Example package not found at {path}." ?? string.Empty);
+        File.Exists(path).Should().BeTrue("{0}", $"Example package not found at {path}.");
         Result<KnowledgePackage> parsed = KnowledgePackageParser.Parse(File.ReadAllText(path));
         parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         ImmutableArray<Derivation> derivations = RuleEvaluator.Evaluate(parsed.Value.Rules, parsed.Value.Facts);

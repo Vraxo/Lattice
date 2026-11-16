@@ -66,7 +66,7 @@ public sealed partial class CharcoalThemeStylesheetTests
         foreach (string token in neutralTokens)
         {
             (int r, int g, int b) = ExtractRgbToken(css, token);
-            (Math.Abs(r - g) <= 2 && Math.Abs(g - b) <= 2 && Math.Abs(r - b) <= 2).Should().BeTrue("{0}", $"Expected '{token}' to be neutral gray, but got RGB({r}, {g}, {b})." ?? string.Empty);
+            (Math.Abs(r - g) <= 2 && Math.Abs(g - b) <= 2 && Math.Abs(r - b) <= 2).Should().BeTrue("{0}", $"Expected '{token}' to be neutral gray, but got RGB({r}, {g}, {b}).");
         }
 
         // Verify WCAG AA (>= 4.5:1) contrast for primary and muted text against main and panel surfaces.

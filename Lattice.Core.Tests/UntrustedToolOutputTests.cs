@@ -37,7 +37,7 @@ public sealed class UntrustedToolOutputTests
         string requestedAction,
         string rationale)
     {
-        string.IsNullOrWhiteSpace(rationale).Should().BeFalse("{0}", $"{id}: fixture rationale is required." ?? string.Empty);
+        string.IsNullOrWhiteSpace(rationale).Should().BeFalse("{0}", $"{id}: fixture rationale is required.");
         using JsonDocument expectedDocument = JsonDocument.Parse(expectedJson);
         JsonElement expected = expectedDocument.RootElement;
         using TempWorkspace workspace = new();
@@ -142,6 +142,6 @@ public sealed class UntrustedToolOutputTests
 
     private static void Equal<T>(string id, string rationale, string field, T expected, T actual)
     {
-        EqualityComparer<T>.Default.Equals(expected, actual).Should().BeTrue("{0}", $"{id}: {field} differed. Expected '{expected}', actual '{actual}'. Rationale: {rationale}" ?? string.Empty);
+        EqualityComparer<T>.Default.Equals(expected, actual).Should().BeTrue("{0}", $"{id}: {field} differed. Expected '{expected}', actual '{actual}'. Rationale: {rationale}");
     }
 }

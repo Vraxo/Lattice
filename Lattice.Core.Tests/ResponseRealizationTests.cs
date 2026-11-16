@@ -42,7 +42,7 @@ public sealed class ResponseRealizationTests
         JsonElement entry = document.RootElement;
         ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
         Result<string> realized = template.Realize(Slots(entry.GetProperty("slots")));
-        realized.IsSuccess.Should().BeTrue("{0}", $"{id}: {realized.Error?.Message}" ?? string.Empty);
+        realized.IsSuccess.Should().BeTrue("{0}", $"{id}: {realized.Error?.Message}");
         realized.Value.Should().Be(entry.GetProperty("expect").GetString());
     }
 
@@ -54,7 +54,7 @@ public sealed class ResponseRealizationTests
         JsonElement entry = document.RootElement;
         ResponseTemplate template = Template(entry.GetProperty("template").GetString()!);
         Result<string> realized = template.Realize(Slots(entry.GetProperty("slots")));
-        realized.IsSuccess.Should().BeFalse("{0}", $"{id}: expected a rejection but realization succeeded." ?? string.Empty);
+        realized.IsSuccess.Should().BeFalse("{0}", $"{id}: expected a rejection but realization succeeded.");
         realized.Error!.Code.Should().Be(ResponseErrorCodes.MissingSlot);
         realized.Error.Message.Should().Contain($"'{missing}'");
     }

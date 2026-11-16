@@ -6,7 +6,7 @@ public sealed class IntentPatternCatalogTests
     public void ParsesThePatternsFile()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "config", "nlp", "patterns.json");
-        File.Exists(path).Should().BeTrue("{0}", $"Patterns file not found at {path}." ?? string.Empty);
+        File.Exists(path).Should().BeTrue("{0}", $"Patterns file not found at {path}.");
         Result<IntentPatternCatalog> result = IntentPatternCatalogParser.Parse(File.ReadAllText(path));
         result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
         result.Value.Patterns.Should().NotBeEmpty();

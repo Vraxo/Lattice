@@ -14,7 +14,7 @@ public sealed class KnowledgePackageParserTests
     public void ParsesTheExamplePackage()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "knowledge", "example.physics", "package.json");
-        File.Exists(path).Should().BeTrue("{0}", $"Example package not found at {path}." ?? string.Empty);
+        File.Exists(path).Should().BeTrue("{0}", $"Example package not found at {path}.");
         Result<KnowledgePackage> result = KnowledgePackageParser.Parse(File.ReadAllText(path));
         result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
         result.Value.Id.Should().Be("example.physics");
