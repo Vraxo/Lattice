@@ -51,7 +51,7 @@ public sealed class LexicalRetrievalTests
     {
         KnowledgeLookup lookup = Lookup();
         RetrievalCandidate top = lookup.Search("liquid commonly denoted")[0];
-        top.Factors.Should().BeNotEmpty();
+        top.Factors.Should().NotBeEmpty();
         top.Factors.Where(factor => factor.RawScore > 0).Should().NotBeEmpty();
         top.MatchedField.Should().Be("definition");
         top.MatchedText.Should().ContainEquivalentOf("liquid");

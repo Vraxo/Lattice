@@ -47,7 +47,7 @@ public sealed class WorkspaceFileDiscoveryTests
         entry.Kind.Should().Be(DesktopTurnKind.FileInspected);
         entry.InspectedRelativePath.Should().Be(expectedRelativePath);
         entry.Summary.Should().Contain($"Here is '{expectedRelativePath}'");
-        entry.FileContents.Should().BeNotNull();
+        entry.FileContents.Should().NotBeNull();
     }
 
     [Fact]

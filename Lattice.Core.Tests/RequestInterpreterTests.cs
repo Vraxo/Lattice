@@ -71,7 +71,7 @@ public sealed class RequestInterpreterTests
         result.Kind.Should().Be(IntentMatchKind.Unknown);
         result.Intent.Should().Be(RequestIntentKind.Unknown);
         result.Match.Should().BeNull();
-        result.Diagnostic.Should().BeNotNull();
+        result.Diagnostic.Should().NotBeNull();
     }
 
     [Fact]

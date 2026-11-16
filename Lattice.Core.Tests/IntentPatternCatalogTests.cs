@@ -9,7 +9,7 @@ public sealed class IntentPatternCatalogTests
         File.Exists(path).Should().BeTrue("{0}", $"Patterns file not found at {path}." ?? string.Empty);
         Result<IntentPatternCatalog> result = IntentPatternCatalogParser.Parse(File.ReadAllText(path));
         result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
-        result.Value.Patterns.Should().BeNotEmpty();
+        result.Value.Patterns.Should().NotBeEmpty();
     }
 
     [Fact]

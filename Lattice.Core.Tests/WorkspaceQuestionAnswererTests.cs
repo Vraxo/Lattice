@@ -66,7 +66,7 @@ public sealed class WorkspaceQuestionAnswererTests
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, "find symbol Calculator");
         answer.Status.Should().Be(EvidenceAnswerStatus.Answered);
-        answer.Evidence.Should().BeNotEmpty();
+        answer.Evidence.Should().NotBeEmpty();
     }
 
     [Fact]

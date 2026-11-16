@@ -65,7 +65,7 @@ public sealed class RetrievalBenchmarkTests
     [Fact]
     public void EveryEntryHasANonEmptyExpectedSet()
     {
-        Entries().Should().AllSatisfy(entry => entry.ExpectedIds.Should().BeNotEmpty());
+        Entries().Should().AllSatisfy(entry => entry.ExpectedIds.Should().NotBeEmpty());
     }
 
     [Fact]

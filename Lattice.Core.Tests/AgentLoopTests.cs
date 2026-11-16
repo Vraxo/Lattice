@@ -9,7 +9,7 @@ public sealed class AgentLoopTests
         Session session = Session.Empty(SessionId.New());
         AgentTurnResult result = loop.Run(session, Parse("action calculator | left=2 | right=3"));
         result.Outcome.Should().Be(TurnOutcome.ToolSucceeded);
-        result.Invocation.Should().BeNotNull();
+        result.Invocation.Should().NotBeNull();
         result.Invocation!.Result.Output!.AsInteger().Should().Be(5);
         result.Session.ToolInvocations.Should().ContainSingle();
     }

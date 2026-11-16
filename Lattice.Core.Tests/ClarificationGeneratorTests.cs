@@ -19,7 +19,7 @@ public sealed class ClarificationGeneratorTests
             new IntentMatch("question.what-is", RequestIntentKind.Question, null),
             "topic");
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        request.Should().BeNotNull();
+        request.Should().NotBeNull();
         request.Kind.Should().Be(ClarificationKind.MissingValue);
         request.Question.Should().Be("What topic?");
     }
@@ -34,7 +34,7 @@ public sealed class ClarificationGeneratorTests
                 new IntentMatch("show.explain", RequestIntentKind.Explanation, new IntentSlot("target", "README.md")),
             ]);
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        request.Should().BeNotNull();
+        request.Should().NotBeNull();
         request.Kind.Should().Be(ClarificationKind.AmbiguousIntent);
         request.Question.Should().Contain("an explanation");
         request.Question.Should().Contain("a file inspection");
@@ -50,7 +50,7 @@ public sealed class ClarificationGeneratorTests
                 new IntentMatch("b", RequestIntentKind.Explanation, new IntentSlot("target", "README.md")),
             ]);
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        request.Should().BeNotNull();
+        request.Should().NotBeNull();
         request.Kind.Should().Be(ClarificationKind.AmbiguousIntent);
         request.Question.Should().Contain("more specific");
     }
@@ -60,7 +60,7 @@ public sealed class ClarificationGeneratorTests
     {
         RequestInterpretation interpretation = RequestInterpretation.Unknown("hello there", "No known pattern matched.");
         ClarificationRequest? request = ClarificationGenerator.TryCreate(interpretation);
-        request.Should().BeNotNull();
+        request.Should().NotBeNull();
         request.Kind.Should().Be(ClarificationKind.UnknownIntent);
         request.Question.Should().Contain("rephrase");
     }

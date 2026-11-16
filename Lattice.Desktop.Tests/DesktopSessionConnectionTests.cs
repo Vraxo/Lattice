@@ -31,7 +31,7 @@ public sealed class DesktopSessionConnectionTests
 
         session.IsConnected.Should().BeFalse();
         session.ConnectedWorkspacePath.Should().BeNull();
-        session.WorkspaceError.Should().BeNotNull();
+        session.WorkspaceError.Should().NotBeNull();
         session.WorkspaceError.Should().ContainEquivalentOf("folder path");
     }
 
@@ -47,7 +47,7 @@ public sealed class DesktopSessionConnectionTests
         await session.ConnectAsync();
 
         session.IsConnected.Should().BeFalse();
-        session.WorkspaceError.Should().BeNotNull();
+        session.WorkspaceError.Should().NotBeNull();
         session.WorkspaceError.Should().ContainEquivalentOf("does not exist");
     }
 
@@ -67,7 +67,7 @@ public sealed class DesktopSessionConnectionTests
 
         session.IsConnected.Should().BeTrue();
         session.ConnectedWorkspacePath.Should().Be(Path.GetFullPath(workspace.Path));
-        session.WorkspaceError.Should().BeNotNull();
+        session.WorkspaceError.Should().NotBeNull();
         session.WorkspaceError.Should().ContainEquivalentOf("file, not a directory");
     }
 

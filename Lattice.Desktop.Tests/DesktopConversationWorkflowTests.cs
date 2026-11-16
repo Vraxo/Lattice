@@ -242,7 +242,7 @@ public sealed class DesktopConversationWorkflowTests
             cards[i].QuerySelector(".user-body")!.TextContent.Should().Be(searchPhrases[i]);
             cards[i].GetAttribute("data-turn-kind").Should().Be("SearchResults");
             cards[i].QuerySelector(".turn-summary")!.TextContent.Should().Contain("matching occurrences of 'WorkspaceRoot'");
-            cards[i].QuerySelector(".evidence-list[tabindex='0']").Should().BeNotNull();
+            cards[i].QuerySelector(".evidence-list[tabindex='0']").Should().NotBeNull();
         }
 
         cards[5].GetAttribute("data-turn-kind").Should().Be("AmbiguousInput");
@@ -255,7 +255,7 @@ public sealed class DesktopConversationWorkflowTests
             card.QuerySelector(".user-body")!.TextContent.Should().Be(inspectPhrases[i]);
             card.GetAttribute("data-turn-kind").Should().Be("FileInspected");
             card.QuerySelector(".file-path")!.TextContent.Should().Be("Lattice/WorkspaceRoot.cs");
-            card.QuerySelector(".file-contents[tabindex='0']").Should().BeNotNull();
+            card.QuerySelector(".file-contents[tabindex='0']").Should().NotBeNull();
             card.QuerySelector(".file-contents")!.TextContent.Should().Contain("public sealed class WorkspaceRoot");
         }
 

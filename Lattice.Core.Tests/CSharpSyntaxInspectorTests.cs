@@ -30,7 +30,7 @@ public sealed class CSharpSyntaxInspectorTests
         Result<SyntaxInspection> result = CSharpSyntaxInspector.Inspect("class Foo {");
         result.IsSuccess.Should().BeTrue();
         result.Value.IsValid.Should().BeFalse();
-        result.Value.Diagnostics.Should().BeNotEmpty();
+        result.Value.Diagnostics.Should().NotBeEmpty();
     }
 
     [Fact]

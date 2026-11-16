@@ -29,7 +29,7 @@ public sealed class ConversationalPhraseRoutingTests
         entry.Kind.Should().Be(DesktopTurnKind.SearchResults);
         entry.SearchQuery.Should().Be("WorkspaceRoot");
         entry.CapturedValue.Should().Be("WorkspaceRoot");
-        entry.MatchedPatternId.Should().BeNotNull();
+        entry.MatchedPatternId.Should().NotBeNull();
         entry.SafeEvidence.Length.Should().Be(2);
     }
 
@@ -61,7 +61,7 @@ public sealed class ConversationalPhraseRoutingTests
         entry.Kind.Should().Be(DesktopTurnKind.FileInspected);
         entry.InspectedRelativePath.Should().Be("Lattice/WorkspaceRoot.cs");
         entry.CapturedValue.Should().Be("Lattice/WorkspaceRoot.cs");
-        entry.MatchedPatternId.Should().BeNotNull();
+        entry.MatchedPatternId.Should().NotBeNull();
         entry.FileContents.Should().Be(expectedSource);
     }
 
