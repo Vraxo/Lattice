@@ -5,18 +5,18 @@ public sealed class ToolIdTests
     [Fact]
     public void RejectsEmptyValue()
     {
-        Assert.Throws<ArgumentException>(() => new ToolId(string.Empty));
+        FluentActions.Invoking(() => new ToolId(string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void IdsWithSameValueAreEqual()
     {
-        Assert.Equal(new ToolId("calculator"), new ToolId("calculator"));
+        new ToolId("calculator").Should().Be(new ToolId("calculator"));
     }
 
     [Fact]
     public void IdsWithDifferentValueAreNotEqual()
     {
-        Assert.NotEqual(new ToolId("calculator"), new ToolId("clock"));
+        new ToolId("clock").Should().NotBe(new ToolId("calculator"));
     }
 }

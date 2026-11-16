@@ -10,39 +10,39 @@ public sealed class TextLineTests
     public void AcceptsKnownTerminators(string terminator)
     {
         TextLine line = new("content", terminator);
-        Assert.Equal("content", line.Content);
-        Assert.Equal(terminator, line.Terminator);
-        Assert.Equal("content" + terminator, line.Text);
+        line.Content.Should().Be("content");
+        line.Terminator.Should().Be(terminator);
+        line.Text.Should().Be("content" + terminator);
     }
 
     [Fact]
     public void RejectsUnknownTerminator()
     {
-        Assert.Throws<ArgumentException>(() => new TextLine("content", "\n\n"));
+        FluentActions.Invoking(() => new TextLine("content", "\n\n")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void RejectsNullContent()
     {
-        Assert.Throws<ArgumentNullException>(() => new TextLine(null!, "\n"));
+        FluentActions.Invoking(() => new TextLine(null!, "\n")).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void EmptyLineWithNoTerminatorIsValid()
     {
         TextLine line = new(string.Empty, string.Empty);
-        Assert.Equal(string.Empty, line.Text);
+        line.Text.Should().Be(string.Empty);
     }
 
     [Fact]
     public void LinesWithSameContentAndTerminatorAreEqual()
     {
-        Assert.Equal(new TextLine("a", "\n"), new TextLine("a", "\n"));
+        new TextLine("a", "\n").Should().Be(new TextLine("a", "\n"));
     }
 
     [Fact]
     public void LinesDifferingOnlyByTerminatorAreNotEqual()
     {
-        Assert.NotEqual(new TextLine("a", "\n"), new TextLine("a", "\r\n"));
+        new TextLine("a", "\r\n").Should().NotBe(new TextLine("a", "\n"));
     }
 }

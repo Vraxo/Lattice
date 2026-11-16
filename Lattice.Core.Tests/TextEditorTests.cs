@@ -7,8 +7,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 2), "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nX\nc\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nX\nc\n");
     }
 
     [Fact]
@@ -16,8 +16,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("keep1\nold1\nold2\nkeep2\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 3), "new\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("keep1\nnew\nkeep2\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("keep1\nnew\nkeep2\n");
     }
 
     [Fact]
@@ -27,8 +27,8 @@ public sealed class TextEditorTests
         // the next line. Supplying the terminator is the caller's responsibility.
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 2), "X");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nXc\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nXc\n");
     }
 
     [Fact]
@@ -36,8 +36,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\nc\nd\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 3), "X\nY\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nX\nY\nd\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nX\nY\nd\n");
     }
 
     [Fact]
@@ -45,8 +45,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Replace(document, LineRange.At(1), "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nX\nb\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nX\nb\n");
     }
 
     [Fact]
@@ -54,8 +54,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(0, 5), "X\n");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(DocumentErrorCodes.RangeOutOfBounds);
     }
 
     [Fact]
@@ -63,8 +63,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         Result<TextDocument> result = TextEditor.Delete(document, new LineRange(1, 2));
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nc\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nc\n");
     }
 
     [Fact]
@@ -72,8 +72,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         Result<TextDocument> result = TextEditor.Delete(document, new LineRange(2, 3));
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nb\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nb\n");
     }
 
     [Fact]
@@ -81,9 +81,9 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Delete(document, new LineRange(0, 2));
-        Assert.True(result.IsSuccess);
-        Assert.Equal(0, result.Value.LineCount);
-        Assert.Equal(string.Empty, result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.LineCount.Should().Be(0);
+        result.Value.ToText().Should().Be(string.Empty);
     }
 
     [Fact]
@@ -91,8 +91,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Delete(document, LineRange.At(1));
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nb\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nb\n");
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Insert(document, 0, "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("X\na\nb\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("X\na\nb\n");
     }
 
     [Fact]
@@ -109,8 +109,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Insert(document, 1, "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nX\nb\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nX\nb\n");
     }
 
     [Fact]
@@ -118,8 +118,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\n");
         Result<TextDocument> result = TextEditor.Insert(document, 2, "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nb\nX\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nb\nX\n");
     }
 
     [Fact]
@@ -127,8 +127,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse(string.Empty);
         Result<TextDocument> result = TextEditor.Insert(document, 0, "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("X\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("X\n");
     }
 
     [Fact]
@@ -136,8 +136,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\n");
         Result<TextDocument> result = TextEditor.Insert(document, 5, "X\n");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(DocumentErrorCodes.RangeOutOfBounds);
     }
 
     [Fact]
@@ -145,8 +145,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\n");
         Result<TextDocument> result = TextEditor.Insert(document, -1, "X\n");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(DocumentErrorCodes.RangeOutOfBounds, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(DocumentErrorCodes.RangeOutOfBounds);
     }
 
     [Fact]
@@ -154,8 +154,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\r\nb\r\nc\r\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 2), "X\r\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\r\nX\r\nc\r\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\r\nX\r\nc\r\n");
     }
 
     [Fact]
@@ -163,8 +163,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\r\nb\nc\r\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 2), "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\r\nX\nc\r\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\r\nX\nc\r\n");
     }
 
     [Fact]
@@ -172,8 +172,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(1, 2), "X\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("a\nX\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("a\nX\n");
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         TextEditor.Replace(document, new LineRange(1, 2), "X\n");
-        Assert.Equal("a\nb\nc\n", document.ToText());
+        document.ToText().Should().Be("a\nb\nc\n");
     }
 
     [Fact]
@@ -189,8 +189,8 @@ public sealed class TextEditorTests
     {
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         Result<TextDocument> result = TextEditor.Replace(document, new LineRange(0, 3), "X\nY\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("X\nY\n", result.Value.ToText());
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ToText().Should().Be("X\nY\n");
     }
 
     [Fact]
@@ -199,22 +199,22 @@ public sealed class TextEditorTests
         TextDocument document = TextDocument.Parse("a\nb\nc\n");
         Result<TextDocument> first = TextEditor.Replace(document, new LineRange(1, 2), "X\n");
         Result<TextDocument> second = TextEditor.Replace(document, new LineRange(1, 2), "X\n");
-        Assert.Equal(first.Value, second.Value);
+        second.Value.Should().Be(first.Value);
     }
 
     [Fact]
     public void NullDocumentIsRejected()
     {
-        Assert.Throws<ArgumentNullException>(() => TextEditor.Replace(null!, LineRange.Empty, "X"));
-        Assert.Throws<ArgumentNullException>(() => TextEditor.Insert(null!, 0, "X"));
-        Assert.Throws<ArgumentNullException>(() => TextEditor.Delete(null!, LineRange.Empty));
+        FluentActions.Invoking(() => TextEditor.Replace(null!, LineRange.Empty, "X")).Should().ThrowExactly<ArgumentNullException>();
+        FluentActions.Invoking(() => TextEditor.Insert(null!, 0, "X")).Should().ThrowExactly<ArgumentNullException>();
+        FluentActions.Invoking(() => TextEditor.Delete(null!, LineRange.Empty)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void NullReplacementIsRejected()
     {
         TextDocument document = TextDocument.Parse("a\n");
-        Assert.Throws<ArgumentNullException>(() => TextEditor.Replace(document, LineRange.Empty, null!));
-        Assert.Throws<ArgumentNullException>(() => TextEditor.Insert(document, 0, null!));
+        FluentActions.Invoking(() => TextEditor.Replace(document, LineRange.Empty, null!)).Should().ThrowExactly<ArgumentNullException>();
+        FluentActions.Invoking(() => TextEditor.Insert(document, 0, null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 }

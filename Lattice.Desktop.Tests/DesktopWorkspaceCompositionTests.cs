@@ -11,21 +11,19 @@ public sealed class DesktopWorkspaceCompositionTests
         using DesktopTempWorkspace workspace = new();
         WorkspaceConnectionResult result = WorkspaceConnector.Connect(workspace.Path);
 
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         ConnectedWorkspace connected = result.Workspace!;
 
-        Assert.Equal(ToolPermissionPolicy.ReadOnlyOnly, connected.Policy);
-        Assert.True(connected.Policy.IsAllowed(ToolSideEffect.ReadOnly));
-        Assert.False(connected.Policy.IsAllowed(ToolSideEffect.LocalWrite));
-        Assert.False(connected.Policy.IsAllowed(ToolSideEffect.CommandExecution));
-        Assert.False(connected.Policy.IsAllowed(ToolSideEffect.ExternalSideEffect));
+        connected.Policy.Should().Be(ToolPermissionPolicy.ReadOnlyOnly);
+        connected.Policy.IsAllowed(ToolSideEffect.ReadOnly).Should().BeTrue();
+        connected.Policy.IsAllowed(ToolSideEffect.LocalWrite).Should().BeFalse();
+        connected.Policy.IsAllowed(ToolSideEffect.CommandExecution).Should().BeFalse();
+        connected.Policy.IsAllowed(ToolSideEffect.ExternalSideEffect).Should().BeFalse();
 
-        Assert.All(
-            connected.Registry.Tools,
-            tool => Assert.Equal(ToolSideEffect.ReadOnly, tool.Descriptor.SideEffect));
-        Assert.False(connected.Registry.TryResolve(WriteFileTool.Id, out _));
-        Assert.False(connected.Registry.TryResolve(MarkdownEditTool.Id, out _));
-        Assert.False(connected.Registry.TryResolve(GuardedCommandTool.Id, out _));
+        connected.Registry.Tools.Should().AllSatisfy(tool => tool.Descriptor.SideEffect.Should().Be(ToolSideEffect.ReadOnly));
+        connected.Registry.TryResolve(WriteFileTool.Id, out _).Should().BeFalse();
+        connected.Registry.TryResolve(MarkdownEditTool.Id, out _).Should().BeFalse();
+        connected.Registry.TryResolve(GuardedCommandTool.Id, out _).Should().BeFalse();
     }
 
     [Fact]
@@ -40,9 +38,9 @@ public sealed class DesktopWorkspaceCompositionTests
         {
             WorkspaceConnectionResult result = WorkspaceConnector.Connect(linkRoot);
 
-            Assert.False(result.IsSuccess);
-            Assert.Null(result.Workspace);
-            Assert.Contains("reparse point", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+            result.IsSuccess.Should().BeFalse();
+            result.Workspace.Should().BeNull();
+            result.ErrorMessage.Should().ContainEquivalentOf("reparse point");
         }
         finally
         {
@@ -82,6 +80,6 @@ public sealed class DesktopWorkspaceCompositionTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}");
     }
 }

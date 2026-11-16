@@ -23,8 +23,6 @@ public sealed class ActionProposalExhaustivenessTests
             .Where(type => !type.IsAbstract && typeof(ActionProposal).IsAssignableFrom(type))
             .Select(type => type.Name)
             .OrderBy(name => name, StringComparer.Ordinal),];
-        Assert.True(
-            Expected.SequenceEqual(actual, StringComparer.Ordinal),
-            $"Expected: {string.Join(", ", Expected)}{Environment.NewLine}Actual: {string.Join(", ", actual)}");
+        Expected.SequenceEqual(actual, StringComparer.Ordinal).Should().BeTrue("{0}", $"Expected: {string.Join(", ", Expected)}{Environment.NewLine}Actual: {string.Join(", ", actual)}");
     }
 }

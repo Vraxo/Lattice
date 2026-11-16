@@ -14,9 +14,9 @@ public sealed class SystemProcessRunnerTests
             ["--version"],
             workspace.Path,
             TimeSpan.FromSeconds(60));
-        Assert.False(outcome.TimedOut);
-        Assert.Equal(0, outcome.ExitCode);
-        Assert.False(string.IsNullOrWhiteSpace(outcome.StandardOutput));
+        outcome.TimedOut.Should().BeFalse();
+        outcome.ExitCode.Should().Be(0);
+        string.IsNullOrWhiteSpace(outcome.StandardOutput).Should().BeFalse();
     }
 
     [Fact]
@@ -29,8 +29,8 @@ public sealed class SystemProcessRunnerTests
             ["--definitely-not-a-real-option"],
             workspace.Path,
             TimeSpan.FromSeconds(60));
-        Assert.False(outcome.TimedOut);
-        Assert.NotEqual(0, outcome.ExitCode);
+        outcome.TimedOut.Should().BeFalse();
+        outcome.ExitCode.Should().NotBe(0);
     }
 
     [Fact]
@@ -46,8 +46,8 @@ public sealed class SystemProcessRunnerTests
             workspace.Path,
             TimeSpan.FromSeconds(60),
             source.Token);
-        Assert.True(outcome.Cancelled);
-        Assert.False(outcome.TimedOut);
+        outcome.Cancelled.Should().BeTrue();
+        outcome.TimedOut.Should().BeFalse();
     }
 
     [Fact]
@@ -67,8 +67,8 @@ public sealed class SystemProcessRunnerTests
             workspace.Path,
             TimeSpan.FromSeconds(60),
             source.Token);
-        Assert.True(outcome.Cancelled);
-        Assert.False(outcome.TimedOut);
+        outcome.Cancelled.Should().BeTrue();
+        outcome.TimedOut.Should().BeFalse();
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class SystemProcessRunnerTests
             ["--info"],
             workspace.Path,
             TimeSpan.FromMilliseconds(1));
-        Assert.True(outcome.TimedOut);
-        Assert.Equal(-1, outcome.ExitCode);
+        outcome.TimedOut.Should().BeTrue();
+        outcome.ExitCode.Should().Be(-1);
     }
 }

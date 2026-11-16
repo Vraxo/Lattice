@@ -14,27 +14,27 @@ public sealed class AgentRunContextTests
         AgentTurnResult first = loop.Run(original, context, firstStatement);
         AgentTurnResult second = loop.Run(first.Session, context, secondStatement);
 
-        Assert.Equal(TurnOutcome.FactRecorded, first.Outcome);
-        Assert.Single(first.Session.Facts);
-        Assert.Equal(TurnOutcome.StepLimitExceeded, second.Outcome);
-        Assert.Same(first.Session, second.Session);
-        Assert.Single(second.Session.Facts);
-        Assert.Equal(1, context.MaxSteps);
-        Assert.Equal(1, context.StepsUsed);
-        Assert.Equal(0, context.RemainingSteps);
-        Assert.Contains("1-step limit", second.Response, StringComparison.Ordinal);
+        first.Outcome.Should().Be(TurnOutcome.FactRecorded);
+        first.Session.Facts.Should().ContainSingle();
+        second.Outcome.Should().Be(TurnOutcome.StepLimitExceeded);
+        second.Session.Should().BeSameAs(first.Session);
+        second.Session.Facts.Should().ContainSingle();
+        context.MaxSteps.Should().Be(1);
+        context.StepsUsed.Should().Be(1);
+        context.RemainingSteps.Should().Be(0);
+        second.Response.Should().Contain("1-step limit");
     }
 
     [Fact]
     public void RejectsNonPositiveMaximumSteps()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AgentRunContext(0));
+        FluentActions.Invoking(() => new AgentRunContext(0)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     private static IControlledStatement Parse(string text)
     {
         Result<IControlledStatement> parsed = ControlledLanguageParser.Parse(text);
-        Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+        parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         return parsed.Value;
     }
 }

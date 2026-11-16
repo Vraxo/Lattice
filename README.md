@@ -24,6 +24,12 @@ dotnet test Lattice.slnx --configuration Release --no-build
 dotnet run --project Lattice.Desktop/Lattice.Desktop.csproj --configuration Release
 ```
 
+Both test projects use **xUnit** for test discovery/execution and **AwesomeAssertions** for assertions.
+Use fluent `Should()` assertions for new tests: `Equal` for ordered sequences, `ThrowExactly<T>`
+when the exact exception type matters, and explicit case-sensitive or case-insensitive string
+assertions as appropriate. Decimal-precision checks round both values before comparing to preserve
+their original rounding semantics.
+
 The legacy controlled-statement console harness remains available separately:
 
 ```powershell

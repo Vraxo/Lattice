@@ -22,8 +22,8 @@ public sealed class WorkspaceFileAccessEncodingTests : IDisposable
     {
         string path = _workspace.WriteFile("a.txt", "old\n");
         Result result = WorkspaceFileAccess.Write(path, "a.txt", "old\n", "new\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("new\n", File.ReadAllText(path));
+        result.IsSuccess.Should().BeTrue();
+        File.ReadAllText(path).Should().Be("new\n");
     }
 
     [Fact]
@@ -32,10 +32,10 @@ public sealed class WorkspaceFileAccessEncodingTests : IDisposable
         byte[] before = [0xEF, 0xBB, 0xBF, .. Encoding.UTF8.GetBytes("old\n")];
         string path = WriteBytes("a.txt", before);
         Result result = WorkspaceFileAccess.Write(path, "a.txt", "old\n", "new\n");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.EncodingPreservationUnsupported, result.Error!.Code);
-        Assert.True(before.SequenceEqual(File.ReadAllBytes(path)));
-        Assert.False(File.Exists(path + WorkspaceFileAccess.BackupSuffix));
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.EncodingPreservationUnsupported);
+        before.SequenceEqual(File.ReadAllBytes(path)).Should().BeTrue();
+        File.Exists(path + WorkspaceFileAccess.BackupSuffix).Should().BeFalse();
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public sealed class WorkspaceFileAccessEncodingTests : IDisposable
     {
         string path = WriteBytes("a.txt", [0xC3, 0x28]);
         Result result = WorkspaceFileAccess.Write(path, "a.txt", "ignored", "ignored");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.EncodingInvalid, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.EncodingInvalid);
     }
 
     [Fact]
@@ -52,8 +52,8 @@ public sealed class WorkspaceFileAccessEncodingTests : IDisposable
     {
         string path = _workspace.WriteFile("a.txt", "old\n");
         Result result = WorkspaceFileAccess.Write(path, "a.txt", "old\n", "new\n");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("old\n", File.ReadAllText(path + WorkspaceFileAccess.BackupSuffix));
+        result.IsSuccess.Should().BeTrue();
+        File.ReadAllText(path + WorkspaceFileAccess.BackupSuffix).Should().Be("old\n");
     }
 
     private string WriteBytes(string relative, byte[] bytes)

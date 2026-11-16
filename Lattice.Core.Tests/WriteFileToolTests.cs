@@ -11,9 +11,9 @@ public sealed class WriteFileToolTests
 
         // ReadOnlyOnly does not grant LocalWrite, so the executor must not invoke the tool.
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("a.txt", "world", "there"), ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
-        Assert.Equal("hello world", File.ReadAllText(file));
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.permission.denied");
+        File.ReadAllText(file).Should().Be("hello world");
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public sealed class WriteFileToolTests
         string file = workspace.WriteFile("a.txt", "hello world");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolExecutor.Execute(tool, Patch("a.txt", "world", "there"), ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(File.Exists(file + WriteFileTool.BackupSuffix));
+        File.Exists(file + WriteFileTool.BackupSuffix).Should().BeFalse();
     }
 
     [Fact]
@@ -33,9 +33,9 @@ public sealed class WriteFileToolTests
         string file = workspace.WriteFile("a.txt", "alpha\nbeta\ngamma\n");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("a.txt", "beta", "BETA"), ToolPermissionPolicy.AllowAll);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Equal("alpha\nBETA\ngamma\n", File.ReadAllText(file));
-        Assert.Equal("@@ -1,3 +1,3 @@\n alpha\n-beta\n+BETA\n gamma\n", invocation.Result.Output!.AsString());
+        invocation.Result.IsSuccess.Should().BeTrue();
+        File.ReadAllText(file).Should().Be("alpha\nBETA\ngamma\n");
+        invocation.Result.Output!.AsString().Should().Be("@@ -1,3 +1,3 @@\n alpha\n-beta\n+BETA\n gamma\n");
     }
 
     [Fact]
@@ -45,8 +45,8 @@ public sealed class WriteFileToolTests
         string file = workspace.WriteFile("a.txt", "original");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolExecutor.Execute(tool, Patch("a.txt", "original", "changed"), ToolPermissionPolicy.AllowAll);
-        Assert.True(File.Exists(file + WriteFileTool.BackupSuffix));
-        Assert.Equal("original", File.ReadAllText(file + WriteFileTool.BackupSuffix));
+        File.Exists(file + WriteFileTool.BackupSuffix).Should().BeTrue();
+        File.ReadAllText(file + WriteFileTool.BackupSuffix).Should().Be("original");
     }
 
     [Fact]
@@ -56,9 +56,9 @@ public sealed class WriteFileToolTests
         string file = workspace.WriteFile("a.txt", "hello");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("a.txt", "missing", "x"), ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PatchContextNotFound, invocation.Result.Error!.Code);
-        Assert.Equal("hello", File.ReadAllText(file));
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.PatchContextNotFound);
+        File.ReadAllText(file).Should().Be("hello");
     }
 
     [Fact]
@@ -68,9 +68,9 @@ public sealed class WriteFileToolTests
         string file = workspace.WriteFile("a.txt", "x y x");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("a.txt", "x", "z"), ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PatchContextAmbiguous, invocation.Result.Error!.Code);
-        Assert.Equal("x y x", File.ReadAllText(file));
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.PatchContextAmbiguous);
+        File.ReadAllText(file).Should().Be("x y x");
     }
 
     [Fact]
@@ -79,8 +79,8 @@ public sealed class WriteFileToolTests
         using TempWorkspace workspace = new();
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("../outside.txt", "a", "b"), ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -89,8 +89,8 @@ public sealed class WriteFileToolTests
         using TempWorkspace workspace = new();
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("nope.txt", "a", "b"), ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.PathNotFound);
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public sealed class WriteFileToolTests
         workspace.WriteFile("a.txt", "hello");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("a.txt", string.Empty, "x"), ToolPermissionPolicy.AllowAll);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.WriteFailed, invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be(FileToolErrorCodes.WriteFailed);
     }
 
     [Fact]
@@ -119,8 +119,8 @@ public sealed class WriteFileToolTests
 
         // The argument validator rejects the type mismatch before the tool is invoked, so the
         // error comes from the executor boundary, not from the tool's own fallback.
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.argument.type", invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.argument.type");
     }
 
     [Fact]
@@ -130,8 +130,8 @@ public sealed class WriteFileToolTests
         string file = workspace.WriteFile("a.txt", "keep remove");
         WriteFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolInvocation invocation = ToolExecutor.Execute(tool, Patch("a.txt", " remove", string.Empty), ToolPermissionPolicy.AllowAll);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Equal("keep", File.ReadAllText(file));
+        invocation.Result.IsSuccess.Should().BeTrue();
+        File.ReadAllText(file).Should().Be("keep");
     }
 
     private static ArgumentBag Patch(string path, string find, string replace)

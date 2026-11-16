@@ -24,13 +24,13 @@ public sealed class ConversationalPhraseRoutingTests
         session.MessageInput = message;
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(message, entry.RequestText);
-        Assert.Equal(DesktopTurnKind.SearchResults, entry.Kind);
-        Assert.Equal("WorkspaceRoot", entry.SearchQuery);
-        Assert.Equal("WorkspaceRoot", entry.CapturedValue);
-        Assert.NotNull(entry.MatchedPatternId);
-        Assert.Equal(2, entry.SafeEvidence.Length);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.RequestText.Should().Be(message);
+        entry.Kind.Should().Be(DesktopTurnKind.SearchResults);
+        entry.SearchQuery.Should().Be("WorkspaceRoot");
+        entry.CapturedValue.Should().Be("WorkspaceRoot");
+        entry.MatchedPatternId.Should().NotBeNull();
+        entry.SafeEvidence.Length.Should().Be(2);
     }
 
     [Theory]
@@ -56,13 +56,13 @@ public sealed class ConversationalPhraseRoutingTests
         session.MessageInput = message;
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(message, entry.RequestText);
-        Assert.Equal(DesktopTurnKind.FileInspected, entry.Kind);
-        Assert.Equal("Lattice/WorkspaceRoot.cs", entry.InspectedRelativePath);
-        Assert.Equal("Lattice/WorkspaceRoot.cs", entry.CapturedValue);
-        Assert.NotNull(entry.MatchedPatternId);
-        Assert.Equal(expectedSource, entry.FileContents);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.RequestText.Should().Be(message);
+        entry.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        entry.InspectedRelativePath.Should().Be("Lattice/WorkspaceRoot.cs");
+        entry.CapturedValue.Should().Be("Lattice/WorkspaceRoot.cs");
+        entry.MatchedPatternId.Should().NotBeNull();
+        entry.FileContents.Should().Be(expectedSource);
     }
 
     [Fact]
@@ -83,11 +83,11 @@ public sealed class ConversationalPhraseRoutingTests
         session.MessageInput = "Show me ../outside.txt.";
         await session.SendMessageAsync();
 
-        Assert.Equal(2, session.Entries.Count);
-        Assert.Equal(DesktopTurnKind.FileInspected, session.Entries[0].Kind);
-        Assert.Equal("docs/Architecture Notes.md", session.Entries[0].InspectedRelativePath);
-        Assert.Equal("# Notes\n", session.Entries[0].FileContents);
+        session.Entries.Count.Should().Be(2);
+        session.Entries[0].Kind.Should().Be(DesktopTurnKind.FileInspected);
+        session.Entries[0].InspectedRelativePath.Should().Be("docs/Architecture Notes.md");
+        session.Entries[0].FileContents.Should().Be("# Notes\n");
 
-        Assert.Equal(DesktopTurnKind.AccessRejected, session.Entries[1].Kind);
+        session.Entries[1].Kind.Should().Be(DesktopTurnKind.AccessRejected);
     }
 }

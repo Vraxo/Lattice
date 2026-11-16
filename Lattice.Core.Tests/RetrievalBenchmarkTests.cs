@@ -33,9 +33,9 @@ public sealed class RetrievalBenchmarkTests
         KnowledgeLookup lookup = Lookup();
         ImmutableArray<BenchmarkEntry> entries = [.. Entries().Where(entry => entry.QueryClass == queryClass)];
         Metrics metrics = Measure(lookup, entries);
-        BaselineRow baseline = Assert.Single(Baseline(), row => row.QueryClass == queryClass);
-        Assert.Equal(baseline.Precision, metrics.Precision, precision: 6);
-        Assert.Equal(baseline.Recall, metrics.Recall, precision: 6);
+        BaselineRow baseline = Baseline().Should().ContainSingle(row => row.QueryClass == queryClass).Which;
+        Math.Round(metrics.Precision, 6).Should().Be(Math.Round(baseline.Precision, 6));
+        Math.Round(metrics.Recall, 6).Should().Be(Math.Round(baseline.Recall, 6));
     }
 
     [Fact]
@@ -44,10 +44,10 @@ public sealed class RetrievalBenchmarkTests
         KnowledgeLookup lookup = Lookup();
         Metrics exact = Measure(lookup, Entries().Where(e => e.QueryClass == "exact-symbol"));
         Metrics alias = Measure(lookup, Entries().Where(e => e.QueryClass == "alias"));
-        Assert.Equal(1.0, exact.Precision, precision: 6);
-        Assert.Equal(1.0, exact.Recall, precision: 6);
-        Assert.Equal(1.0, alias.Precision, precision: 6);
-        Assert.Equal(1.0, alias.Recall, precision: 6);
+        Math.Round(exact.Precision, 6).Should().Be(1.0);
+        Math.Round(exact.Recall, 6).Should().Be(1.0);
+        Math.Round(alias.Precision, 6).Should().Be(1.0);
+        Math.Round(alias.Recall, 6).Should().Be(1.0);
     }
 
     [Fact]
@@ -58,14 +58,14 @@ public sealed class RetrievalBenchmarkTests
         KnowledgeLookup lookup = Lookup();
         Metrics related = Measure(lookup, Entries().Where(e => e.QueryClass == "related-concept"));
         Metrics documentation = Measure(lookup, Entries().Where(e => e.QueryClass == "documentation"));
-        Assert.Equal(0.0, related.Recall, precision: 6);
-        Assert.Equal(0.0, documentation.Recall, precision: 6);
+        Math.Round(related.Recall, 6).Should().Be(0.0);
+        Math.Round(documentation.Recall, 6).Should().Be(0.0);
     }
 
     [Fact]
     public void EveryEntryHasANonEmptyExpectedSet()
     {
-        Assert.All(Entries(), entry => Assert.NotEmpty(entry.ExpectedIds));
+        Entries().Should().AllSatisfy(entry => entry.ExpectedIds.Should().NotBeEmpty());
     }
 
     [Fact]
@@ -73,11 +73,7 @@ public sealed class RetrievalBenchmarkTests
     {
         KnowledgePackage package = Package();
         HashSet<string> ids = [.. package.Concepts.Select(concept => concept.Id)];
-        Assert.All(
-            Entries(),
-            entry => Assert.All(
-                entry.ExpectedIds,
-                id => Assert.Contains(id, ids)));
+        Entries().Should().AllSatisfy(entry => entry.ExpectedIds.Should().AllSatisfy(id => ids.Should().Contain(id)));
     }
 
     [Fact]
@@ -85,7 +81,7 @@ public sealed class RetrievalBenchmarkTests
     {
         HashSet<string> corpusClasses = [.. Entries().Select(entry => entry.QueryClass)];
         HashSet<string> baselineClasses = [.. Baseline().Select(row => row.QueryClass)];
-        Assert.True(corpusClasses.SetEquals(baselineClasses));
+        corpusClasses.SetEquals(baselineClasses).Should().BeTrue();
     }
 
     [Fact]
@@ -100,15 +96,15 @@ public sealed class RetrievalBenchmarkTests
         Metrics alias = MeasureRanked(lookup, Entries().Where(e => e.QueryClass == "alias"));
         Metrics documentation = MeasureRanked(lookup, Entries().Where(e => e.QueryClass == "documentation"));
         Metrics related = MeasureRanked(lookup, Entries().Where(e => e.QueryClass == "related-concept"));
-        Assert.Equal(1.0, exact.Recall, precision: 6);
-        Assert.Equal(1.0, alias.Recall, precision: 6);
-        Assert.True(documentation.Recall > 0.0, "Documentation recall should improve above the 0.0 baseline.");
+        Math.Round(exact.Recall, 6).Should().Be(1.0);
+        Math.Round(alias.Recall, 6).Should().Be(1.0);
+        (documentation.Recall > 0.0).Should().BeTrue("{0}", "Documentation recall should improve above the 0.0 baseline.");
 
         // related-concept stays unserved with this corpus: its queries connect through facts, not
         // concept text. Asserting >= 0 rather than == 0 keeps this test honest if the corpus later
         // adds a query whose words do appear in concept text (lexical, still not traversal). The
         // traversal-absence proof is the next test.
-        Assert.True(related.Recall >= 0.0);
+        (related.Recall >= 0.0).Should().BeTrue();
     }
 
     [Fact]
@@ -118,7 +114,7 @@ public sealed class RetrievalBenchmarkTests
         // text contains those words. If M9.2 had added fact/relation traversal this would match. It
         // must not, because graph traversal is out of scope for M9.2.
         KnowledgeLookup lookup = Lookup();
-        Assert.Empty(lookup.Search("boiling point"));
+        lookup.Search("boiling point").Should().BeEmpty();
     }
 
     [Fact]
@@ -128,9 +124,9 @@ public sealed class RetrievalBenchmarkTests
         double exact = MrrAtFive(lookup, Entries().Where(e => e.QueryClass == "exact-symbol"));
         double alias = MrrAtFive(lookup, Entries().Where(e => e.QueryClass == "alias"));
         double documentation = MrrAtFive(lookup, Entries().Where(e => e.QueryClass == "documentation"));
-        Assert.Equal(1.0, exact, precision: 6);
-        Assert.Equal(1.0, alias, precision: 6);
-        Assert.True(documentation > 0.0);
+        Math.Round(exact, 6).Should().Be(1.0);
+        Math.Round(alias, 6).Should().Be(1.0);
+        (documentation > 0.0).Should().BeTrue();
     }
 
     private static Metrics MeasureRanked(KnowledgeLookup lookup, IEnumerable<BenchmarkEntry> entries)
@@ -223,7 +219,7 @@ public sealed class RetrievalBenchmarkTests
     {
         string path = Path.Combine(AppContext.BaseDirectory, "knowledge", "example.physics", "package.json");
         Result<KnowledgePackage> parsed = KnowledgePackageParser.Parse(File.ReadAllText(path));
-        Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+        parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         return parsed.Value;
     }
 

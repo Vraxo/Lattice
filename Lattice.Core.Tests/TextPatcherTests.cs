@@ -6,9 +6,9 @@ public sealed class TextPatcherTests
     public void AppliesUniqueMatch()
     {
         PatchPreview preview = TextPatcher.Apply("hello world", new TextPatch("world", "there"));
-        Assert.True(preview.IsApplied);
-        Assert.Equal("hello there", preview.PatchedText);
-        Assert.Equal(6, preview.MatchIndex);
+        preview.IsApplied.Should().BeTrue();
+        preview.PatchedText.Should().Be("hello there");
+        preview.MatchIndex.Should().Be(6);
     }
 
     [Fact]
@@ -16,71 +16,71 @@ public sealed class TextPatcherTests
     {
         const string original = "alpha\nbeta\ngamma\n";
         PatchPreview preview = TextPatcher.Apply(original, new TextPatch("beta", "BETA"));
-        Assert.True(preview.IsApplied);
-        Assert.Equal("alpha\nBETA\ngamma\n", preview.PatchedText);
+        preview.IsApplied.Should().BeTrue();
+        preview.PatchedText.Should().Be("alpha\nBETA\ngamma\n");
 
         // Everything outside the replaced span must be byte-identical.
-        Assert.StartsWith("alpha\n", preview.PatchedText, StringComparison.Ordinal);
-        Assert.EndsWith("\ngamma\n", preview.PatchedText, StringComparison.Ordinal);
+        preview.PatchedText.Should().StartWith("alpha\n");
+        preview.PatchedText.Should().EndWith("\ngamma\n");
     }
 
     [Fact]
     public void StaleContextIsRejected()
     {
         PatchPreview preview = TextPatcher.Apply("hello world", new TextPatch("goodbye", "hi"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextNotFound, preview.Status);
-        Assert.Null(preview.PatchedText);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextNotFound);
+        preview.PatchedText.Should().BeNull();
     }
 
     [Fact]
     public void AmbiguousContextIsRejected()
     {
         PatchPreview preview = TextPatcher.Apply("a b a", new TextPatch("a", "x"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextAmbiguous, preview.Status);
-        Assert.Null(preview.PatchedText);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextAmbiguous);
+        preview.PatchedText.Should().BeNull();
     }
 
     [Fact]
     public void ContextPresentTwiceIsRejectedEvenIfAdjacent()
     {
         PatchPreview preview = TextPatcher.Apply("aaaa", new TextPatch("aa", "b"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextAmbiguous, preview.Status);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextAmbiguous);
     }
 
     [Fact]
     public void DeletingTextRemovesIt()
     {
         PatchPreview preview = TextPatcher.Apply("keep delete keep2", new TextPatch(" delete", string.Empty));
-        Assert.True(preview.IsApplied);
-        Assert.Equal("keep keep2", preview.PatchedText);
+        preview.IsApplied.Should().BeTrue();
+        preview.PatchedText.Should().Be("keep keep2");
     }
 
     [Fact]
     public void MatchingIsCaseSensitive()
     {
         PatchPreview preview = TextPatcher.Apply("Hello", new TextPatch("hello", "hi"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextNotFound, preview.Status);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextNotFound);
     }
 
     [Fact]
     public void MatchAtStartIsApplied()
     {
         PatchPreview preview = TextPatcher.Apply("start end", new TextPatch("start", "begin"));
-        Assert.True(preview.IsApplied);
-        Assert.Equal(0, preview.MatchIndex);
-        Assert.Equal("begin end", preview.PatchedText);
+        preview.IsApplied.Should().BeTrue();
+        preview.MatchIndex.Should().Be(0);
+        preview.PatchedText.Should().Be("begin end");
     }
 
     [Fact]
     public void EmptyOriginalCannotContainContext()
     {
         PatchPreview preview = TextPatcher.Apply(string.Empty, new TextPatch("a", "b"));
-        Assert.False(preview.IsApplied);
-        Assert.Equal(PatchStatus.ContextNotFound, preview.Status);
+        preview.IsApplied.Should().BeFalse();
+        preview.Status.Should().Be(PatchStatus.ContextNotFound);
     }
 
     [Fact]
@@ -88,8 +88,8 @@ public sealed class TextPatcherTests
     {
         // Replacing "a" with "aa" must not then match the inserted text.
         PatchPreview preview = TextPatcher.Apply("a", new TextPatch("a", "aa"));
-        Assert.True(preview.IsApplied);
-        Assert.Equal("aa", preview.PatchedText);
+        preview.IsApplied.Should().BeTrue();
+        preview.PatchedText.Should().Be("aa");
     }
 
     [Fact]
@@ -98,14 +98,14 @@ public sealed class TextPatcherTests
         TextPatch patch = new("b", "x");
         PatchPreview first = TextPatcher.Apply("abc", patch);
         PatchPreview second = TextPatcher.Apply("abc", patch);
-        Assert.Equal(first.PatchedText, second.PatchedText);
-        Assert.Equal(first.MatchIndex, second.MatchIndex);
+        second.PatchedText.Should().Be(first.PatchedText);
+        second.MatchIndex.Should().Be(first.MatchIndex);
     }
 
     [Fact]
     public void NullInputsThrow()
     {
-        Assert.Throws<ArgumentNullException>(() => TextPatcher.Apply(null!, new TextPatch("a", "b")));
-        Assert.Throws<ArgumentNullException>(() => TextPatcher.Apply("abc", null!));
+        FluentActions.Invoking(() => TextPatcher.Apply(null!, new TextPatch("a", "b"))).Should().ThrowExactly<ArgumentNullException>();
+        FluentActions.Invoking(() => TextPatcher.Apply("abc", null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 }

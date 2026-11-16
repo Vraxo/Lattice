@@ -12,16 +12,16 @@ public sealed class WorkspaceSafetyBoundaryTests
         WorkspaceRoot root = new(workspace.Path);
 
         ToolResult read = new ReadFileTool(root).Execute(PathArguments("src/Example.cs"));
-        Assert.True(read.IsSuccess);
-        Assert.Equal("public sealed class Example { }", read.Output!.AsString());
+        read.IsSuccess.Should().BeTrue();
+        read.Output!.AsString().Should().Be("public sealed class Example { }");
 
         ToolResult search = new FileSearchTool(root).Execute(QueryArguments("Example"));
-        Assert.True(search.IsSuccess);
-        Assert.Equal("src/Example.cs:1: public sealed class Example { }", search.Output!.AsString());
+        search.IsSuccess.Should().BeTrue();
+        search.Output!.AsString().Should().Be("src/Example.cs:1: public sealed class Example { }");
 
         ToolResult list = new ListDirectoryTool(root).Execute(PathArguments("src"));
-        Assert.True(list.IsSuccess);
-        Assert.Equal("Example.cs", list.Output!.AsString());
+        list.IsSuccess.Should().BeTrue();
+        list.Output!.AsString().Should().Be("Example.cs");
     }
 
     [Theory]
@@ -35,16 +35,16 @@ public sealed class WorkspaceSafetyBoundaryTests
         WorkspaceRoot root = new(workspace.Path);
 
         ToolResult read = new ReadFileTool(root).Execute(PathArguments(escapingPath));
-        Assert.False(read.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, read.Error!.Code);
+        read.IsSuccess.Should().BeFalse();
+        read.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
 
         ToolResult list = new ListDirectoryTool(root).Execute(PathArguments(escapingPath));
-        Assert.False(list.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, list.Error!.Code);
+        list.IsSuccess.Should().BeFalse();
+        list.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
 
         ToolResult search = new FileSearchTool(root).Execute(QueryWithPathArguments("needle", escapingPath));
-        Assert.False(search.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, search.Error!.Code);
+        search.IsSuccess.Should().BeFalse();
+        search.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -55,16 +55,16 @@ public sealed class WorkspaceSafetyBoundaryTests
         WorkspaceRoot root = new(workspace.Path);
 
         ToolResult read = new ReadFileTool(root).Execute(PathArguments(fullFilePath));
-        Assert.False(read.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, read.Error!.Code);
+        read.IsSuccess.Should().BeFalse();
+        read.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
 
         ToolResult list = new ListDirectoryTool(root).Execute(PathArguments(workspace.Path));
-        Assert.False(list.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, list.Error!.Code);
+        list.IsSuccess.Should().BeFalse();
+        list.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
 
         ToolResult search = new FileSearchTool(root).Execute(QueryWithPathArguments("needle", workspace.Path));
-        Assert.False(search.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, search.Error!.Code);
+        search.IsSuccess.Should().BeFalse();
+        search.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [SymlinkFact]
@@ -81,16 +81,16 @@ public sealed class WorkspaceSafetyBoundaryTests
         WorkspaceRoot root = new(workspace.Path);
 
         ToolResult directRead = new ReadFileTool(root).Execute(PathArguments("linked.txt"));
-        Assert.False(directRead.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, directRead.Error!.Code);
+        directRead.IsSuccess.Should().BeFalse();
+        directRead.Error!.Code.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
 
         ToolResult search = new FileSearchTool(root).Execute(QueryArguments("needle"));
-        Assert.True(search.IsSuccess);
-        Assert.Equal("ordinary.txt:1: needle-ordinary-inside", search.Output!.AsString());
+        search.IsSuccess.Should().BeTrue();
+        search.Output!.AsString().Should().Be("ordinary.txt:1: needle-ordinary-inside");
 
         ToolResult list = new ListDirectoryTool(root).Execute(PathArguments("."));
-        Assert.True(list.IsSuccess);
-        Assert.Equal("ordinary.txt", list.Output!.AsString());
+        list.IsSuccess.Should().BeTrue();
+        list.Output!.AsString().Should().Be("ordinary.txt");
     }
 
     [SymlinkFact]
@@ -107,28 +107,28 @@ public sealed class WorkspaceSafetyBoundaryTests
         WorkspaceRoot root = new(workspace.Path);
 
         ToolResult readThroughLink = new ReadFileTool(root).Execute(PathArguments("linked-dir/secret.cs"));
-        Assert.False(readThroughLink.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, readThroughLink.Error!.Code);
+        readThroughLink.IsSuccess.Should().BeFalse();
+        readThroughLink.Error!.Code.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
 
         ToolResult readLinkDirItself = new ReadFileTool(root).Execute(PathArguments("linked-dir"));
-        Assert.False(readLinkDirItself.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, readLinkDirItself.Error!.Code);
+        readLinkDirItself.IsSuccess.Should().BeFalse();
+        readLinkDirItself.Error!.Code.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
 
         ToolResult listLinkDir = new ListDirectoryTool(root).Execute(PathArguments("linked-dir"));
-        Assert.False(listLinkDir.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, listLinkDir.Error!.Code);
+        listLinkDir.IsSuccess.Should().BeFalse();
+        listLinkDir.Error!.Code.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
 
         ToolResult searchLinkDir = new FileSearchTool(root).Execute(QueryWithPathArguments("SharedToken", "linked-dir"));
-        Assert.False(searchLinkDir.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, searchLinkDir.Error!.Code);
+        searchLinkDir.IsSuccess.Should().BeFalse();
+        searchLinkDir.Error!.Code.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
 
         ToolResult recursiveSearch = new FileSearchTool(root).Execute(QueryArguments("SharedToken"));
-        Assert.True(recursiveSearch.IsSuccess);
-        Assert.Equal("src/Real.cs:1: public class SharedToken { }", recursiveSearch.Output!.AsString());
+        recursiveSearch.IsSuccess.Should().BeTrue();
+        recursiveSearch.Output!.AsString().Should().Be("src/Real.cs:1: public class SharedToken { }");
 
         ToolResult rootListing = new ListDirectoryTool(root).Execute(PathArguments("."));
-        Assert.True(rootListing.IsSuccess);
-        Assert.Equal("src/", rootListing.Output!.AsString());
+        rootListing.IsSuccess.Should().BeTrue();
+        rootListing.Output!.AsString().Should().Be("src/");
     }
 
     [Fact]
@@ -147,16 +147,16 @@ public sealed class WorkspaceSafetyBoundaryTests
             WorkspaceRoot root = new(workspace.Path);
 
             ToolResult directRead = new ReadFileTool(root).Execute(PathArguments("mount-link/escaped.txt"));
-            Assert.False(directRead.IsSuccess);
-            Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, directRead.Error!.Code);
+            directRead.IsSuccess.Should().BeFalse();
+            directRead.Error!.Code.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
 
             ToolResult search = new FileSearchTool(root).Execute(QueryArguments("reparse-target-token"));
-            Assert.True(search.IsSuccess);
-            Assert.Equal("local.txt:1: reparse-target-token", search.Output!.AsString());
+            search.IsSuccess.Should().BeTrue();
+            search.Output!.AsString().Should().Be("local.txt:1: reparse-target-token");
 
             ToolResult listing = new ListDirectoryTool(root).Execute(PathArguments("."));
-            Assert.True(listing.IsSuccess);
-            Assert.Equal("local.txt", listing.Output!.AsString());
+            listing.IsSuccess.Should().BeTrue();
+            listing.Output!.AsString().Should().Be("local.txt");
         }
         finally
         {
@@ -196,7 +196,7 @@ public sealed class WorkspaceSafetyBoundaryTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}");
     }
 
     private static ArgumentBag PathArguments(string path)

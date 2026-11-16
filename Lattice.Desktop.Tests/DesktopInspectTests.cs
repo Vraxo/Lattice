@@ -18,11 +18,11 @@ public sealed class DesktopInspectTests
         session.RequestInput = "inspect src/Greeter.cs";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.FileInspected, entry.Kind);
-        Assert.Equal("src/Greeter.cs", entry.InspectedRelativePath);
-        Assert.Equal(source, entry.FileContents);
-        Assert.Equal(string.Empty, session.RequestInput);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        entry.InspectedRelativePath.Should().Be("src/Greeter.cs");
+        entry.FileContents.Should().Be(source);
+        session.RequestInput.Should().Be(string.Empty);
     }
 
     [Fact]
@@ -34,10 +34,10 @@ public sealed class DesktopInspectTests
         session.RequestInput = "inspect missing/DoesNotExist.cs";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.MissingFile, entry.Kind);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, entry.ErrorCode);
-        Assert.Contains("was not found", entry.Summary, StringComparison.OrdinalIgnoreCase);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.MissingFile);
+        entry.ErrorCode.Should().Be(FileToolErrorCodes.PathNotFound);
+        entry.Summary.Should().ContainEquivalentOf("was not found");
     }
 
     [Fact]
@@ -50,10 +50,10 @@ public sealed class DesktopInspectTests
         session.RequestInput = "inspect src";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.InspectError, entry.Kind);
-        Assert.Equal(FileToolErrorCodes.NotAFile, entry.ErrorCode);
-        Assert.Contains("directory, not a file", entry.Summary, StringComparison.OrdinalIgnoreCase);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.InspectError);
+        entry.ErrorCode.Should().Be(FileToolErrorCodes.NotAFile);
+        entry.Summary.Should().ContainEquivalentOf("directory, not a file");
     }
 
     [Fact]
@@ -70,11 +70,11 @@ public sealed class DesktopInspectTests
         session.RequestInput = "inspect binary.bin";
         await session.SubmitRequestAsync();
 
-        Assert.Equal(2, session.Entries.Count);
-        Assert.Equal(DesktopTurnKind.InspectError, session.Entries[0].Kind);
-        Assert.Equal(FileToolErrorCodes.FileTooLarge, session.Entries[0].ErrorCode);
-        Assert.Equal(DesktopTurnKind.InspectError, session.Entries[1].Kind);
-        Assert.Equal(FileToolErrorCodes.EncodingInvalid, session.Entries[1].ErrorCode);
+        session.Entries.Count.Should().Be(2);
+        session.Entries[0].Kind.Should().Be(DesktopTurnKind.InspectError);
+        session.Entries[0].ErrorCode.Should().Be(FileToolErrorCodes.FileTooLarge);
+        session.Entries[1].Kind.Should().Be(DesktopTurnKind.InspectError);
+        session.Entries[1].ErrorCode.Should().Be(FileToolErrorCodes.EncodingInvalid);
     }
 
     [Theory]
@@ -89,9 +89,9 @@ public sealed class DesktopInspectTests
         session.RequestInput = request;
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.AccessRejected, entry.Kind);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, entry.ErrorCode);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.AccessRejected);
+        entry.ErrorCode.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -104,9 +104,9 @@ public sealed class DesktopInspectTests
         session.RequestInput = $"inspect {fullFilePath}";
         await session.SubmitRequestAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.AccessRejected, entry.Kind);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, entry.ErrorCode);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.AccessRejected);
+        entry.ErrorCode.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -125,10 +125,10 @@ public sealed class DesktopInspectTests
             session.RequestInput = "inspect linked/secret.txt";
             await session.SubmitRequestAsync();
 
-            DesktopTurnEntry entry = Assert.Single(session.Entries);
-            Assert.Equal(DesktopTurnKind.AccessRejected, entry.Kind);
-            Assert.Equal(FileToolErrorCodes.ReparsePointNotAllowed, entry.ErrorCode);
-            Assert.Null(entry.FileContents);
+            DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+            entry.Kind.Should().Be(DesktopTurnKind.AccessRejected);
+            entry.ErrorCode.Should().Be(FileToolErrorCodes.ReparsePointNotAllowed);
+            entry.FileContents.Should().BeNull();
         }
         finally
         {
@@ -156,10 +156,10 @@ public sealed class DesktopInspectTests
         await component.Find("#message-input").InputAsync("inspect notes.txt");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Single(component.FindAll("#turn-history > li"));
-        Assert.Equal("notes.txt", component.Find(".file-path").TextContent);
-        Assert.Equal(untrustedPayload, component.Find(".file-contents").TextContent);
-        Assert.Empty(component.FindAll(".file-contents script"));
+        component.FindAll("#turn-history > li").Should().ContainSingle();
+        component.Find(".file-path").TextContent.Should().Be("notes.txt");
+        component.Find(".file-contents").TextContent.Should().Be(untrustedPayload);
+        component.FindAll(".file-contents script").Should().BeEmpty();
     }
 
     [Fact]
@@ -178,16 +178,16 @@ public sealed class DesktopInspectTests
         await component.Find("#message-input").InputAsync("inspect src/Program.cs");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Equal("src/Program.cs", component.Find(".file-path").TextContent);
-        Assert.Contains("Console.WriteLine(\"Lattice\");", component.Find(".file-contents").TextContent, StringComparison.Ordinal);
+        component.Find(".file-path").TextContent.Should().Be("src/Program.cs");
+        component.Find(".file-contents").TextContent.Should().Contain("Console.WriteLine(\"Lattice\");");
 
         await component.Find("#message-input").InputAsync("inspect missing.cs");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         var items = component.FindAll("#turn-history > li");
-        Assert.Equal(2, items.Count);
-        Assert.Equal("FileInspected", items[0].GetAttribute("data-turn-kind"));
-        Assert.Equal("MissingFile", items[1].GetAttribute("data-turn-kind"));
+        items.Count.Should().Be(2);
+        items[0].GetAttribute("data-turn-kind").Should().Be("FileInspected");
+        items[1].GetAttribute("data-turn-kind").Should().Be("MissingFile");
     }
 
     private static async Task<DesktopSession> ConnectSessionAsync(string workspacePath)
@@ -197,7 +197,7 @@ public sealed class DesktopInspectTests
             WorkspacePathInput = workspacePath,
         };
         await session.ConnectAsync();
-        Assert.True(session.IsConnected);
+        session.IsConnected.Should().BeTrue();
         return session;
     }
 
@@ -230,6 +230,6 @@ public sealed class DesktopInspectTests
 
         using Process process = Process.Start(startInfo)!;
         process.WaitForExit();
-        Assert.True(process.ExitCode == 0, $"mklink /J failed: {process.StandardError.ReadToEnd()}");
+        (process.ExitCode == 0).Should().BeTrue("{0}", $"mklink /J failed: {process.StandardError.ReadToEnd()}");
     }
 }

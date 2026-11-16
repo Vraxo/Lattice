@@ -13,12 +13,12 @@ public sealed class AppConnectionComponentTests
 
         IRenderedComponent<App> component = context.Render<App>();
 
-        Assert.Equal("Lattice", component.Find(".brand").TextContent);
-        Assert.Equal("false", component.Find("#active-workspace").GetAttribute("data-connected"));
-        Assert.Contains("Not connected", component.Find("#active-workspace").TextContent, StringComparison.Ordinal);
-        Assert.Single(component.FindAll("#workspace-path"));
-        Assert.Single(component.FindAll("#connect-workspace"));
-        Assert.Empty(component.FindAll("[role='alert']"));
+        component.Find(".brand").TextContent.Should().Be("Lattice");
+        component.Find("#active-workspace").GetAttribute("data-connected").Should().Be("false");
+        component.Find("#active-workspace").TextContent.Should().Contain("Not connected");
+        component.FindAll("#workspace-path").Should().ContainSingle();
+        component.FindAll("#connect-workspace").Should().ContainSingle();
+        component.FindAll("[role='alert']").Should().BeEmpty();
     }
 
     [Fact]
@@ -32,12 +32,9 @@ public sealed class AppConnectionComponentTests
         await component.Find("#workspace-path").InputAsync(workspace.Path);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Equal("true", component.Find("#active-workspace").GetAttribute("data-connected"));
-        Assert.Contains(
-            Path.GetFullPath(workspace.Path),
-            component.Find("#active-workspace").TextContent,
-            StringComparison.Ordinal);
-        Assert.Empty(component.FindAll("[role='alert']"));
+        component.Find("#active-workspace").GetAttribute("data-connected").Should().Be("true");
+        component.Find("#active-workspace").TextContent.Should().Contain(Path.GetFullPath(workspace.Path));
+        component.FindAll("[role='alert']").Should().BeEmpty();
     }
 
     [Fact]
@@ -51,8 +48,8 @@ public sealed class AppConnectionComponentTests
         await component.Find("#workspace-path").InputAsync(missing);
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Equal("false", component.Find("#active-workspace").GetAttribute("data-connected"));
-        Assert.Contains("does not exist", component.Find("[role='alert']").TextContent, StringComparison.OrdinalIgnoreCase);
+        component.Find("#active-workspace").GetAttribute("data-connected").Should().Be("false");
+        component.Find("[role='alert']").TextContent.Should().ContainEquivalentOf("does not exist");
     }
 
     [Fact]
@@ -71,8 +68,8 @@ public sealed class AppConnectionComponentTests
         {
             component.WaitForAssertion(() =>
             {
-                Assert.True(component.Find("#workspace-form fieldset").HasAttribute("disabled"));
-                Assert.Contains("Connecting", component.Find("#connect-workspace").TextContent, StringComparison.Ordinal);
+                component.Find("#workspace-form fieldset").HasAttribute("disabled").Should().BeTrue();
+                component.Find("#connect-workspace").TextContent.Should().Contain("Connecting");
             });
         }
         finally
@@ -81,7 +78,7 @@ public sealed class AppConnectionComponentTests
         }
 
         await submit;
-        Assert.False(component.Find("#workspace-form fieldset").HasAttribute("disabled"));
-        Assert.Equal("true", component.Find("#active-workspace").GetAttribute("data-connected"));
+        component.Find("#workspace-form fieldset").HasAttribute("disabled").Should().BeFalse();
+        component.Find("#active-workspace").GetAttribute("data-connected").Should().Be("true");
     }
 }

@@ -7,17 +7,16 @@ public sealed class DerivationTests
     {
         KnowledgeFact conclusion = new("derived.rule.a", "concept.a", "q", "w", "rule:rule.a");
         Derivation derivation = new("rule.a", ["fact.a", "fact.b"], conclusion);
-        Assert.Equal("rule.a", derivation.RuleId);
-        Assert.Equal(new[] { "fact.a", "fact.b" }, derivation.PremiseFactIds);
-        Assert.Equal(conclusion, derivation.Conclusion);
+        derivation.RuleId.Should().Be("rule.a");
+        derivation.PremiseFactIds.Should().Equal(new[] { "fact.a", "fact.b" });
+        derivation.Conclusion.Should().Be(conclusion);
     }
 
     [Fact]
     public void RejectsEmptyRuleId()
     {
         KnowledgeFact conclusion = new("derived.rule.a", "concept.a", "q", "w");
-        Assert.Throws<ArgumentException>(
-            () => new Derivation(string.Empty, ["fact.a"], conclusion));
+        FluentActions.Invoking(() => new Derivation(string.Empty, ["fact.a"], conclusion)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -26,6 +25,6 @@ public sealed class DerivationTests
         KnowledgeFact conclusion = new("derived.rule.a", "concept.a", "q", "w", "rule:rule.a");
         Derivation first = new("rule.a", ["fact.a"], conclusion);
         Derivation second = new("rule.a", ["fact.a"], conclusion);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 }

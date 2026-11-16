@@ -37,7 +37,7 @@ public sealed class UntrustedToolOutputTests
         string requestedAction,
         string rationale)
     {
-        Assert.False(string.IsNullOrWhiteSpace(rationale), $"{id}: fixture rationale is required.");
+        string.IsNullOrWhiteSpace(rationale).Should().BeFalse("{0}", $"{id}: fixture rationale is required.");
         using JsonDocument expectedDocument = JsonDocument.Parse(expectedJson);
         JsonElement expected = expectedDocument.RootElement;
         using TempWorkspace workspace = new();
@@ -73,7 +73,7 @@ public sealed class UntrustedToolOutputTests
             "sourceInvocationCount",
             expected.GetProperty("sourceInvocationCount").GetInt32(),
             sourceResult.Session.ToolInvocations.Length);
-        ToolInvocation sourceInvocation = Assert.Single(sourceResult.Session.ToolInvocations);
+        ToolInvocation sourceInvocation = sourceResult.Session.ToolInvocations.Should().ContainSingle().Which;
         Equal(id, rationale, "sourceToolId", toolId, sourceInvocation.ToolId.Value);
         Equal(id, rationale, "payload", payload, sourceInvocation.Result.Output!.AsString());
         Equal(
@@ -131,7 +131,7 @@ public sealed class UntrustedToolOutputTests
     private static IControlledStatement Parse(string statement)
     {
         Result<IControlledStatement> result = ControlledLanguageParser.Parse(statement);
-        Assert.True(result.IsSuccess, result.Error?.Message);
+        result.IsSuccess.Should().BeTrue("{0}", result.Error?.Message ?? string.Empty);
         return result.Value;
     }
 
@@ -142,8 +142,6 @@ public sealed class UntrustedToolOutputTests
 
     private static void Equal<T>(string id, string rationale, string field, T expected, T actual)
     {
-        Assert.True(
-            EqualityComparer<T>.Default.Equals(expected, actual),
-            $"{id}: {field} differed. Expected '{expected}', actual '{actual}'. Rationale: {rationale}");
+        EqualityComparer<T>.Default.Equals(expected, actual).Should().BeTrue("{0}", $"{id}: {field} differed. Expected '{expected}', actual '{actual}'. Rationale: {rationale}");
     }
 }

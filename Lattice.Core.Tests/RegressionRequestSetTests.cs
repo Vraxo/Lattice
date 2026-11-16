@@ -383,9 +383,7 @@ public sealed class RegressionRequestSetTests
 
     private static void Equal<T>(string id, string rationale, string field, T expected, T actual)
     {
-        Assert.True(
-            EqualityComparer<T>.Default.Equals(expected, actual),
-            $"{id}: {field} differed. Expected '{expected}', actual '{actual}'. Rationale: {rationale}");
+        EqualityComparer<T>.Default.Equals(expected, actual).Should().BeTrue("{0}", $"{id}: {field} differed. Expected '{expected}', actual '{actual}'. Rationale: {rationale}");
     }
 
     private static void SequenceEqual(
@@ -397,8 +395,6 @@ public sealed class RegressionRequestSetTests
     {
         string[] expectedArray = [.. expected];
         string[] actualArray = [.. actual];
-        Assert.True(
-            expectedArray.SequenceEqual(actualArray, StringComparer.Ordinal),
-            $"{id}: {field} differed. Expected [{string.Join(", ", expectedArray)}], actual [{string.Join(", ", actualArray)}]. Rationale: {rationale}");
+        expectedArray.SequenceEqual(actualArray, StringComparer.Ordinal).Should().BeTrue("{0}", $"{id}: {field} differed. Expected [{string.Join(", ", expectedArray)}], actual [{string.Join(", ", actualArray)}]. Rationale: {rationale}");
     }
 }

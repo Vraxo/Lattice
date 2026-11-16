@@ -14,18 +14,18 @@ public sealed class ChatInterfaceComponentTests
 
         IRenderedComponent<App> component = context.Render<App>();
 
-        Assert.Empty(component.FindAll("#request-form"));
-        Assert.DoesNotContain("Workspace Request", component.Markup, StringComparison.Ordinal);
-        Assert.DoesNotContain("inspect <", component.Markup, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("find symbol <", component.Markup, StringComparison.OrdinalIgnoreCase);
+        component.FindAll("#request-form").Should().BeEmpty();
+        component.Markup.Should().NotContain("Workspace Request");
+        component.Markup.Should().NotContainEquivalentOf("inspect <");
+        component.Markup.Should().NotContainEquivalentOf("find symbol <");
 
         var composer = component.Find("textarea#message-input");
-        Assert.Equal("TEXTAREA", composer.NodeName);
-        Assert.Equal("Send", component.Find("#send-message").TextContent.Trim());
+        composer.NodeName.Should().Be("TEXTAREA");
+        component.Find("#send-message").TextContent.Trim().Should().Be("Send");
 
         var emptyState = component.Find("#chat-empty-state");
-        Assert.Contains("Connect a workspace folder", emptyState.TextContent, StringComparison.Ordinal);
-        Assert.Contains("Where does WorkspaceRoot appear?", emptyState.TextContent, StringComparison.Ordinal);
+        emptyState.TextContent.Should().Contain("Connect a workspace folder");
+        emptyState.TextContent.Should().Contain("Where does WorkspaceRoot appear?");
     }
 
     [Fact]
@@ -40,11 +40,11 @@ public sealed class ChatInterfaceComponentTests
         await component.Find("#workspace-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
         var emptyState = component.Find("#chat-empty-state");
-        Assert.Contains("Ask about your codebase", emptyState.TextContent, StringComparison.Ordinal);
-        Assert.Contains(Path.GetFullPath(workspace.Path), emptyState.TextContent, StringComparison.Ordinal);
-        Assert.Contains("Where is WorkspaceRoot used in this project?", emptyState.TextContent, StringComparison.Ordinal);
-        Assert.DoesNotContain("inspect <", emptyState.TextContent, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("find symbol <", emptyState.TextContent, StringComparison.OrdinalIgnoreCase);
+        emptyState.TextContent.Should().Contain("Ask about your codebase");
+        emptyState.TextContent.Should().Contain(Path.GetFullPath(workspace.Path));
+        emptyState.TextContent.Should().Contain("Where is WorkspaceRoot used in this project?");
+        emptyState.TextContent.Should().NotContainEquivalentOf("inspect <");
+        emptyState.TextContent.Should().NotContainEquivalentOf("find symbol <");
     }
 
     [Fact]
@@ -68,16 +68,16 @@ public sealed class ChatInterfaceComponentTests
             ShiftKey = false,
         });
 
-        Assert.Equal(string.Empty, session.MessageInput);
-        var exchange = Assert.Single(component.FindAll("#turn-history > li.chat-exchange"));
+        session.MessageInput.Should().Be(string.Empty);
+        var exchange = component.FindAll("#turn-history > li.chat-exchange").Should().ContainSingle().Which;
         var userBubble = exchange.QuerySelector("[data-message-role='user']")!;
         var assistantBubble = exchange.QuerySelector("[data-message-role='assistant']")!;
 
-        Assert.Contains("user-message", userBubble.ClassList);
-        Assert.Contains("assistant-message", assistantBubble.ClassList);
-        Assert.Contains("inspect README.md", userBubble.QuerySelector(".user-body")!.TextContent, StringComparison.Ordinal);
-        Assert.Equal("README.md", assistantBubble.QuerySelector(".file-path")!.TextContent);
-        Assert.Contains("# Sample Repo", assistantBubble.QuerySelector(".file-contents")!.TextContent, StringComparison.Ordinal);
+        userBubble.ClassList.Should().Contain("user-message");
+        assistantBubble.ClassList.Should().Contain("assistant-message");
+        userBubble.QuerySelector(".user-body")!.TextContent.Should().Contain("inspect README.md");
+        assistantBubble.QuerySelector(".file-path")!.TextContent.Should().Be("README.md");
+        assistantBubble.QuerySelector(".file-contents")!.TextContent.Should().Contain("# Sample Repo");
 
         context.JSInterop.VerifyFocusAsyncInvoke();
     }
@@ -103,15 +103,15 @@ public sealed class ChatInterfaceComponentTests
             ShiftKey = true,
         });
 
-        Assert.Empty(session.Entries);
-        Assert.Equal("inspect", session.MessageInput);
+        session.Entries.Should().BeEmpty();
+        session.MessageInput.Should().Be("inspect");
 
         await component.Find("#message-input").InputAsync("inspect\nREADME.md");
         await component.Find("#send-message").ClickAsync();
 
-        var exchange = Assert.Single(component.FindAll("#turn-history > li.chat-exchange"));
-        Assert.Equal("inspect\nREADME.md", exchange.QuerySelector(".user-body")!.TextContent);
-        Assert.Equal("FileInspected", exchange.GetAttribute("data-turn-kind"));
+        var exchange = component.FindAll("#turn-history > li.chat-exchange").Should().ContainSingle().Which;
+        exchange.QuerySelector(".user-body")!.TextContent.Should().Be("inspect\nREADME.md");
+        exchange.GetAttribute("data-turn-kind").Should().Be("FileInspected");
     }
 
     [Fact]
@@ -136,14 +136,14 @@ public sealed class ChatInterfaceComponentTests
         {
             component.WaitForAssertion(() =>
             {
-                Assert.Equal(string.Empty, session.MessageInput);
-                Assert.True(component.Find("#chat-form fieldset").HasAttribute("disabled"));
-                Assert.Contains("Sending", component.Find("#send-message").TextContent, StringComparison.Ordinal);
+                session.MessageInput.Should().Be(string.Empty);
+                component.Find("#chat-form fieldset").HasAttribute("disabled").Should().BeTrue();
+                component.Find("#send-message").TextContent.Should().Contain("Sending");
 
                 var pendingTurn = component.Find("#pending-turn");
-                Assert.Contains("inspect README.md", pendingTurn.QuerySelector(".user-body")!.TextContent, StringComparison.Ordinal);
-                Assert.Contains("Checking the workspace", pendingTurn.QuerySelector(".pending-text")!.TextContent, StringComparison.Ordinal);
-                Assert.DoesNotContain("Running command", component.Markup, StringComparison.OrdinalIgnoreCase);
+                pendingTurn.QuerySelector(".user-body")!.TextContent.Should().Contain("inspect README.md");
+                pendingTurn.QuerySelector(".pending-text")!.TextContent.Should().Contain("Checking the workspace");
+                component.Markup.Should().NotContainEquivalentOf("Running command");
             });
         }
         finally
@@ -154,9 +154,9 @@ public sealed class ChatInterfaceComponentTests
 
         await inflight;
 
-        Assert.Empty(component.FindAll("#pending-turn"));
-        Assert.False(component.Find("#chat-form fieldset").HasAttribute("disabled"));
-        Assert.Single(component.FindAll("#turn-history > li.chat-exchange"));
+        component.FindAll("#pending-turn").Should().BeEmpty();
+        component.Find("#chat-form fieldset").HasAttribute("disabled").Should().BeFalse();
+        component.FindAll("#turn-history > li.chat-exchange").Should().ContainSingle();
     }
 
     [Fact]
@@ -176,15 +176,15 @@ public sealed class ChatInterfaceComponentTests
         await component.Find("#message-input").InputAsync("   ");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Equal("   ", session.MessageInput);
-        Assert.Empty(session.Entries);
-        Assert.Single(component.FindAll("#composer-error[role='alert']"));
+        session.MessageInput.Should().Be("   ");
+        session.Entries.Should().BeEmpty();
+        component.FindAll("#composer-error[role='alert']").Should().ContainSingle();
 
         await component.Find("#message-input").InputAsync("Where does WorkspaceRoot appear?");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        Assert.Equal("Where does WorkspaceRoot appear?", session.MessageInput);
-        DesktopTurnEntry failure = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.UnexpectedError, failure.Kind);
+        session.MessageInput.Should().Be("Where does WorkspaceRoot appear?");
+        DesktopTurnEntry failure = session.Entries.Should().ContainSingle().Which;
+        failure.Kind.Should().Be(DesktopTurnKind.UnexpectedError);
     }
 }

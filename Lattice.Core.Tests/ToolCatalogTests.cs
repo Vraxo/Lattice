@@ -6,14 +6,14 @@ public sealed class ToolCatalogTests
     public void RejectsDuplicateIds()
     {
         ToolDescriptor[] descriptors = [Descriptor("calculator"), Descriptor("calculator")];
-        Assert.Throws<ArgumentException>(() => new ToolCatalog(descriptors));
+        FluentActions.Invoking(() => new ToolCatalog(descriptors)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void AcceptsDistinctIds()
     {
         ToolCatalog catalog = new([Descriptor("calculator"), Descriptor("clock")]);
-        Assert.Equal(2, catalog.Descriptors.Length);
+        catalog.Descriptors.Length.Should().Be(2);
     }
 
     [Fact]
@@ -21,22 +21,22 @@ public sealed class ToolCatalogTests
     {
         ToolCatalog first = new([Descriptor("calculator")]);
         ToolCatalog second = new([Descriptor("calculator")]);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
     public void ResolvesRegisteredTool()
     {
         ToolCatalog catalog = new([Descriptor("calculator")]);
-        Assert.True(catalog.TryResolve(new ToolId("calculator"), out ToolDescriptor? descriptor));
-        Assert.Equal(new ToolId("calculator"), descriptor.Id);
+        catalog.TryResolve(new ToolId("calculator"), out ToolDescriptor? descriptor).Should().BeTrue();
+        descriptor.Id.Should().Be(new ToolId("calculator"));
     }
 
     [Fact]
     public void UnknownToolFailsToResolve()
     {
         ToolCatalog catalog = new([Descriptor("calculator")]);
-        Assert.False(catalog.TryResolve(new ToolId("clock"), out _));
+        catalog.TryResolve(new ToolId("clock"), out _).Should().BeFalse();
     }
 
     private static ToolDescriptor Descriptor(string id)

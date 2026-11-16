@@ -30,14 +30,14 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, question);
-        Assert.Equal(expectedStatus, answer.Status.ToString());
+        answer.Status.ToString().Should().Be(expectedStatus);
         string actualFiles = string.Join(
             ",",
             answer.Evidence
                 .Select(reference => reference.RelativePath)
                 .Distinct()
                 .OrderBy(f => f, StringComparer.Ordinal));
-        Assert.Equal(expectedFiles, actualFiles);
+        actualFiles.Should().Be(expectedFiles);
     }
 
     [Fact]
@@ -45,10 +45,10 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, "find symbol Calculator");
-        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
-        Assert.DoesNotContain('{', answer.Text);
-        Assert.DoesNotContain('}', answer.Text);
-        Assert.Contains("'Calculator'", answer.Text, StringComparison.Ordinal);
+        answer.Status.Should().Be(EvidenceAnswerStatus.Answered);
+        answer.Text.Should().NotContain('{'.ToString());
+        answer.Text.Should().NotContain('}'.ToString());
+        answer.Text.Should().Contain("'Calculator'");
     }
 
     [Fact]
@@ -56,8 +56,8 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, "find symbol Strings");
-        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
-        Assert.Equal("Found 'Strings' in 1 file, on 1 line.", answer.Text);
+        answer.Status.Should().Be(EvidenceAnswerStatus.Answered);
+        answer.Text.Should().Be("Found 'Strings' in 1 file, on 1 line.");
     }
 
     [Fact]
@@ -65,8 +65,8 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, "find symbol Calculator");
-        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
-        Assert.NotEmpty(answer.Evidence);
+        answer.Status.Should().Be(EvidenceAnswerStatus.Answered);
+        answer.Evidence.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, "read src");
-        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
-        Assert.Equal("src", answer.Evidence[0].RelativePath);
+        answer.Status.Should().Be(EvidenceAnswerStatus.Answered);
+        answer.Evidence[0].RelativePath.Should().Be("src");
     }
 
     [Fact]
@@ -83,8 +83,8 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         using TempWorkspace workspace = BuildWorkspace();
         EvidenceAnswer answer = Answer(workspace, "explain gravity");
-        Assert.NotEqual(EvidenceAnswerStatus.Answered, answer.Status);
-        Assert.Empty(answer.Evidence);
+        answer.Status.Should().NotBe(EvidenceAnswerStatus.Answered);
+        answer.Evidence.Should().BeEmpty();
     }
 
     private static EvidenceAnswer Answer(TempWorkspace workspace, string question)
@@ -108,7 +108,7 @@ public sealed class WorkspaceQuestionAnswererTests
     {
         string path = Path.Combine(AppContext.BaseDirectory, "config", "nlp", "patterns.json");
         Result<IntentPatternCatalog> parsed = IntentPatternCatalogParser.Parse(File.ReadAllText(path));
-        Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+        parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         return new RequestInterpreter(parsed.Value);
     }
 

@@ -13,8 +13,8 @@ public sealed class LexicalRetrievalTests
         KnowledgeLookup lookup = Lookup();
         System.Collections.Immutable.ImmutableArray<RetrievalCandidate> ranked = lookup.Search("concept.water");
         RetrievalCandidate top = ranked[0];
-        Assert.Equal("concept.water", top.Concept.Id);
-        Assert.True(ranked.Length == 1 || ranked[0].Score > ranked[1].Score);
+        top.Concept.Id.Should().Be("concept.water");
+        (ranked.Length == 1 || ranked[0].Score > ranked[1].Score).Should().BeTrue();
     }
 
     [Fact]
@@ -22,8 +22,8 @@ public sealed class LexicalRetrievalTests
     {
         KnowledgeLookup lookup = Lookup();
         ConceptLookup best = lookup.FindBest("H2O");
-        Assert.True(best.IsFound);
-        Assert.Equal("concept.water", best.Concept!.Id);
+        best.IsFound.Should().BeTrue();
+        best.Concept!.Id.Should().Be("concept.water");
     }
 
     [Fact]
@@ -33,8 +33,8 @@ public sealed class LexicalRetrievalTests
         // must now return concept.water for its own definition words.
         KnowledgeLookup lookup = Lookup();
         ConceptLookup best = lookup.FindBest("liquid commonly denoted");
-        Assert.True(best.IsFound);
-        Assert.Equal("concept.water", best.Concept!.Id);
+        best.IsFound.Should().BeTrue();
+        best.Concept!.Id.Should().Be("concept.water");
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class LexicalRetrievalTests
         KnowledgeLookup lookup = Lookup();
         RetrievalCandidate top = lookup.Search("liquid commonly denoted")[0];
         double expected = top.Factors.Sum(factor => factor.Weight * factor.RawScore);
-        Assert.Equal(expected, top.Score, precision: 6);
+        Math.Round(top.Score, 6).Should().Be(Math.Round(expected, 6));
     }
 
     [Fact]
@@ -51,10 +51,10 @@ public sealed class LexicalRetrievalTests
     {
         KnowledgeLookup lookup = Lookup();
         RetrievalCandidate top = lookup.Search("liquid commonly denoted")[0];
-        Assert.NotEmpty(top.Factors);
-        Assert.Contains(top.Factors, factor => factor.RawScore > 0);
-        Assert.Equal("definition", top.MatchedField);
-        Assert.Contains("liquid", top.MatchedText, StringComparison.OrdinalIgnoreCase);
+        top.Factors.Should().NotBeEmpty();
+        top.Factors.Where(factor => factor.RawScore > 0).Should().NotBeEmpty();
+        top.MatchedField.Should().Be("definition");
+        top.MatchedText.Should().ContainEquivalentOf("liquid");
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class LexicalRetrievalTests
     {
         KnowledgeLookup lookup = Lookup();
         RetrievalCandidate top = lookup.Search("concept.steam")[0];
-        Assert.Equal("example.physics:concept.steam", top.Source);
+        top.Source.Should().Be("example.physics:concept.steam");
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class LexicalRetrievalTests
         KnowledgeLookup lookup = Lookup();
         System.Collections.Immutable.ImmutableArray<RetrievalCandidate> first = lookup.Search("water");
         System.Collections.Immutable.ImmutableArray<RetrievalCandidate> second = lookup.Search("water");
-        Assert.True(first.Select(c => c.Concept.Id).SequenceEqual(second.Select(c => c.Concept.Id)));
+        first.Select(c => c.Concept.Id).SequenceEqual(second.Select(c => c.Concept.Id)).Should().BeTrue();
     }
 
     [Fact]
@@ -89,22 +89,22 @@ public sealed class LexicalRetrievalTests
 
         // "a" is a substring of both preferred names only if present; use a query matching both ids.
         System.Collections.Immutable.ImmutableArray<RetrievalCandidate> ranked = lookup.Search("concept.");
-        Assert.Equal("concept.alpha", ranked[0].Concept.Id);
-        Assert.Equal("concept.zebra", ranked[1].Concept.Id);
+        ranked[0].Concept.Id.Should().Be("concept.alpha");
+        ranked[1].Concept.Id.Should().Be("concept.zebra");
     }
 
     [Fact]
     public void LimitIsHonored()
     {
         KnowledgeLookup lookup = Lookup();
-        Assert.True(lookup.Search("water", limit: 1).Length <= 1);
+        (lookup.Search("water", limit: 1).Length <= 1).Should().BeTrue();
     }
 
     [Fact]
     public void NonPositiveLimitIsRejected()
     {
         KnowledgeLookup lookup = Lookup();
-        Assert.Throws<ArgumentOutOfRangeException>(() => lookup.Search("water", limit: 0));
+        FluentActions.Invoking(() => lookup.Search("water", limit: 0)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
@@ -122,18 +122,18 @@ public sealed class LexicalRetrievalTests
                 new KnowledgeConcept("concept.b", "shared"),
             ]));
         System.Collections.Immutable.ImmutableArray<RetrievalCandidate> baseline = lookup.Search("shared");
-        Assert.Equal("concept.b", baseline[0].Concept.Id);
+        baseline[0].Concept.Id.Should().Be("concept.b");
         System.Collections.Immutable.ImmutableArray<RetrievalCandidate> tuned = lookup.Search(
             "shared",
             new LexicalRetrievalWeights(aliasExact: 1000, preferredExact: 1));
-        Assert.Equal("concept.a", tuned[0].Concept.Id);
+        tuned[0].Concept.Id.Should().Be("concept.a");
     }
 
     private static KnowledgeLookup Lookup()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "knowledge", "example.physics", "package.json");
         Result<KnowledgePackage> parsed = KnowledgePackageParser.Parse(File.ReadAllText(path));
-        Assert.True(parsed.IsSuccess, parsed.Error?.Message);
+        parsed.IsSuccess.Should().BeTrue("{0}", parsed.Error?.Message ?? string.Empty);
         return new KnowledgeLookup(parsed.Value);
     }
 }

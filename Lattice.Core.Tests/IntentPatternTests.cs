@@ -7,17 +7,17 @@ public sealed class IntentPatternTests
     [Fact]
     public void ParsesTemplateWithTrailingSlot()
     {
-        Assert.True(IntentPattern.TryParseTemplate("what is {topic}", out ImmutableArray<string> literals, out string? slot, out _));
-        Assert.Equal(new[] { "what", "is" }, literals);
-        Assert.Equal("topic", slot);
+        IntentPattern.TryParseTemplate("what is {topic}", out ImmutableArray<string> literals, out string? slot, out _).Should().BeTrue();
+        literals.Should().Equal(new[] { "what", "is" });
+        slot.Should().Be("topic");
     }
 
     [Fact]
     public void ParsesTemplateWithNoSlot()
     {
-        Assert.True(IntentPattern.TryParseTemplate("hello world", out ImmutableArray<string> literals, out string? slot, out _));
-        Assert.Equal(new[] { "hello", "world" }, literals);
-        Assert.Null(slot);
+        IntentPattern.TryParseTemplate("hello world", out ImmutableArray<string> literals, out string? slot, out _).Should().BeTrue();
+        literals.Should().Equal(new[] { "hello", "world" });
+        slot.Should().BeNull();
     }
 
     [Theory]
@@ -29,17 +29,17 @@ public sealed class IntentPatternTests
     [InlineData("what is {9bad}")]
     public void RejectsInvalidTemplates(string template)
     {
-        Assert.False(IntentPattern.TryParseTemplate(template, out _, out _, out _));
+        IntentPattern.TryParseTemplate(template, out _, out _, out _).Should().BeFalse();
     }
 
     [Fact]
     public void RejectsUnknownIntentInConstructor()
     {
-        Assert.Throws<ArgumentException>(() => new IntentPattern(
+        FluentActions.Invoking(() => new IntentPattern(
             "p",
             RequestIntentKind.Unknown,
             ["x"],
-            null));
+            null)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -47,22 +47,22 @@ public sealed class IntentPatternTests
     {
         IntentPattern first = new("p", RequestIntentKind.Question, ["what", "is"], "topic");
         IntentPattern second = new("p", RequestIntentKind.Question, ["what", "is"], "topic");
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
     public void ParsesTemplateWithLeadingAndTrailingLiteralsAroundSingleSlot()
     {
-        Assert.True(IntentPattern.TryParseTemplate(
+        IntentPattern.TryParseTemplate(
             "can you find where {symbol} is used throughout this project",
             out ImmutableArray<string> prefixLiterals,
             out string? slotName,
             out ImmutableArray<string> suffixLiterals,
-            out _));
+            out _).Should().BeTrue();
 
-        Assert.Equal<IEnumerable<string>>(["can", "you", "find", "where"], prefixLiterals);
-        Assert.Equal("symbol", slotName);
-        Assert.Equal<IEnumerable<string>>(["is", "used", "throughout", "this", "project"], suffixLiterals);
+        prefixLiterals.Should().Equal(["can", "you", "find", "where"]);
+        slotName.Should().Be("symbol");
+        suffixLiterals.Should().Equal(["is", "used", "throughout", "this", "project"]);
     }
 
     [Theory]
@@ -75,18 +75,18 @@ public sealed class IntentPatternTests
     [InlineData("where does {9bad} appear")]
     public void RejectsMalformedSurroundedSlotTemplates(string template)
     {
-        Assert.False(IntentPattern.TryParseTemplate(template, out _, out _, out _, out _));
+        IntentPattern.TryParseTemplate(template, out _, out _, out _, out _).Should().BeFalse();
     }
 
     [Fact]
     public void RejectsSuffixLiteralsWithoutSlot()
     {
-        Assert.Throws<ArgumentException>(() => new IntentPattern(
+        FluentActions.Invoking(() => new IntentPattern(
             "invalid",
             RequestIntentKind.FindSymbol,
             ["where"],
             null,
-            ["appear"]));
+            ["appear"])).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -96,9 +96,9 @@ public sealed class IntentPatternTests
         IntentPattern second = new("p", RequestIntentKind.FindSymbol, ["where", "is"], "symbol", ["defined"]);
         IntentPattern same = new("p", RequestIntentKind.FindSymbol, ["where", "is"], "symbol", ["used"]);
 
-        Assert.NotEqual(first, second);
-        Assert.Equal(first, same);
-        Assert.Equal(first.GetHashCode(), same.GetHashCode());
-        Assert.Equal(3, first.LiteralCount);
+        second.Should().NotBe(first);
+        same.Should().Be(first);
+        same.GetHashCode().Should().Be(first.GetHashCode());
+        first.LiteralCount.Should().Be(3);
     }
 }

@@ -9,8 +9,8 @@ public sealed class PolicySelectorTests
             goals: [GoalWith(GoalStatus.Completed)],
             interpretation: Matched());
         ActionSelection selection = PolicySelector.Default.Select(context);
-        Assert.True(selection.IsSelected);
-        Assert.IsType<FinishProposal>(selection.Proposal);
+        selection.IsSelected.Should().BeTrue();
+        selection.Proposal.Should().BeOfType<FinishProposal>();
     }
 
     [Fact]
@@ -18,8 +18,8 @@ public sealed class PolicySelectorTests
     {
         ActionSelectionContext context = Context(interpretation: Unknown());
         ActionSelection selection = PolicySelector.Default.Select(context);
-        Assert.True(selection.IsSelected);
-        Assert.IsType<AskUserProposal>(selection.Proposal);
+        selection.IsSelected.Should().BeTrue();
+        selection.Proposal.Should().BeOfType<AskUserProposal>();
     }
 
     [Fact]
@@ -29,8 +29,8 @@ public sealed class PolicySelectorTests
             goals: [GoalWith(GoalStatus.Incomplete)],
             interpretation: Matched());
         ActionSelection selection = PolicySelector.Default.Select(context);
-        Assert.True(selection.IsSelected);
-        Assert.IsType<ContinueProposal>(selection.Proposal);
+        selection.IsSelected.Should().BeTrue();
+        selection.Proposal.Should().BeOfType<ContinueProposal>();
     }
 
     [Fact]
@@ -41,10 +41,10 @@ public sealed class PolicySelectorTests
             goals: [GoalWith(GoalStatus.Blocked)],
             interpretation: Matched());
         ActionSelection selection = PolicySelector.Default.Select(context);
-        Assert.False(selection.IsSelected);
-        Assert.Equal(ActionSelectionKind.Blocked, selection.Kind);
-        AskUserProposal ask = Assert.IsType<AskUserProposal>(selection.Proposal);
-        Assert.Equal(ClarificationKind.NoEligibleAction, ask.Request.Kind);
+        selection.IsSelected.Should().BeFalse();
+        selection.Kind.Should().Be(ActionSelectionKind.Blocked);
+        AskUserProposal ask = selection.Proposal.Should().BeOfType<AskUserProposal>().Which;
+        ask.Request.Kind.Should().Be(ClarificationKind.NoEligibleAction);
     }
 
     [Fact]
@@ -52,8 +52,8 @@ public sealed class PolicySelectorTests
     {
         ActionSelectionContext context = Context(interpretation: Matched());
         ActionSelection selection = PolicySelector.Default.Select(context);
-        Assert.False(selection.IsSelected);
-        Assert.IsType<AskUserProposal>(selection.Proposal);
+        selection.IsSelected.Should().BeFalse();
+        selection.Proposal.Should().BeOfType<AskUserProposal>();
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class PolicySelectorTests
         ActionSelection selection = PolicySelector.Default.Select(context);
 
         // Clarify (priority 90) outranks continue (priority 50).
-        Assert.IsType<AskUserProposal>(selection.Proposal);
+        selection.Proposal.Should().BeOfType<AskUserProposal>();
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class PolicySelectorTests
         ActionSelection selection = PolicySelector.Default.Select(context);
 
         // Finish (priority 100) outranks clarify (priority 90).
-        Assert.IsType<FinishProposal>(selection.Proposal);
+        selection.Proposal.Should().BeOfType<FinishProposal>();
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public sealed class PolicySelectorTests
             new FakeRule("high", 20, new RespondProposal("high")),
         ]);
         ActionSelection selection = selector.Select(Context());
-        Assert.Equal(new RespondProposal("high"), selection.Proposal);
+        selection.Proposal.Should().Be(new RespondProposal("high"));
     }
 
     [Fact]
@@ -101,9 +101,9 @@ public sealed class PolicySelectorTests
             new FakeRule("high", 20, new RespondProposal("high")),
         ]);
         ActionSelection selection = selector.Select(Context());
-        RejectedRule rejected = Assert.Single(selection.RejectedRules);
-        Assert.Equal("low", rejected.RuleId);
-        Assert.Equal(10, rejected.Priority);
+        RejectedRule rejected = selection.RejectedRules.Should().ContainSingle().Which;
+        rejected.RuleId.Should().Be("low");
+        rejected.Priority.Should().Be(10);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public sealed class PolicySelectorTests
             new FakeRule("a", 10, new RespondProposal("a")),
         ]);
         ActionSelection selection = selector.Select(Context());
-        Assert.Equal(new RespondProposal("a"), selection.Proposal);
+        selection.Proposal.Should().Be(new RespondProposal("a"));
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public sealed class PolicySelectorTests
             new FakeRule("always", 10, new RespondProposal("always")),
         ]);
         ActionSelection selection = selector.Select(Context());
-        Assert.Equal(new RespondProposal("always"), selection.Proposal);
+        selection.Proposal.Should().Be(new RespondProposal("always"));
     }
 
     [Fact]
@@ -135,8 +135,8 @@ public sealed class PolicySelectorTests
     {
         PolicySelector selector = new([]);
         ActionSelection selection = selector.Select(Context());
-        Assert.False(selection.IsSelected);
-        Assert.IsType<AskUserProposal>(selection.Proposal);
+        selection.IsSelected.Should().BeFalse();
+        selection.Proposal.Should().BeOfType<AskUserProposal>();
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public sealed class PolicySelectorTests
             interpretation: Matched());
         ActionSelection first = PolicySelector.Default.Select(context);
         ActionSelection second = PolicySelector.Default.Select(context);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -158,14 +158,13 @@ public sealed class PolicySelectorTests
             new FakeRule("dup", 10, null),
             new FakeRule("dup", 20, null),
         ];
-        Assert.Throws<ArgumentException>(() => new PolicySelector(rules));
+        FluentActions.Invoking(() => new PolicySelector(rules)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void EmptyRuleIdIsRejected()
     {
-        Assert.Throws<ArgumentException>(
-            () => new PolicySelector([new FakeRule("  ", 10, null)]));
+        FluentActions.Invoking(() => new PolicySelector([new FakeRule("  ", 10, null)])).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -181,13 +180,13 @@ public sealed class PolicySelectorTests
             new FakeRule("invoke", 10, new InvokeToolProposal(CalculatorTool.Id, arguments)),
         ]);
         ActionSelection selection = selector.Select(Context());
-        Assert.IsType<InvokeToolProposal>(selection.Proposal);
+        selection.Proposal.Should().BeOfType<InvokeToolProposal>();
     }
 
     [Fact]
     public void NullContextThrows()
     {
-        Assert.Throws<ArgumentNullException>(() => PolicySelector.Default.Select(null!));
+        FluentActions.Invoking(() => PolicySelector.Default.Select(null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     private static ActionSelectionContext Context(

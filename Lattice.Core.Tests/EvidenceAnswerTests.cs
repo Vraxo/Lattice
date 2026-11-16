@@ -5,8 +5,7 @@ public sealed class EvidenceAnswerTests
     [Fact]
     public void AnsweredRequiresEvidence()
     {
-        Assert.Throws<ArgumentException>(
-            () => EvidenceAnswer.Answered("q", "t", []));
+        FluentActions.Invoking(() => EvidenceAnswer.Answered("q", "t", [])).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -14,38 +13,36 @@ public sealed class EvidenceAnswerTests
     {
         EvidenceReference reference = new("a.txt", 1, 1, "x");
         EvidenceAnswer answer = EvidenceAnswer.Answered("q", "t", [reference]);
-        Assert.Equal(EvidenceAnswerStatus.Answered, answer.Status);
-        Assert.Equal(reference, Assert.Single(answer.Evidence));
+        answer.Status.Should().Be(EvidenceAnswerStatus.Answered);
+        answer.Evidence.Should().ContainSingle().Which.Should().Be(reference);
     }
 
     [Fact]
     public void InsufficientHasNoEvidence()
     {
         EvidenceAnswer answer = EvidenceAnswer.Insufficient("q", "t");
-        Assert.Equal(EvidenceAnswerStatus.InsufficientEvidence, answer.Status);
-        Assert.Empty(answer.Evidence);
+        answer.Status.Should().Be(EvidenceAnswerStatus.InsufficientEvidence);
+        answer.Evidence.Should().BeEmpty();
     }
 
     [Fact]
     public void UnsupportedHasNoEvidence()
     {
         EvidenceAnswer answer = EvidenceAnswer.Unsupported("q", "t");
-        Assert.Equal(EvidenceAnswerStatus.UnsupportedQuestion, answer.Status);
-        Assert.Empty(answer.Evidence);
+        answer.Status.Should().Be(EvidenceAnswerStatus.UnsupportedQuestion);
+        answer.Evidence.Should().BeEmpty();
     }
 
     [Fact]
     public void AnswersWithSameContentAreEqual()
     {
         EvidenceReference reference = new("a.txt", 1, 1, "x");
-        Assert.Equal(
-            EvidenceAnswer.Answered("q", "t", [reference]),
-            EvidenceAnswer.Answered("q", "t", [reference]));
+        EvidenceAnswer.Answered("q", "t", [reference]).Should().Be(EvidenceAnswer.Answered("q", "t", [reference]));
     }
 
     [Fact]
     public void EvidenceReferenceRejectsInvertedRange()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new EvidenceReference("a.txt", 5, 2, "x"));
+        FluentActions.Invoking(() => new EvidenceReference("a.txt", 5, 2, "x")).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 }

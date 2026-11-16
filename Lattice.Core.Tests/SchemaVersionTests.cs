@@ -5,16 +5,16 @@ public sealed class SchemaVersionTests
     [Fact]
     public void ParsesMajorAndMinor()
     {
-        Assert.True(SchemaVersion.TryParse("1.0", out SchemaVersion version));
-        Assert.Equal(1, version.Major);
-        Assert.Equal(0, version.Minor);
+        SchemaVersion.TryParse("1.0", out SchemaVersion version).Should().BeTrue();
+        version.Major.Should().Be(1);
+        version.Minor.Should().Be(0);
     }
 
     [Fact]
     public void ParsesMultiDigitMinor()
     {
-        Assert.True(SchemaVersion.TryParse("1.12", out SchemaVersion version));
-        Assert.Equal(12, version.Minor);
+        SchemaVersion.TryParse("1.12", out SchemaVersion version).Should().BeTrue();
+        version.Minor.Should().Be(12);
     }
 
     [Theory]
@@ -27,12 +27,12 @@ public sealed class SchemaVersionTests
     [InlineData("-1.0")]
     public void RejectsMalformedVersions(string text)
     {
-        Assert.False(SchemaVersion.TryParse(text, out _));
+        SchemaVersion.TryParse(text, out _).Should().BeFalse();
     }
 
     [Fact]
     public void ToStringRoundTrips()
     {
-        Assert.Equal("1.0", new SchemaVersion(1, 0).ToString());
+        new SchemaVersion(1, 0).ToString().Should().Be("1.0");
     }
 }

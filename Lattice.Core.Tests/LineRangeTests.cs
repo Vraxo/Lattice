@@ -6,46 +6,46 @@ public sealed class LineRangeTests
     public void StoresStartAndEnd()
     {
         LineRange range = new(2, 5);
-        Assert.Equal(2, range.Start);
-        Assert.Equal(5, range.End);
-        Assert.Equal(3, range.Length);
-        Assert.False(range.IsEmpty);
+        range.Start.Should().Be(2);
+        range.End.Should().Be(5);
+        range.Length.Should().Be(3);
+        range.IsEmpty.Should().BeFalse();
     }
 
     [Fact]
     public void EmptyRangeHasZeroLength()
     {
-        Assert.True(LineRange.At(4).IsEmpty);
-        Assert.True(LineRange.Empty.IsEmpty);
+        LineRange.At(4).IsEmpty.Should().BeTrue();
+        LineRange.Empty.IsEmpty.Should().BeTrue();
     }
 
     [Fact]
     public void NegativeStartIsRejected()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LineRange(-1, 0));
+        FluentActions.Invoking(() => new LineRange(-1, 0)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void EndBeforeStartIsRejected()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new LineRange(3, 2));
+        FluentActions.Invoking(() => new LineRange(3, 2)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void FromOneBasedLinesConvertsToEndExclusiveRange()
     {
         LineRange range = LineRange.FromOneBasedLines(2, 3);
-        Assert.Equal(1, range.Start);
-        Assert.Equal(3, range.End);
+        range.Start.Should().Be(1);
+        range.End.Should().Be(3);
     }
 
     [Fact]
     public void FromOneBasedLineCoversASingleLine()
     {
         LineRange range = LineRange.FromOneBasedLine(5);
-        Assert.Equal(4, range.Start);
-        Assert.Equal(5, range.End);
-        Assert.Equal(1, range.Length);
+        range.Start.Should().Be(4);
+        range.End.Should().Be(5);
+        range.Length.Should().Be(1);
     }
 
     [Theory]
@@ -53,18 +53,18 @@ public sealed class LineRangeTests
     [InlineData(-1, 1)]
     public void OneBasedConversionRejectsNonPositiveFirstLine(int first, int last)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => LineRange.FromOneBasedLines(first, last));
+        FluentActions.Invoking(() => LineRange.FromOneBasedLines(first, last)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void OneBasedConversionRejectsInvertedSpan()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => LineRange.FromOneBasedLines(5, 3));
+        FluentActions.Invoking(() => LineRange.FromOneBasedLines(5, 3)).Should().ThrowExactly<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void RangesWithSameBoundsAreEqual()
     {
-        Assert.Equal(new LineRange(1, 4), new LineRange(1, 4));
+        new LineRange(1, 4).Should().Be(new LineRange(1, 4));
     }
 }

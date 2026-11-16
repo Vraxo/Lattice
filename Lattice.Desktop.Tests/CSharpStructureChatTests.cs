@@ -22,20 +22,20 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "What classes are in this project?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.CSharpStructureResults, entry.Kind);
-        Assert.Equal(2, entry.SafeDeclarations.Length);
-        Assert.Contains(entry.SafeDeclarations, declaration =>
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.CSharpStructureResults);
+        entry.SafeDeclarations.Length.Should().Be(2);
+        entry.SafeDeclarations.Where(declaration =>
             declaration.Name == "Alpha"
             && declaration.Kind == "class"
             && declaration.RelativePath == "src/Alpha.cs"
-            && declaration.Signature.Contains("public sealed class Alpha", StringComparison.Ordinal));
-        Assert.Contains(entry.SafeDeclarations, declaration =>
+            && declaration.Signature.Contains("public sealed class Alpha", StringComparison.Ordinal)).Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration =>
             declaration.Name == "Beta"
             && declaration.Kind == "record"
-            && declaration.RelativePath == "src/Beta.cs");
-        Assert.DoesNotContain(entry.SafeDeclarations, declaration => declaration.Name is "IThing" or "FakeClass" or "Generated");
-        Assert.Contains("2 C# classes and records", entry.Summary, StringComparison.Ordinal);
+            && declaration.RelativePath == "src/Beta.cs").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name is "IThing" or "FakeClass" or "Generated").Should().BeEmpty();
+        entry.Summary.Should().Contain("2 C# classes and records");
     }
 
     [Fact]
@@ -50,15 +50,15 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "What types are in this project?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.CSharpStructureResults, entry.Kind);
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Vector" && declaration.Kind == "struct");
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Position"
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.CSharpStructureResults);
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "Vector" && declaration.Kind == "struct").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "Position"
             && declaration.Kind == "record struct"
-            && declaration.Signature.Contains("(int X, int Y)", StringComparison.Ordinal));
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "IThing" && declaration.Kind == "interface");
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Mode" && declaration.Kind == "enum");
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Callback" && declaration.Kind == "delegate");
+            && declaration.Signature.Contains("(int X, int Y)", StringComparison.Ordinal)).Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "IThing" && declaration.Kind == "interface").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "Mode" && declaration.Kind == "enum").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "Callback" && declaration.Kind == "delegate").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -74,22 +74,22 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "Where is WorkspaceRoot defined?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry definition = Assert.Single(session.Entries);
-        CSharpDeclaration declaration = Assert.Single(definition.SafeDeclarations);
-        Assert.Equal(DesktopTurnKind.CSharpStructureResults, definition.Kind);
-        Assert.Equal("WorkspaceRoot", declaration.Name);
-        Assert.Equal("class", declaration.Kind);
-        Assert.Equal("src/WorkspaceRoot.cs", declaration.RelativePath);
-        Assert.Equal(3, declaration.Line);
+        DesktopTurnEntry definition = session.Entries.Should().ContainSingle().Which;
+        CSharpDeclaration declaration = definition.SafeDeclarations.Should().ContainSingle().Which;
+        definition.Kind.Should().Be(DesktopTurnKind.CSharpStructureResults);
+        declaration.Name.Should().Be("WorkspaceRoot");
+        declaration.Kind.Should().Be("class");
+        declaration.RelativePath.Should().Be("src/WorkspaceRoot.cs");
+        declaration.Line.Should().Be(3);
 
         session.MessageInput = "Show me that file.";
         await session.SendMessageAsync();
 
-        Assert.Equal(2, session.Entries.Count);
+        session.Entries.Count.Should().Be(2);
         DesktopTurnEntry opened = session.Entries[1];
-        Assert.Equal(DesktopTurnKind.FileInspected, opened.Kind);
-        Assert.Equal("src/WorkspaceRoot.cs", opened.InspectedRelativePath);
-        Assert.Contains("public sealed class WorkspaceRoot", opened.FileContents, StringComparison.Ordinal);
+        opened.Kind.Should().Be(DesktopTurnKind.FileInspected);
+        opened.InspectedRelativePath.Should().Be("src/WorkspaceRoot.cs");
+        opened.FileContents.Should().Contain("public sealed class WorkspaceRoot");
     }
 
     [Fact]
@@ -107,14 +107,14 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "Show me the members of WorkspaceRoot.";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.CSharpStructureResults, entry.Kind);
-        Assert.Equal(4, entry.SafeDeclarations.Length);
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "_path" && declaration.Kind == "field");
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "WorkspaceRoot" && declaration.Kind == "constructor");
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "FullPath" && declaration.Kind == "property");
-        Assert.Contains(entry.SafeDeclarations, declaration => declaration.Name == "Reset" && declaration.Kind == "method");
-        Assert.DoesNotContain(entry.SafeDeclarations, declaration => declaration.Name == "DoNotInclude");
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.CSharpStructureResults);
+        entry.SafeDeclarations.Length.Should().Be(4);
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "_path" && declaration.Kind == "field").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "WorkspaceRoot" && declaration.Kind == "constructor").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "FullPath" && declaration.Kind == "property").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "Reset" && declaration.Kind == "method").Should().NotBeEmpty();
+        entry.SafeDeclarations.Where(declaration => declaration.Name == "DoNotInclude").Should().BeEmpty();
     }
 
     [Fact]
@@ -130,12 +130,12 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "What classes are in this project?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        CSharpDeclaration declaration = Assert.Single(entry.SafeDeclarations);
-        Assert.Equal("Visible", declaration.Name);
-        Assert.Equal(1, entry.StructureSourceFileCount);
-        Assert.Equal(1, entry.StructureSkippedFileCount);
-        Assert.DoesNotContain("Generated", entry.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        CSharpDeclaration declaration = entry.SafeDeclarations.Should().ContainSingle().Which;
+        declaration.Name.Should().Be("Visible");
+        entry.StructureSourceFileCount.Should().Be(1);
+        entry.StructureSkippedFileCount.Should().Be(1);
+        entry.Summary.Should().NotContain("Generated");
     }
 
     [Fact]
@@ -149,10 +149,10 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "Where is WorkspaceRoot declared?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.CSharpStructureResults, entry.Kind);
-        Assert.Empty(entry.SafeDeclarations);
-        Assert.Contains("couldn't find a C# declaration named 'WorkspaceRoot'", entry.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.CSharpStructureResults);
+        entry.SafeDeclarations.Should().BeEmpty();
+        entry.Summary.Should().Contain("couldn't find a C# declaration named 'WorkspaceRoot'");
     }
 
     [Fact]
@@ -170,12 +170,12 @@ public sealed class CSharpStructureChatTests
         await component.Find("#message-input").InputAsync("What classes are in this project?");
         await component.Find("#chat-form").TriggerEventAsync("onsubmit", EventArgs.Empty);
 
-        var exchange = Assert.Single(component.FindAll("#turn-history > li.chat-exchange"));
-        Assert.Equal("CSharpStructureResults", exchange.GetAttribute("data-turn-kind"));
-        Assert.Contains("Roslyn syntax declarations", exchange.QuerySelector(".structure-header")!.TextContent, StringComparison.Ordinal);
-        Assert.Contains("src/Widget.cs:2", exchange.QuerySelector(".structure-location")!.TextContent, StringComparison.Ordinal);
-        Assert.Contains("public sealed class Widget", exchange.QuerySelector(".structure-signature")!.TextContent, StringComparison.Ordinal);
-        Assert.Contains("does not yet compile the project", exchange.QuerySelector(".structure-footnote")!.TextContent, StringComparison.Ordinal);
+        var exchange = component.FindAll("#turn-history > li.chat-exchange").Should().ContainSingle().Which;
+        exchange.GetAttribute("data-turn-kind").Should().Be("CSharpStructureResults");
+        exchange.QuerySelector(".structure-header")!.TextContent.Should().Contain("Roslyn syntax declarations");
+        exchange.QuerySelector(".structure-location")!.TextContent.Should().Contain("src/Widget.cs:2");
+        exchange.QuerySelector(".structure-signature")!.TextContent.Should().Contain("public sealed class Widget");
+        exchange.QuerySelector(".structure-footnote")!.TextContent.Should().Contain("does not yet compile the project");
     }
 
     [Fact]
@@ -188,9 +188,9 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "What does Widget do?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(DesktopTurnKind.UnsupportedInput, entry.Kind);
-        Assert.Empty(entry.SafeDeclarations);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.Kind.Should().Be(DesktopTurnKind.UnsupportedInput);
+        entry.SafeDeclarations.Should().BeEmpty();
     }
 
     [Fact]
@@ -206,10 +206,10 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "What classes are in this project?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(CSharpWorkspaceStructureInspector.MaxSourceFilesRead, entry.StructureSourceFileCount);
-        Assert.True(entry.StructureIsTruncated);
-        Assert.Equal(CSharpWorkspaceStructureInspector.MaxSourceFilesRead, entry.SafeDeclarations.Length);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.StructureSourceFileCount.Should().Be(CSharpWorkspaceStructureInspector.MaxSourceFilesRead);
+        entry.StructureIsTruncated.Should().BeTrue();
+        entry.SafeDeclarations.Length.Should().Be(CSharpWorkspaceStructureInspector.MaxSourceFilesRead);
     }
 
     [Fact]
@@ -226,10 +226,10 @@ public sealed class CSharpStructureChatTests
         session.MessageInput = "What classes are in this project?";
         await session.SendMessageAsync();
 
-        DesktopTurnEntry entry = Assert.Single(session.Entries);
-        Assert.Equal(CSharpWorkspaceStructureInspector.MaxDeclarations, entry.SafeDeclarations.Length);
-        Assert.True(entry.StructureIsTruncated);
-        Assert.Contains("safety limit", entry.Summary, StringComparison.Ordinal);
+        DesktopTurnEntry entry = session.Entries.Should().ContainSingle().Which;
+        entry.SafeDeclarations.Length.Should().Be(CSharpWorkspaceStructureInspector.MaxDeclarations);
+        entry.StructureIsTruncated.Should().BeTrue();
+        entry.Summary.Should().Contain("safety limit");
     }
 
     private static async Task<DesktopSession> ConnectSessionAsync(string workspacePath)
@@ -239,7 +239,7 @@ public sealed class CSharpStructureChatTests
             WorkspacePathInput = workspacePath,
         };
         await session.ConnectAsync();
-        Assert.True(session.IsConnected);
+        session.IsConnected.Should().BeTrue();
         return session;
     }
 }

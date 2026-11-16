@@ -6,22 +6,22 @@ public sealed class ToolRegistryTests
     public void ResolvesRegisteredTool()
     {
         ToolRegistry registry = new([new CalculatorTool()]);
-        Assert.True(registry.TryResolve(CalculatorTool.Id, out ITool? tool));
-        Assert.IsType<CalculatorTool>(tool);
+        registry.TryResolve(CalculatorTool.Id, out ITool? tool).Should().BeTrue();
+        tool.Should().BeOfType<CalculatorTool>();
     }
 
     [Fact]
     public void UnknownToolFailsToResolve()
     {
         ToolRegistry registry = new([new CalculatorTool()]);
-        Assert.False(registry.TryResolve(new ToolId("missing"), out _));
+        registry.TryResolve(new ToolId("missing"), out _).Should().BeFalse();
     }
 
     [Fact]
     public void RejectsDuplicateToolIds()
     {
         ITool[] tools = [new CalculatorTool(), new CalculatorTool()];
-        Assert.Throws<ArgumentException>(() => new ToolRegistry(tools));
+        FluentActions.Invoking(() => new ToolRegistry(tools)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -29,6 +29,6 @@ public sealed class ToolRegistryTests
     {
         ToolRegistry registry = new([new CalculatorTool(), new FailingTool()]);
         ToolCatalog catalog = registry.ToCatalog();
-        Assert.Equal(2, catalog.Descriptors.Length);
+        catalog.Descriptors.Length.Should().Be(2);
     }
 }

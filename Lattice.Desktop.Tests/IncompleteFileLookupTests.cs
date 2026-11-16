@@ -18,12 +18,12 @@ public sealed class IncompleteFileLookupTests
 
         DesktopTurnEntry entry = processor.Execute(connected, $"Show me {requestedName}");
 
-        Assert.Equal(DesktopTurnKind.AmbiguousInput, entry.Kind);
-        Assert.Null(entry.FileContents);
-        Assert.True(entry.HasMoreCandidates);
-        Assert.Equal(expectedMatches, entry.TotalCandidateCount);
-        Assert.Contains("may be incomplete", entry.Summary, StringComparison.Ordinal);
-        Assert.DoesNotContain("couldn't find", entry.Summary, StringComparison.Ordinal);
-        Assert.DoesNotContain("more than", entry.Summary, StringComparison.Ordinal);
+        entry.Kind.Should().Be(DesktopTurnKind.AmbiguousInput);
+        entry.FileContents.Should().BeNull();
+        entry.HasMoreCandidates.Should().BeTrue();
+        entry.TotalCandidateCount.Should().Be(expectedMatches);
+        entry.Summary.Should().Contain("may be incomplete");
+        entry.Summary.Should().NotContain("couldn't find");
+        entry.Summary.Should().NotContain("more than");
     }
 }

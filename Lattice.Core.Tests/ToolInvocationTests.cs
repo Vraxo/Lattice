@@ -8,16 +8,15 @@ public sealed class ToolInvocationTests
         ArgumentBag arguments = ArgumentBag.From([new ArgumentEntry("left", ArgumentValue.FromInteger(1))]);
         ToolResult result = ToolResult.Success(ArgumentValue.FromInteger(1));
         ToolInvocation invocation = new(CalculatorTool.Id, arguments, result);
-        Assert.Equal(CalculatorTool.Id, invocation.ToolId);
-        Assert.Equal(arguments, invocation.Arguments);
-        Assert.Equal(result, invocation.Result);
+        invocation.ToolId.Should().Be(CalculatorTool.Id);
+        invocation.Arguments.Should().Be(arguments);
+        invocation.Result.Should().Be(result);
     }
 
     [Fact]
     public void RejectsNullArguments()
     {
-        Assert.Throws<ArgumentNullException>(
-            () => new ToolInvocation(CalculatorTool.Id, null!, ToolResult.Success(ArgumentValue.FromInteger(1))));
+        FluentActions.Invoking(() => new ToolInvocation(CalculatorTool.Id, null!, ToolResult.Success(ArgumentValue.FromInteger(1)))).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
@@ -25,6 +24,6 @@ public sealed class ToolInvocationTests
     {
         ToolInvocation first = new(CalculatorTool.Id, ArgumentBag.Empty, ToolResult.Success(ArgumentValue.FromInteger(1)));
         ToolInvocation second = new(CalculatorTool.Id, ArgumentBag.Empty, ToolResult.Success(ArgumentValue.FromInteger(1)));
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 }

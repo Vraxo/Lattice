@@ -9,8 +9,8 @@ public sealed class ReadFileToolTests
         workspace.WriteFile("a.txt", "hello");
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "a.txt");
-        Assert.True(result.IsSuccess);
-        Assert.Equal("hello", result.Output!.AsString());
+        result.IsSuccess.Should().BeTrue();
+        result.Output!.AsString().Should().Be("hello");
     }
 
     [Fact]
@@ -19,8 +19,8 @@ public sealed class ReadFileToolTests
         using TempWorkspace workspace = new();
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "nope.txt");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathNotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.PathNotFound);
     }
 
     [Fact]
@@ -30,8 +30,8 @@ public sealed class ReadFileToolTests
         workspace.CreateDirectory("sub");
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "sub");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.NotAFile, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.NotAFile);
     }
 
     [Fact]
@@ -40,8 +40,8 @@ public sealed class ReadFileToolTests
         using TempWorkspace workspace = new();
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "../secrets.txt");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.PathOutsideRoot, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.PathOutsideRoot);
     }
 
     [Fact]
@@ -51,8 +51,8 @@ public sealed class ReadFileToolTests
         workspace.WriteBytes("big.txt", new byte[ReadFileTool.MaxBytes + 1]);
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "big.txt");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.FileTooLarge, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.FileTooLarge);
     }
 
     [Fact]
@@ -65,8 +65,8 @@ public sealed class ReadFileToolTests
         workspace.WriteBytes("bad.txt", [0xC3, 0x28]);
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = Execute(tool, "bad.txt");
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.EncodingInvalid, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.EncodingInvalid);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public sealed class ReadFileToolTests
         using TempWorkspace workspace = new();
         ReadFileTool tool = new(new WorkspaceRoot(workspace.Path));
         ToolResult result = tool.Execute(ArgumentBag.Empty);
-        Assert.False(result.IsSuccess);
-        Assert.Equal(FileToolErrorCodes.ReadFailed, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(FileToolErrorCodes.ReadFailed);
     }
 
     private static ToolResult Execute(ReadFileTool tool, string path)

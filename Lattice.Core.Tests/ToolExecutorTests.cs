@@ -11,9 +11,9 @@ public sealed class ToolExecutorTests
             new ArgumentEntry("right", ArgumentValue.FromInteger(3)),
         ]);
         ToolInvocation invocation = ToolExecutor.Execute(new CalculatorTool(), arguments, ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.Equal(5, invocation.Result.Output!.AsInteger());
-        Assert.Equal(CalculatorTool.Id, invocation.ToolId);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        invocation.Result.Output!.AsInteger().Should().Be(5);
+        invocation.ToolId.Should().Be(CalculatorTool.Id);
     }
 
     [Fact]
@@ -22,16 +22,16 @@ public sealed class ToolExecutorTests
         RecordingTool tool = new();
         ArgumentBag arguments = ArgumentBag.Empty;
         ToolInvocation invocation = ToolExecutor.Execute(tool, arguments, ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.False(tool.WasExecuted);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        tool.WasExecuted.Should().BeFalse();
     }
 
     [Fact]
     public void RuntimeToolFailureIsRecorded()
     {
         ToolInvocation invocation = ToolExecutor.Execute(new FailingTool(), ArgumentBag.Empty, ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("failing.tool", invocation.Result.Error!.Code);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("failing.tool");
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public sealed class ToolExecutorTests
     {
         WriteRecordingTool tool = new();
         ToolInvocation invocation = ToolExecutor.Execute(tool, ArgumentBag.Empty, ToolPermissionPolicy.ReadOnlyOnly);
-        Assert.False(invocation.Result.IsSuccess);
-        Assert.Equal("tool.permission.denied", invocation.Result.Error!.Code);
-        Assert.False(tool.WasExecuted);
+        invocation.Result.IsSuccess.Should().BeFalse();
+        invocation.Result.Error!.Code.Should().Be("tool.permission.denied");
+        tool.WasExecuted.Should().BeFalse();
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class ToolExecutorTests
     {
         WriteRecordingTool tool = new();
         ToolInvocation invocation = ToolExecutor.Execute(tool, ArgumentBag.Empty, ToolPermissionPolicy.AllowAll);
-        Assert.True(invocation.Result.IsSuccess);
-        Assert.True(tool.WasExecuted);
+        invocation.Result.IsSuccess.Should().BeTrue();
+        tool.WasExecuted.Should().BeTrue();
     }
 }

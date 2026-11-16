@@ -5,37 +5,37 @@ public sealed class ActionProposalTests
     [Fact]
     public void InvokeToolProposalRejectsNullArguments()
     {
-        Assert.Throws<ArgumentNullException>(() => new InvokeToolProposal(CalculatorTool.Id, null!));
+        FluentActions.Invoking(() => new InvokeToolProposal(CalculatorTool.Id, null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void InvokeToolProposalRejectsEmptyToolId()
     {
-        Assert.Throws<ArgumentException>(() => new InvokeToolProposal(default, ArgumentBag.Empty));
+        FluentActions.Invoking(() => new InvokeToolProposal(default, ArgumentBag.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void AskUserProposalRejectsNullRequest()
     {
-        Assert.Throws<ArgumentNullException>(() => new AskUserProposal(null!));
+        FluentActions.Invoking(() => new AskUserProposal(null!)).Should().ThrowExactly<ArgumentNullException>();
     }
 
     [Fact]
     public void RespondProposalRejectsEmptyText()
     {
-        Assert.Throws<ArgumentException>(() => new RespondProposal("   "));
+        FluentActions.Invoking(() => new RespondProposal("   ")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void ContinueProposalRejectsEmptyReason()
     {
-        Assert.Throws<ArgumentException>(() => new ContinueProposal(string.Empty));
+        FluentActions.Invoking(() => new ContinueProposal(string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void FinishProposalRejectsEmptyReason()
     {
-        Assert.Throws<ArgumentException>(() => new FinishProposal(string.Empty));
+        FluentActions.Invoking(() => new FinishProposal(string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class ActionProposalTests
     {
         InvokeToolProposal first = new(CalculatorTool.Id, ArgumentBag.Empty);
         InvokeToolProposal second = new(CalculatorTool.Id, ArgumentBag.Empty);
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class ActionProposalTests
     {
         RespondProposal first = new("one");
         RespondProposal second = new("two");
-        Assert.NotEqual(first, second);
+        second.Should().NotBe(first);
     }
 
     [Fact]
@@ -59,6 +59,6 @@ public sealed class ActionProposalTests
     {
         ActionProposal first = new ContinueProposal("keep going");
         ActionProposal second = new FinishProposal("keep going");
-        Assert.NotEqual(first, second);
+        second.Should().NotBe(first);
     }
 }

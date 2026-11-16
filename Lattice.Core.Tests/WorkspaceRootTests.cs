@@ -6,13 +6,13 @@ public sealed class WorkspaceRootTests
     public void RejectsMissingDirectory()
     {
         string missing = Path.Combine(Path.GetTempPath(), "lattice-missing-" + Guid.NewGuid().ToString("N"));
-        Assert.Throws<DirectoryNotFoundException>(() => new WorkspaceRoot(missing));
+        FluentActions.Invoking(() => new WorkspaceRoot(missing)).Should().ThrowExactly<DirectoryNotFoundException>();
     }
 
     [Fact]
     public void RejectsEmptyPath()
     {
-        Assert.Throws<ArgumentException>(() => new WorkspaceRoot("   "));
+        FluentActions.Invoking(() => new WorkspaceRoot("   ")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
@@ -20,8 +20,8 @@ public sealed class WorkspaceRootTests
     {
         using TempWorkspace workspace = new();
         WorkspaceRoot root = new(workspace.Path);
-        Assert.True(root.TryResolve("sub/file.txt", out string? full));
-        Assert.StartsWith(workspace.Path, full, StringComparison.Ordinal);
+        root.TryResolve("sub/file.txt", out string? full).Should().BeTrue();
+        full.Should().StartWith(workspace.Path);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class WorkspaceRootTests
     {
         using TempWorkspace workspace = new();
         WorkspaceRoot root = new(workspace.Path);
-        Assert.False(root.TryResolve(Path.Combine(workspace.Path, "file.txt"), out _));
+        root.TryResolve(Path.Combine(workspace.Path, "file.txt"), out _).Should().BeFalse();
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class WorkspaceRootTests
     {
         using TempWorkspace workspace = new();
         WorkspaceRoot root = new(workspace.Path);
-        Assert.False(root.TryResolve("../escape.txt", out _));
+        root.TryResolve("../escape.txt", out _).Should().BeFalse();
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class WorkspaceRootTests
     {
         using TempWorkspace workspace = new();
         WorkspaceRoot root = new(workspace.Path);
-        Assert.False(root.TryResolve("sub/../../escape.txt", out _));
+        root.TryResolve("sub/../../escape.txt", out _).Should().BeFalse();
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public sealed class WorkspaceRootTests
 
         // A naive StartsWith check would accept this because the sibling's name begins with
         // the root's name.
-        Assert.False(root.TryResolve("../" + Path.GetFileName(workspace.Path) + "-evil/file.txt", out _));
+        root.TryResolve("../" + Path.GetFileName(workspace.Path) + "-evil/file.txt", out _).Should().BeFalse();
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class WorkspaceRootTests
         using TempWorkspace workspace = new();
         workspace.CreateDirectory("sub");
         WorkspaceRoot root = new(workspace.Path);
-        Assert.True(root.TryResolve("sub/../file.txt", out _));
+        root.TryResolve("sub/../file.txt", out _).Should().BeTrue();
     }
 
     [Fact]
@@ -73,6 +73,6 @@ public sealed class WorkspaceRootTests
     {
         using TempWorkspace workspace = new();
         WorkspaceRoot root = new(workspace.Path);
-        Assert.False(root.TryResolve("   ", out _));
+        root.TryResolve("   ", out _).Should().BeFalse();
     }
 }

@@ -5,36 +5,32 @@ public sealed class ActionSelectionTests
     [Fact]
     public void SelectedRequiresProposalAndReason()
     {
-        Assert.Throws<ArgumentNullException>(
-            () => ActionSelection.Selected(null!, "reason"));
-        Assert.Throws<ArgumentException>(
-            () => ActionSelection.Selected(new RespondProposal("x"), "  "));
+        FluentActions.Invoking(() => ActionSelection.Selected(null!, "reason")).Should().ThrowExactly<ArgumentNullException>();
+        FluentActions.Invoking(() => ActionSelection.Selected(new RespondProposal("x"), "  ")).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void BlockedRequiresProposalAndReason()
     {
-        Assert.Throws<ArgumentNullException>(
-            () => ActionSelection.Blocked(null!, "reason"));
-        Assert.Throws<ArgumentException>(
-            () => ActionSelection.Blocked(new RespondProposal("x"), string.Empty));
+        FluentActions.Invoking(() => ActionSelection.Blocked(null!, "reason")).Should().ThrowExactly<ArgumentNullException>();
+        FluentActions.Invoking(() => ActionSelection.Blocked(new RespondProposal("x"), string.Empty)).Should().ThrowExactly<ArgumentException>();
     }
 
     [Fact]
     public void SelectedReportsSelectedKind()
     {
         ActionSelection selection = ActionSelection.Selected(new RespondProposal("done"), "rule applied");
-        Assert.True(selection.IsSelected);
-        Assert.Equal(ActionSelectionKind.Selected, selection.Kind);
-        Assert.Empty(selection.RejectedRules);
+        selection.IsSelected.Should().BeTrue();
+        selection.Kind.Should().Be(ActionSelectionKind.Selected);
+        selection.RejectedRules.Should().BeEmpty();
     }
 
     [Fact]
     public void BlockedReportsBlockedKind()
     {
         ActionSelection selection = ActionSelection.Blocked(new RespondProposal("blocked"), "no rule");
-        Assert.False(selection.IsSelected);
-        Assert.Equal(ActionSelectionKind.Blocked, selection.Kind);
+        selection.IsSelected.Should().BeFalse();
+        selection.Kind.Should().Be(ActionSelectionKind.Blocked);
     }
 
     [Fact]
@@ -42,7 +38,7 @@ public sealed class ActionSelectionTests
     {
         ActionSelection first = ActionSelection.Selected(new RespondProposal("done"), "reason");
         ActionSelection second = ActionSelection.Selected(new RespondProposal("done"), "reason");
-        Assert.Equal(first, second);
+        second.Should().Be(first);
     }
 
     [Fact]
@@ -56,6 +52,6 @@ public sealed class ActionSelectionTests
             new RespondProposal("done"),
             "reason",
             [new RejectedRule("b", 10)]);
-        Assert.NotEqual(first, second);
+        second.Should().NotBe(first);
     }
 }
