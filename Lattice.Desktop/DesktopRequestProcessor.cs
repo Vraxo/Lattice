@@ -359,16 +359,12 @@ internal sealed class DesktopRequestProcessor(
                 capturedValueOverride: requestedPath);
         }
 
-        Result<WorkspaceFileLookupResult> lookupResult = workspace.FileLocator.FindByFileName(requestedPath);
-        if (!lookupResult.IsSuccess)
+        WorkspaceFileLookupOutcome outcome = workspace.FileLocator.ResolveByFileName(requestedPath);
+        return outcome switch
         {
-            return MapFileError(workspace, requestText, requestedPath, patternId, lookupResult.Error!);
-        }
-
-        WorkspaceFileLookupResult lookup = lookupResult.Value;
-        if (lookup.TotalMatches == 0)
-        {
-            return new DesktopTurnEntry(
+            WorkspaceFileLookupFailed failed =>
+                MapFileError(workspace, requestText, requestedPath, patternId, failed.Error),
+            WorkspaceFileMissing => new DesktopTurnEntry(
                 requestText,
                 DesktopTurnKind.MissingFile,
                 $"I couldn't find a file named '{requestedPath}' anywhere in the connected workspace.",
@@ -376,25 +372,33 @@ internal sealed class DesktopRequestProcessor(
                 InspectedRelativePath: requestedPath,
                 ErrorCode: FileToolErrorCodes.PathNotFound,
                 MatchedPatternId: patternId,
-                CapturedValue: requestedPath);
-        }
-
-        if (lookup.TotalMatches == 1 && lookup.SafeRelativePaths.Length == 1)
-        {
-            return ExecuteDirectInspect(
+                CapturedValue: requestedPath),
+            WorkspaceFileFound found => ExecuteDirectInspect(
                 workspace,
                 requestText,
-                lookup.SafeRelativePaths[0],
+                found.RelativePath,
                 patternId,
-                capturedValueOverride: requestedPath);
-        }
+                capturedValueOverride: requestedPath),
+            WorkspaceFileAmbiguous ambiguous => BuildMultipleBasenameMatchesEntry(
+                workspace, requestText, requestedPath, patternId, ambiguous.Matches),
+            WorkspaceFileLookupIncomplete incomplete => BuildIncompleteBasenameLookupEntry(
+                workspace, requestText, requestedPath, patternId, incomplete.Matches),
+        };
+    }
 
-        return BuildMultipleBasenameMatchesEntry(
-            workspace,
-            requestText,
-            requestedPath,
-            patternId,
-            lookup);
+    private DesktopTurnEntry BuildIncompleteBasenameLookupEntry(
+        ConnectedWorkspace workspace,
+        string requestText,
+        string requestedFileName,
+        string patternId,
+        WorkspaceFileLookupResult lookup)
+    {
+        DesktopTurnEntry entry = BuildMultipleBasenameMatchesEntry(
+            workspace, requestText, requestedFileName, patternId, lookup);
+        string lead = $"The filename scan reached its limit and may be incomplete. I found at least {lookup.TotalMatches} files named '{requestedFileName}'. Please provide an explicit relative path or select a listed candidate.";
+        string candidates = string.Join("", lookup.SafeRelativePaths.Take(_maxDisplayedCandidatePaths)
+            .Select((path, index) => $"\n{index + 1}. {path}"));
+        return entry with { Summary = lead + candidates, LeadSummary = lead };
     }
 
     private DesktopTurnEntry BuildMultipleBasenameMatchesEntry(

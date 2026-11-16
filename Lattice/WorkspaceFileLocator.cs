@@ -140,6 +140,39 @@ public sealed class WorkspaceFileLocator
     }
 
     /// <summary>
+    /// Classifies a bounded lookup into explicit outcomes without reading file contents.
+    /// The existing result-based API remains available for callers that need raw scan metadata.
+    /// </summary>
+    public WorkspaceFileLookupOutcome ResolveByFileName(
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        Result<WorkspaceFileLookupResult> result = FindByFileName(fileName, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return new WorkspaceFileLookupFailed(result.Error!);
+        }
+
+        WorkspaceFileLookupResult lookup = result.Value;
+        if (lookup.HasMoreMatches)
+        {
+            return new WorkspaceFileLookupIncomplete(lookup);
+        }
+
+        if (lookup.TotalMatches == 0)
+        {
+            return new WorkspaceFileMissing(lookup.RequestedFileName);
+        }
+
+        if (lookup.TotalMatches == 1 && lookup.SafeRelativePaths.Length == 1)
+        {
+            return new WorkspaceFileFound(lookup.SafeRelativePaths[0]);
+        }
+
+        return new WorkspaceFileAmbiguous(lookup);
+    }
+
+    /// <summary>
     /// Searches the connected workspace for files whose basename matches <paramref name="fileName"/>
     /// exactly (case-insensitively), returning workspace-relative paths without reading file bytes.
     /// </summary>
