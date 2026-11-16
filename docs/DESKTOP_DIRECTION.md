@@ -23,7 +23,7 @@ Lattice is a symbolic coding assistant for a local code workspace. It uses expli
 
 The initial product is a desktop application:
 
-- C# 14 / .NET 10.
+- C# 15 / .NET 11.
 - Blazor UI hosted with PhotinoX.Blazor 5.3.5, following the existing Formloom implementation pattern.
 - A new `Lattice.Desktop` executable project.
 - Existing `Lattice.Core` remains framework-independent.

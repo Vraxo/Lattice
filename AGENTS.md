@@ -29,7 +29,7 @@ Desktop 0.3 is merged; the extensionless filename refinement is PR #14. Desktop 
 - Implement small logical checkpoints and keep the app runnable.
 - You are authorized to commit and push those checkpoints to your feature branch.
 - Open one draft PR targeting main once the first coherent checkpoint is ready. Push subsequent checkpoints to the same PR.
-- Repository PR CI uses Windows and .NET 10. Use it for restore/build/test when the local SDK is unavailable.
+- Repository PR CI uses Windows and .NET 11. Use it for restore/build/test when the local SDK is unavailable.
 - Diagnose and fix CI failures before proceeding. Never weaken tests to get a green result.
 - Never force-push, commit to main, or merge the PR. When all tasks are complete and CI is green, mark the PR ready for review and stop.
 - Do not pause to relay intermediate phase reports. Provide one final report with the PR link, summary, exact CI results, remaining manual checks, and launch instructions.
