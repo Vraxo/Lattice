@@ -8,11 +8,11 @@ Lattice is a **symbolic, tool-using coding assistant** built around explicit sta
 
 The active assignment is [`.agents/todo.md`](.agents/todo.md). Completed Desktop 0.1, Desktop 0.2, and Desktop 0.3 checklists are preserved under [`.agents/archive/`](.agents/archive/).
 
-> **Verification status:** Restore, Release build, workspace symlink/reparse-point safety tests, basename file-discovery tests, charcoal stylesheet verification, C# syntax-structure tests, and headless xUnit/bUnit UI tests pass in Windows CI (.NET 10). Final interactive Photino window verification on a desktop display is tracked in [docs/windows-smoke-test.md](docs/windows-smoke-test.md) and [.agents/todo.md](.agents/todo.md).
+> **Verification status:** The last recorded .NET 10 verification covered restore, Release build, workspace symlink/reparse-point safety tests, basename file-discovery tests, charcoal stylesheet verification, C# syntax-structure tests, and headless xUnit/bUnit UI tests in Windows CI. The .NET 11 upgrade still requires a fresh restore, Release build, and test run. Final interactive Photino window verification on a desktop display is tracked in [docs/windows-smoke-test.md](docs/windows-smoke-test.md) and [.agents/todo.md](.agents/todo.md).
 
 ### Prerequisites
 
-- **.NET 10 SDK** (`10.0.x`).
+- **.NET 11 SDK** (`11.0.x`).
 - **Windows 10/11** with the Microsoft Edge WebView2 Runtime (preinstalled on current Windows 10/11 releases) to launch the native Photino desktop window, or another desktop OS with Photino's native WebView prerequisites installed.
 
 ### Build, test, and launch

@@ -5,7 +5,7 @@ This checklist covers the genuinely manual Windows GUI verification steps for `L
 ## Prerequisites
 
 - Windows 10 or Windows 11 with the Microsoft Edge WebView2 Runtime installed.
-- .NET 10 SDK (`10.0.x`).
+- .NET 11 SDK (`11.0.x`).
 - A local checkout of the `Lattice` repository.
 
 ## Launch
